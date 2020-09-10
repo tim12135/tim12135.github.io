@@ -164,6 +164,340 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://tim-jt.gitee.io/183042282/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Tim">
+      <meta itemprop="description" content="Tim's blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tim's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/183042282/" class="post-title-link" itemprop="url">Docker构建Mysql主从服务</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-24 15:32:02" itemprop="dateCreated datePublished" datetime="2020-02-24T15:32:02+08:00">2020-02-24</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-09-10 16:03:17" itemprop="dateModified" datetime="2020-09-10T16:03:17+08:00">2020-09-10</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/docker/" itemprop="url" rel="index"><span itemprop="name">docker</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/183042282/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/183042282/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="一主一从"><a href="#一主一从" class="headerlink" title="一主一从"></a>一主一从</h2><h3 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h3><p>主库/w1/mysql.cnf</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line">log-bin=mysql-bin #开启二进制日志</span><br><span class="line">server-id=1 #设置server-id</span><br><span class="line">binlog-ignore-db=mysql #忽略mysql数据库的同步，像系统库都可以忽略</span><br><span class="line">binlog-ignore-db=information_schema</span><br><span class="line"><span class="meta">#</span><span class="bash">binlog-do-db=需要复制的主数据库名字</span></span><br><span class="line">binlog_format=STATEMENT #STATEMENT sql复制；ROW 行变化复制；MIXED 混合模式，但是@@hostname 无法解决</span><br></pre></td></tr></table></figure>
+<p>从库/r1/mysql.cnf</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line">server-id=2 #设置server-id，必须唯一</span><br><span class="line"><span class="meta">#</span><span class="bash">relay-log=mysql-relay 启用中继日志</span></span><br></pre></td></tr></table></figure>
+<h3 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">创建docker网络</span></span><br><span class="line">docker network create --subnet=172.20.0.0/16 --gateway=172.20.0.1 mynet ;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash">启动主mysql</span></span><br><span class="line">docker run -itd -p 13306:3306 -h mysqlw1 --name mysqlw1 --volume &quot;$PWD/w1&quot;:/etc/mysql/conf.d -e MYSQL_ROOT_PASSWORD=123456 --network mynet --ip 172.20.0.2 mysql:5.7;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash">启动从mysql</span></span><br><span class="line">docker run -itd -p 13307:3306 -h mysqlr1 --name mysqlr1 --volume &quot;$PWD/r1&quot;:/etc/mysql/conf.d -e MYSQL_ROOT_PASSWORD=123456 --network mynet --ip 172.20.0.3 mysql:5.7;</span><br></pre></td></tr></table></figure>
+<h4 id="主"><a href="#主" class="headerlink" title="主"></a>主</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">创建同步的用户</span></span><br><span class="line">GRANT REPLICATION SLAVE ON *.* TO &#x27;repl&#x27;@&#x27;%&#x27; IDENTIFIED BY &#x27;123456&#x27;;</span><br><span class="line">flush privileges;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash">获取bin日志文件和日志的position</span></span><br><span class="line">SHOW MASTER STATUS;</span><br></pre></td></tr></table></figure>
+<h4 id="从"><a href="#从" class="headerlink" title="从"></a>从</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 配置，需要根据master status的信息修改log_file和log_pos的值</span></span><br><span class="line">CHANGE MASTER TO MASTER_HOST=&#x27;172.20.0.2&#x27;, MASTER_USER=&#x27;repl&#x27;, MASTER_PASSWORD=&#x27;123456&#x27;, MASTER_LOG_FILE=&#x27;mysql-bin.000003&#x27;, MASTER_LOG_POS=759;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 开启从服务</span></span><br><span class="line">start slave;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 查看从服务的状态</span></span><br><span class="line">show slave status\G;</span><br></pre></td></tr></table></figure>
+
+<h2 id="双主双从"><a href="#双主双从" class="headerlink" title="双主双从"></a>双主双从</h2><h3 id="准备-1"><a href="#准备-1" class="headerlink" title="准备"></a>准备</h3><p>主库/w1/mysql.cnf</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line"><span class="meta">#</span><span class="bash">开启二进制日志</span></span><br><span class="line">log-bin=mysql-bin </span><br><span class="line"><span class="meta">#</span><span class="bash">设置server-id</span></span><br><span class="line">server-id=1</span><br><span class="line"><span class="meta">#</span><span class="bash">忽略mysql数据库的同步，像系统库都可以忽略</span></span><br><span class="line">binlog-ignore-db=mysql </span><br><span class="line">binlog-ignore-db=information_schema</span><br><span class="line"><span class="meta">#</span><span class="bash">binlog-do-db=需要复制的主数据库名字</span></span><br><span class="line"><span class="meta">#</span><span class="bash">STATEMENT sql复制；ROW 行变化复制；MIXED 混合模式，但是@@hostname 无法解决</span></span><br><span class="line">binlog_format=STATEMENT </span><br><span class="line"><span class="meta">#</span><span class="bash"> 在作为从库的时候，有写入操作也要更新二进制日志的文件</span></span><br><span class="line">log-slave-updates</span><br><span class="line"><span class="meta">#</span><span class="bash"> 自增长步长</span></span><br><span class="line">auto-increment-increment=2</span><br><span class="line"><span class="meta">#</span><span class="bash"> 自增长起始值</span></span><br><span class="line">auto-increment-offset=1</span><br></pre></td></tr></table></figure>
+
+<p>主库2/w2/mysql.cnf</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line">log-bin=mysql-bin</span><br><span class="line">server-id=3</span><br><span class="line">binlog-ignore-db=mysql </span><br><span class="line">binlog-ignore-db=information_schema</span><br><span class="line"><span class="meta">#</span><span class="bash">binlog-do-db=需要复制的主数据库名字</span></span><br><span class="line">binlog_format=STATEMENT</span><br><span class="line">log-slave-updates</span><br><span class="line">auto-increment-increment=2</span><br><span class="line">auto-increment-offset=2</span><br></pre></td></tr></table></figure>
+
+<p>从库/r1/mysql.cnf</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line"><span class="meta">#</span><span class="bash">设置server-id，必须唯一</span></span><br><span class="line">server-id=2</span><br><span class="line"><span class="meta">#</span><span class="bash">启用中继日志</span></span><br><span class="line">relay-log=mysql-relay</span><br></pre></td></tr></table></figure>
+
+<p>从库2/r2/mysql.cnf</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line">server-id=4</span><br><span class="line">relay-log=mysql-relay</span><br></pre></td></tr></table></figure>
+
+<h3 id="启动后"><a href="#启动后" class="headerlink" title="启动后"></a>启动后</h3><ol>
+<li>启动4个mysql服务后，两台主机需要创建两个备份权限的帐号，命令参照一主一从</li>
+<li>然后按照一主一从的模式，分别配置好两套主从服务，s1-&gt;m1，s2-&gt;m2</li>
+<li>两个主机也需要相互配置对方主机的信息，m1-&gt;m2，m2-&gt;m1</li>
+<li>都开启 start slave;并查看 show slave status;</li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://tim-jt.gitee.io/369552271/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Tim">
+      <meta itemprop="description" content="Tim's blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tim's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/369552271/" class="post-title-link" itemprop="url">ftp、ftps、sftp区别</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-10-31 15:35:18" itemprop="dateCreated datePublished" datetime="2019-10-31T15:35:18+08:00">2019-10-31</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-09-10 15:39:04" itemprop="dateModified" datetime="2020-09-10T15:39:04+08:00">2020-09-10</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index"><span itemprop="name">网络</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/369552271/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/369552271/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <blockquote>
+<p>之前很长一段时间，一直以为sftp是ftp加了安全协议，是ftp升级版本，直到最近有个需求，才发现ftp和sftp完全不一样</p>
+</blockquote>
+<h3 id="ftp"><a href="#ftp" class="headerlink" title="ftp"></a>ftp</h3><ul>
+<li>主动模式</li>
+</ul>
+<ol>
+<li>客户端通过命令通道告诉服务端，我要开启端口N作为数据通道端口</li>
+<li>服务器告诉客户端收到了</li>
+<li>服务器通过20端口连接客户端端口N</li>
+<li>客户端告诉服务器收到了</li>
+<li>传输数据</li>
+</ol>
+<p>缺点：连接客户端的端口可能被客户端的防火墙拦截</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">cmd 通道</span><br><span class="line">client-&gt;server PORT 1027</span><br><span class="line">server-&gt;client ACK</span><br><span class="line"></span><br><span class="line">data 通道</span><br><span class="line">server-&gt;client 连接</span><br><span class="line">client-&gt;server ACK</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>被动模式</li>
+</ul>
+<ol>
+<li>客户端通过命令通道，发送命令PASV</li>
+<li>服务器返回客户端，我开通了数据端口N</li>
+<li>客户端初始化一个数据端口连接到服务器端口N</li>
+<li>服务器数据端口返回客户端数据端口一个ACK</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">cmd 通道</span><br><span class="line">client-&gt;server PASV</span><br><span class="line">server-&gt;client PORT 2024</span><br><span class="line"></span><br><span class="line">data 通道</span><br><span class="line">client-&gt;server 连接</span><br><span class="line">server-&gt;client ACK</span><br></pre></td></tr></table></figure>
+
+<h3 id="ftps"><a href="#ftps" class="headerlink" title="ftps"></a>ftps</h3><p>为ftp增加SSL层加密</p>
+<h3 id="sftp"><a href="#sftp" class="headerlink" title="sftp"></a>sftp</h3><p>sftp始终只有一个通道，数据命令在一个通道内执行，效率比ftp低下</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://tim-jt.gitee.io/189048717/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Tim">
+      <meta itemprop="description" content="Tim's blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tim's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/189048717/" class="post-title-link" itemprop="url">Spring-WebFilter笔记</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-10-23 15:23:50" itemprop="dateCreated datePublished" datetime="2019-10-23T15:23:50+08:00">2019-10-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-09-10 16:05:58" itemprop="dateModified" datetime="2020-09-10T16:05:58+08:00">2020-09-10</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/java/" itemprop="url" rel="index"><span itemprop="name">java</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/java/spring/" itemprop="url" rel="index"><span itemprop="name">spring</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/189048717/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/189048717/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="实现一个过滤器"><a href="#实现一个过滤器" class="headerlink" title="实现一个过滤器"></a>实现一个过滤器</h3><ol>
+<li>实现javax.servlet.Filter接口</li>
+<li>在自定义的过滤器上，加上<code>@WebFilter</code> 注解，并在启动类上加上<code>@ServletComponentScan</code> 注解</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> test;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.servlet.*;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.annotation.WebFilter;</span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Author</span>: jiangtao</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span>: 2019/9/27 11:31</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>:</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@WebFilter(urlPatterns = &quot;/*&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestFilter</span> <span class="keyword">implements</span> <span class="title">Filter</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">(FilterConfig filterConfig)</span> <span class="keyword">throws</span> ServletException </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doFilter</span><span class="params">(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)</span> <span class="keyword">throws</span> IOException, ServletException </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            filterChain.doFilter(servletRequest, servletResponse);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;lalalala&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> test;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.SpringApplication;</span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.autoconfigure.SpringBootApplication;</span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.web.servlet.ServletComponentScan;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Author</span>: jiangtao</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span>: 2019/9/27 11:28</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>:</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@ServletComponentScan</span></span><br><span class="line"><span class="meta">@SpringBootApplication</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Starter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        SpringApplication.run(Starter.class);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>启动后，可以发现日志中打印出来过滤器的信息</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: <span class="string">&#x27;characterEncodingFilter&#x27;</span> to: [<span class="comment">/*]</span></span><br><span class="line"><span class="comment">2019-09-27 13:54:36.171  INFO 45468 --- [ost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: &#x27;hiddenHttpMethodFilter&#x27; to: [/*]</span></span><br><span class="line"><span class="comment">2019-09-27 13:54:36.171  INFO 45468 --- [ost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: &#x27;httpPutFormContentFilter&#x27; to: [/*]</span></span><br><span class="line"><span class="comment">2019-09-27 13:54:36.171  INFO 45468 --- [ost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: &#x27;requestContextFilter&#x27; to: [/*]</span></span><br><span class="line"><span class="comment">2019-09-27 13:54:36.171  INFO 45468 --- [ost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: &#x27;test.TestFilter&#x27; to urls: [/*]</span></span><br><span class="line"><span class="comment">2019-09-27 13:54:36.171  INFO 45468 --- [ost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: &#x27;test.TestFilter2&#x27; to urls: [/app/*]</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="多个过滤器的执行顺序问题"><a href="#多个过滤器的执行顺序问题" class="headerlink" title="多个过滤器的执行顺序问题"></a>多个过滤器的执行顺序问题</h3><ol>
+<li>按照过滤器类的名称比较排序，名称排序值越小越早执行。<br>如 AFilter 早于 BFilter执行，晚于 BFilter结束。</li>
+<li>通过手动创建过滤器对象，并设置排序值<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">FilterRegistrationBean registration = <span class="keyword">new</span> FilterRegistrationBean(<span class="keyword">new</span> AFilter());</span><br><span class="line">registration.addUrlPatterns(<span class="string">&quot;/*&quot;</span>);</span><br><span class="line">registration.setOrder(Integer.MIN_VALUE);</span><br></pre></td></tr></table></figure>
+<font color=red>注解<code>@Order</code>对过滤器的顺序没有任何影响</font></li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://tim-jt.gitee.io/4262978694/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -187,10 +521,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2020-09-10 11:14:50 / 修改时间：11:15:55" itemprop="dateCreated datePublished" datetime="2020-09-10T11:14:50+08:00">2020-09-10</time>
+              <time title="创建时间：2019-09-09 11:14:50" itemprop="dateCreated datePublished" datetime="2019-09-09T11:14:50+08:00">2019-09-09</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-09-10 16:06:13" itemprop="dateModified" datetime="2020-09-10T16:06:13+08:00">2020-09-10</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -198,6 +538,10 @@
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/java/" itemprop="url" rel="index"><span itemprop="name">java</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/java/mybatis/" itemprop="url" rel="index"><span itemprop="name">mybatis</span></a>
                 </span>
             </span>
 
@@ -232,19 +576,19 @@
 <p>MyBatis的一级缓存指的是在一个session域内,session未关闭之前执行的查询会根据SQL为key来缓存(跟mysql缓存一样,修改任何参数的值都会导致缓存失效)</p>
 <p><b>二级缓存</b></p>
 <p>二级缓存就是global caching,它超出session范围之外,可以被所有sqlSession共享,它的实现机制和mysql的缓存一样,开启它只需要在mybatis的配置文件开启settings里的cacheEnabled，需要注意的是global caching的作用域是针对Mapper的Namespace而言的，也就是说只在有在这个Namespace内的查询才能共享这个cache。</p>
-<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">@RunWith(SpringRunner.class)</span><br><span class="line">@SpringBootTest</span><br><span class="line">public class MybatisCacheTest &#123;</span><br><span class="line"></span><br><span class="line">    @Autowired</span><br><span class="line">    private CheckPlanDao checkPlanDao;</span><br><span class="line"></span><br><span class="line">    @Transactional</span><br><span class="line">    @Test</span><br><span class="line">    public void testCache() &#123;</span><br><span class="line">        String id &#x3D; &quot;076973b31f15491c9b1a85a66aa03c15&quot;;</span><br><span class="line">        CheckReportPlanEntity t1 &#x3D; checkPlanDao.selectById(id);</span><br><span class="line">        CheckReportPlanEntity t2 &#x3D; checkPlanDao.selectById(t1.getId());</span><br><span class="line">        System.out.println(&quot;从一级缓存查询：&quot; + (t1 &#x3D;&#x3D; t2));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RunWith(SpringRunner.class)</span></span><br><span class="line"><span class="meta">@SpringBootTest</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MybatisCacheTest</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> CheckPlanDao checkPlanDao;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Transactional</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testCache</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        String id = <span class="string">&quot;076973b31f15491c9b1a85a66aa03c15&quot;</span>;</span><br><span class="line">        CheckReportPlanEntity t1 = checkPlanDao.selectById(id);</span><br><span class="line">        CheckReportPlanEntity t2 = checkPlanDao.selectById(t1.getId());</span><br><span class="line">        System.out.println(<span class="string">&quot;从一级缓存查询：&quot;</span> + (t1 == t2));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>1、执行结果</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">从一级缓存查询：true</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">从一级缓存查询：<span class="keyword">true</span></span><br></pre></td></tr></table></figure>
 
 <p>2、将<code>@Transactional</code>去掉后，执行结果</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">从一级缓存查询：false</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">从一级缓存查询：<span class="keyword">false</span></span><br></pre></td></tr></table></figure>
 
 <p>3、修改CheckPlanDao.xml，在select标签内，增加<code>flushCache=&quot;true&quot;</code></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;select id&#x3D;&quot;selectById&quot; resultType&#x3D;&quot;CheckReportPlanEntity&quot; flushCache&#x3D;&quot;true&quot;&gt;</span><br><span class="line">...</span><br><span class="line">&lt;&#x2F;select&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;select id=<span class="string">&quot;selectById&quot;</span> resultType=<span class="string">&quot;CheckReportPlanEntity&quot;</span> flushCache=<span class="string">&quot;true&quot;</span>&gt;</span><br><span class="line">...</span><br><span class="line">&lt;/select&gt;</span><br></pre></td></tr></table></figure>
 
 <p>执行结果</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">从一级缓存查询：false</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">从一级缓存查询：<span class="keyword">false</span></span><br></pre></td></tr></table></figure>
 
 <h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>在编写代码的时候，一定要注意mybatis的一级缓存问题，在同一个事务内避免出现相同sql重复查询，且中间没有夹着更新、删除这些操作，此时第二次查询是命中了一级缓存，获取到的对象其实是第一次查询到的对象。</p>
 <p>MySQL在8中已经去掉了查询缓存模块，sql 层面的缓存几乎没有价值，而且容易误导开发人员，还是由业务驱动的缓存更有价值且方便维护</p>
@@ -298,7 +642,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-09-10 10:38:10" itemprop="dateModified" datetime="2020-09-10T10:38:10+08:00">2020-09-10</time>
+                <time title="修改时间：2020-09-10 16:04:44" itemprop="dateModified" datetime="2020-09-10T16:04:44+08:00">2020-09-10</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -398,20 +742,20 @@
 </tr>
 </tbody></table>
 <p>COMMAND：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">-P （设置默认策略）</span><br><span class="line">-L （查询详细策略）</span><br><span class="line">-Z （清空策略） </span><br><span class="line">-A （追加策略）</span><br><span class="line">-I num （插入策略）</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">-P （设置默认策略）</span><br><span class="line">-L （查询详细策略）</span><br><span class="line">-Z （清空策略） </span><br><span class="line">-A （追加策略）</span><br><span class="line">-I num （插入策略）</span><br></pre></td></tr></table></figure>
 
 <p>CRETIRIA：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">-p （匹配协议）</span><br><span class="line">    tcp --dport xx：tcp协议，指定端口</span><br><span class="line">    udp --dport xx: udp协议</span><br><span class="line">    icmp --icmp-type 8：请求回显，即ping</span><br><span class="line">                    0：响应，即响应对方的ping </span><br><span class="line">-s （源地址匹配）</span><br><span class="line">-d （目标地址匹配） </span><br><span class="line">-i eth （该网卡流入）</span><br><span class="line">-o eth （该网卡流出）</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">-p （匹配协议）</span><br><span class="line">    tcp --dport xx：tcp协议，指定端口</span><br><span class="line">    udp --dport xx: udp协议</span><br><span class="line">    icmp --icmp-type 8：请求回显，即ping</span><br><span class="line">                    0：响应，即响应对方的ping </span><br><span class="line">-s （源地址匹配）</span><br><span class="line">-d （目标地址匹配） </span><br><span class="line">-i eth （该网卡流入）</span><br><span class="line">-o eth （该网卡流出）</span><br></pre></td></tr></table></figure>
 
 <p>ACTION：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ACCEPT （接受）</span><br><span class="line">DROP （丢弃）</span><br><span class="line">REJECT （拒绝） </span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ACCEPT （接受）</span><br><span class="line">DROP （丢弃）</span><br><span class="line">REJECT （拒绝） </span><br></pre></td></tr></table></figure>
 
 <p>eg：iptables -A INPUT -p tcp –dport 80 -j ACCEPT （接受来自80端口tcp协议的数据）</p>
 <p>添加完之后，命令会马上生效。但需要注意，如果重启，这些命令都会丢失。所以，需要保存到配置文件中,执行 <font color=#0000ff >service iptables save</font></p>
 <h3 id="配置文件方式"><a href="#配置文件方式" class="headerlink" title="配置文件方式"></a>配置文件方式</h3><p>如果通过yum安装的iptables，它的配置文件在 <font color=#0000ff >/etc/sysconfig/iptables</font>。<br>修改完文件，直接执行 <font color=#0000ff >service iptables reload</font></p>
 <h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p><strong><font color=#ff0000 size=4 >如果ssh连接linux，需要注意 执行了 iptables INPUT -P DROP，会断开连接，建议在本机配置，或者通过配置文件配置</font></strong></p>
 <p>附上一份简单的配置，默认拒绝所有请求、转发，允许所有输出；允许80、443端口的tcp请求，以及允许https的三次握手，将无法识别的连接丢弃掉</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">*filter</span><br><span class="line">:INPUT DROP [0:0]</span><br><span class="line">:FORWARD DROP [0:0]</span><br><span class="line">:OUTPUT ACCEPT [30:3148]</span><br><span class="line">-A INPUT -p tcp -m tcp --dport 80 -j ACCEPT</span><br><span class="line">-A INPUT -p tcp -m tcp --dport 443 -j ACCEPT</span><br><span class="line">-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT</span><br><span class="line">-A INPUT -m state --state INVALID -j DROP</span><br><span class="line">-A INPUT -p icmp -m icmp --icmp-type 0 -j ACCEPT</span><br><span class="line">COMMIT</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">*filter</span><br><span class="line">:INPUT DROP [0:0]</span><br><span class="line">:FORWARD DROP [0:0]</span><br><span class="line">:OUTPUT ACCEPT [30:3148]</span><br><span class="line">-A INPUT -p tcp -m tcp --dport 80 -j ACCEPT</span><br><span class="line">-A INPUT -p tcp -m tcp --dport 443 -j ACCEPT</span><br><span class="line">-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT</span><br><span class="line">-A INPUT -m state --state INVALID -j DROP</span><br><span class="line">-A INPUT -p icmp -m icmp --icmp-type 0 -j ACCEPT</span><br><span class="line">COMMIT</span><br></pre></td></tr></table></figure>
 
       
     </div>
@@ -493,20 +837,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">2</span>
+          <span class="site-state-item-count">5</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">6</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-count">10</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -541,6 +885,26 @@
 </div>
 
         
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
 
 
 
