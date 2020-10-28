@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/logo32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/logo16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"tim-jt.gitee.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="近期公司提倡使用 webflux 进行响应式编程，在开发了一个功能模块期间，遇到了很多问题。更加痛苦的是，国内关于 webflux 的问答或者教程还是太基础，没有实战内容，特此记录下期间遇到的问题和解决方案。  项目技术栈 MonoDB 4.2.6 搭建的复制集（mongo 4.x 后支持多文档事务） Spring boot 2.3.3.RELEASE spring-boot-starter-w">
+<meta property="og:type" content="article">
+<meta property="og:title" content="webflux踩坑经历">
+<meta property="og:url" content="http://tim-jt.gitee.io/195629511/index.html">
+<meta property="og:site_name" content="Tim&#39;s blog">
+<meta property="og:description" content="近期公司提倡使用 webflux 进行响应式编程，在开发了一个功能模块期间，遇到了很多问题。更加痛苦的是，国内关于 webflux 的问答或者教程还是太基础，没有实战内容，特此记录下期间遇到的问题和解决方案。  项目技术栈 MonoDB 4.2.6 搭建的复制集（mongo 4.x 后支持多文档事务） Spring boot 2.3.3.RELEASE spring-boot-starter-w">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-10-27T02:48:58.000Z">
+<meta property="article:modified_time" content="2020-10-28T07:26:03.968Z">
+<meta property="article:author" content="Tim">
+<meta property="article:tag" content="spring">
+<meta property="article:tag" content="webflux">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://tim-jt.gitee.io/195629511/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>webflux踩坑经历 | Tim's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Tim's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Tim's blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://tim-jt.gitee.io/195629511/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Tim">
+      <meta itemprop="description" content="Tim's blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tim's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          webflux踩坑经历
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-10-27 10:48:58" itemprop="dateCreated datePublished" datetime="2020-10-27T10:48:58+08:00">2020-10-27</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-10-28 15:26:03" itemprop="dateModified" datetime="2020-10-28T15:26:03+08:00">2020-10-28</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/java/" itemprop="url" rel="index"><span itemprop="name">java</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/java/spring/" itemprop="url" rel="index"><span itemprop="name">spring</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/195629511/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/195629511/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>近期公司提倡使用 webflux 进行响应式编程，在开发了一个功能模块期间，遇到了很多问题。更加痛苦的是，国内关于 webflux 的问答或者教程还是太基础，没有实战内容，特此记录下期间遇到的问题和解决方案。</p>
+</blockquote>
+<h2 id="项目技术栈"><a href="#项目技术栈" class="headerlink" title="项目技术栈"></a>项目技术栈</h2><ul>
+<li>MonoDB 4.2.6 搭建的复制集（mongo 4.x 后支持多文档事务）</li>
+<li>Spring boot 2.3.3.RELEASE</li>
+<li>spring-boot-starter-webflux</li>
+<li>spring-boot-starter-data-mongodb-reactive</li>
+</ul>
+<h2 id="坑"><a href="#坑" class="headerlink" title="坑"></a>坑</h2><h3 id="事务问题"><a href="#事务问题" class="headerlink" title="事务问题"></a>事务问题</h3><p>在得知 mongdb 能支持多文档事务后，本身文档存储贴合我们自定义程度很高的业务，我们果断决定使用 mongdb 作为我们的首选数据库。</p>
+<ol>
+<li>引入 spring mongo 的事务管理器，关于 mongodb 的写入级别，可以参照业务需要灵活配置。</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> ReactiveMongoTransactionManager <span class="title">reactiveMongoTransactionManager</span><span class="params">(ReactiveMongoDatabaseFactory databaseFactory)</span> </span>&#123;</span><br><span class="line">    TransactionOptions transactionOptions = TransactionOptions.builder().writeConcern(WriteConcern.ACKNOWLEDGED).build();</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> ReactiveMongoTransactionManager(databaseFactory, transactionOptions);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>想要并行查询，如下代码，同时查询学生和学校信息</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Transactional</span></span><br><span class="line"><span class="keyword">public</span> Mono&lt;Tuple2&lt;Student, School&gt;&gt; test(String id, String schoolId) &#123;</span><br><span class="line">    <span class="keyword">return</span> Mono.zip(mongoTemplate.findById(id, Student.class),</span><br><span class="line">            mongoTemplate.findById(schoolId, School.class));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>结果提示事务无法查询到，导致 Subscription 已经终止</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">com.mongodb.MongoException: Subscription has already been terminated</span><br><span class="line">...</span><br><span class="line">Caused by: com.mongodb.MongoQueryException: Query failed with error code <span class="number">251</span> and error message <span class="string">&#x27;Given transaction number 1 does not match any in-progress transactions. The active transaction number is -1&#x27;</span> on server <span class="number">192.168</span>.<span class="number">104.117</span>:<span class="number">20001</span></span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>其原因就是事务的开启，不能从 Mono.zip 或者 Flux 这种并行的消息流打开，而是需要先通过单一的消息流打开，后面就会以该事务的 id 来保持数据库请求在一个事务中，最终提交事务或者回滚</li>
+</ol>
+<h3 id="异常和事务"><a href="#异常和事务" class="headerlink" title="异常和事务"></a>异常和事务</h3><p>业务中有一块逻辑是关于库存的变更：某种 sku 在库存中不存在的时候，新增库存记录；存在时，则去更新它的入库数量。此处通过数据库唯一键来保证库存中 sku 记录的唯一性。这样并行插入相同 sku 的库存记录应该会有一个事务抛出唯一键冲突异常，然后获取库存记录再进行更新。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">mongoTemplate.insert(stock)</span><br><span class="line">    .onErrorResume(error -&gt; &#123;</span><br><span class="line">        log.warn(<span class="string">&quot;新增库存失败，尝试更新：&quot;</span> + error.getMessage(), error);</span><br><span class="line">        <span class="keyword">return</span> getStock(stock)</span><br><span class="line">                .flatMap(nowStock -&gt; changeInNum(nowStock, stock.getInNum()));</span><br><span class="line">    &#125;);</span><br></pre></td></tr></table></figure>
+
+<p>但实际执行的时候，虽然 onErrorResume 会执行，但是此时事务已经回滚了，接下来的查询更新操作，都会抛出异常提示 transaction number does not match 异常。用下面的方式就不会因为 mongodb 插入异常导致事务回滚：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">mongoTemplate.inTransaction().execute(mongoOperations -&gt; &#123;</span><br><span class="line">    <span class="keyword">return</span> mongoOperations.insert(stock);</span><br><span class="line">&#125;).collectList()</span><br><span class="line">    .onErrorResume(error -&gt; &#123;</span><br><span class="line">        log.warn(<span class="string">&quot;新增库存失败，尝试更新：&quot;</span> + error.getMessage(), error);</span><br><span class="line">        <span class="keyword">return</span> getStock(stock)</span><br><span class="line">                .flatMap(nowStock -&gt; changeInNum(nowStock, stock.getInNum()));</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="分布式锁"><a href="#分布式锁" class="headerlink" title="分布式锁"></a>分布式锁</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">DistributedLock</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">default</span> Mono&lt;Boolean&gt; <span class="title">getLock</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> getLock(key, Duration.of(<span class="number">5</span>, ChronoUnit.MINUTES), <span class="number">60</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function">Mono&lt;Boolean&gt; <span class="title">getLock</span><span class="params">(String key, Duration expire, <span class="keyword">int</span> retryNum)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function">Mono&lt;Boolean&gt; <span class="title">deleteLock</span><span class="params">(String key)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">default</span> &lt;T&gt; <span class="function">Mono&lt;T&gt; <span class="title">lock</span><span class="params">(String key, Supplier&lt;Mono&lt;T&gt;&gt; supplier)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> lock(key, Duration.of(<span class="number">5</span>, ChronoUnit.MINUTES), <span class="number">60</span>, supplier);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &lt;T&gt; <span class="function">Mono&lt;T&gt; <span class="title">lock</span><span class="params">(String key, Duration expire, <span class="keyword">int</span> retryNum, Supplier&lt;Mono&lt;T&gt;&gt; supplier)</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RedisDistributedLock</span> <span class="keyword">implements</span> <span class="title">DistributedLock</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String CAN_T_LOCK = <span class="string">&quot;can&#x27;t lock&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> ReactiveStringRedisTemplate reactiveStringRedisTemplate;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Mono&lt;Boolean&gt; <span class="title">getLock</span><span class="params">(String key, Duration expire, <span class="keyword">int</span> retryNum)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> reactiveStringRedisTemplate.opsForValue()</span><br><span class="line">                .setIfAbsent(key, key, expire).flatMap(flag -&gt; &#123;</span><br><span class="line">                    <span class="keyword">if</span> (flag) &#123;</span><br><span class="line">                        <span class="keyword">return</span> Mono.just(<span class="keyword">true</span>);</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        <span class="keyword">if</span> (retryNum &lt; <span class="number">1</span>) &#123;</span><br><span class="line">                            <span class="keyword">return</span> Mono.just(<span class="keyword">false</span>);</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">return</span> Mono.delay(Duration.of(<span class="number">1</span>, ChronoUnit.SECONDS)).flatMap(l -&gt; getLock(key, expire, retryNum - <span class="number">1</span>));</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Mono&lt;Boolean&gt; <span class="title">deleteLock</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> reactiveStringRedisTemplate.delete(key).map(l -&gt; l &gt; <span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> &lt;T&gt; <span class="function">Mono&lt;T&gt; <span class="title">lock</span><span class="params">(String key, Duration expire, <span class="keyword">int</span> retryNum, Supplier&lt;Mono&lt;T&gt;&gt; supplier)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> getLock(key, expire, retryNum).flatMap(flag -&gt; &#123;</span><br><span class="line">            <span class="keyword">if</span> (!flag) &#123;</span><br><span class="line">                <span class="keyword">return</span> Mono.error(<span class="keyword">new</span> BusinessException(<span class="keyword">new</span> ErrorInfo(CAN_T_LOCK, <span class="string">&quot;系统繁忙，稍后再试&quot;</span>)));</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">return</span> supplier.get().doFinally(signalType -&gt; &#123;</span><br><span class="line">                    deleteLock(key).subscribe();</span><br><span class="line">                &#125;);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/spring/" rel="tag"># spring</a>
+              <a href="/tags/webflux/" rel="tag"># webflux</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/429807150/" rel="prev" title="Mybatis拦截器解析">
+      <i class="fa fa-chevron-left"></i> Mybatis拦截器解析
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%A1%B9%E7%9B%AE%E6%8A%80%E6%9C%AF%E6%A0%88"><span class="nav-number">1.</span> <span class="nav-text">项目技术栈</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9D%91"><span class="nav-number">2.</span> <span class="nav-text">坑</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8B%E5%8A%A1%E9%97%AE%E9%A2%98"><span class="nav-number">2.1.</span> <span class="nav-text">事务问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%82%E5%B8%B8%E5%92%8C%E4%BA%8B%E5%8A%A1"><span class="nav-number">2.2.</span> <span class="nav-text">异常和事务</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81"><span class="nav-number">2.3.</span> <span class="nav-text">分布式锁</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Tim</p>
+  <div class="site-description" itemprop="description">Tim's blog</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Tim</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'inYiRO8f0iuTOL6ju8PGdoMk-gzGzoHsz',
+      appKey     : '0pQQNirIMrTRy6iq0OoRtqps',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>
