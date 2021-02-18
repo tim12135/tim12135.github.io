@@ -195,7 +195,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-02-02 11:17:25" itemprop="dateModified" datetime="2021-02-02T11:17:25+08:00">2021-02-02</time>
+                <time title="修改时间：2021-02-18 16:17:48" itemprop="dateModified" datetime="2021-02-18T16:17:48+08:00">2021-02-18</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -238,10 +238,10 @@
 <li>电商平台配置商品属性，不同种类的商品属性不同</li>
 <li>工作流程中，不同场景下相同业务的表单有不同的表单填写项</li>
 </ol>
-<h2 id="方案"><a href="#方案" class="headerlink" title="方案"></a>方案</h2><p>通常使用如下方法来实现数据扩展：<strong>预留字段、扩展字段行存储、使用文档型数据库存储</strong>。不管使用哪种方法，核心还是对扩展属性的描述以及扩展属性值的存储</p>
+<h2 id="方案"><a href="#方案" class="headerlink" title="方案"></a>方案</h2><p>通常使用如下方法来实现数据扩展：<strong>预留字段、扩展字段行存储、使用文档型数据库存储</strong>。不管使用哪种方法，核心还是对<strong>扩展属性的描述</strong>以及<strong>扩展属性值的存储</strong></p>
 <h3 id="扩展属性的描述"><a href="#扩展属性的描述" class="headerlink" title="扩展属性的描述"></a>扩展属性的描述</h3><p>类似数据库描述表的某一列，它的列名、类型、注释、是否主键、外键信息、默认值等等。我们描述扩展属性也需要按照业务场景去约束规范属性的维度。如：扩展属性唯一标识、显示名称、显示的 ui 类型、填写值的长度、值格式、是否必填、是否允许修改必填属性等等</p>
 <p>有扩展属性，自然有对应的扩展表，扩展属性归属于哪张扩展表，这样才能将不同业务抽象出来。扩展表也类似数据库描述表信息一样。如：扩展表唯一标识、显示名称、实际数据库表名、所属租户等等</p>
-<h3 id="方案-1：预留字段"><a href="#方案-1：预留字段" class="headerlink" title="方案 1：预留字段"></a>方案 1：预留字段</h3><p>业务中的往往都会有一些公共属性和基于租户等维度的自定义属性，公共属性产生的数据我们用固定表存储，而自定义属性产生的数据我们用扩展表存储。</p>
+<h3 id="扩展属性的存储"><a href="#扩展属性的存储" class="headerlink" title="扩展属性的存储"></a>扩展属性的存储</h3><h4 id="方案-1：预留字段"><a href="#方案-1：预留字段" class="headerlink" title="方案 1：预留字段"></a>方案 1：预留字段</h4><p>业务中的往往都会有一些公共属性和基于租户等维度的自定义属性，公共属性产生的数据我们用固定表存储，而自定义属性产生的数据我们用扩展表存储。</p>
 <p>通过在数据库中新建一张 ExtData 的扩展表，存储自定义属性的值，表字段：id,table_id,biz_id,tenant_id,create_time,update_time,version,create_by,update_by,value_1,value_2,value_3,…,value_190，扩展属性的值存储在 value_1 至 value_190 列中。</p>
 <p>在自定义属性的定义描述中需要增加 column_index ，用于映射 ExtData 中的 value 列，以此来关联自定义属性的定义描述和自定义属性的值。</p>
 <blockquote>
@@ -252,9 +252,97 @@
 <p>可以优化的点：</p>
 <ol>
 <li>扩展表定义需要频繁获取，但不会经常更新，可以放入缓存中</li>
-<li>经常用于查询的字段，劲量提炼到固定表中作为公共字段，并且建立索引</li>
+<li>读取扩展表定义和新增、查询、更新可以封装起来，提供简单接口给上层使用</li>
+<li>自定义字段如果要关联查询，并且数据量大的话，可以再建立一张索引表，实现索引逻辑</li>
 </ol>
 </blockquote>
+<h4 id="方案-2：扩展字段行存储（不推荐）"><a href="#方案-2：扩展字段行存储（不推荐）" class="headerlink" title="方案 2：扩展字段行存储（不推荐）"></a>方案 2：扩展字段行存储（不推荐）</h4><p>扩展字段行存储，其实就是 EAV（Entity-Attribute-value）模型，表字段：uid, key, value。</p>
+<p>eg.</p>
+<table>
+<thead>
+<tr>
+<th>uid</th>
+<th>key</th>
+<th>value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>name</td>
+<td>jt</td>
+</tr>
+<tr>
+<td>1</td>
+<td>sex</td>
+<td>f</td>
+</tr>
+<tr>
+<td>1</td>
+<td>age</td>
+<td>20</td>
+</tr>
+<tr>
+<td>2</td>
+<td>name</td>
+<td>hjp</td>
+</tr>
+<tr>
+<td>2</td>
+<td>sex</td>
+<td>f</td>
+</tr>
+<tr>
+<td>2</td>
+<td>age</td>
+<td>27</td>
+</tr>
+<tr>
+<td>2</td>
+<td>remark</td>
+<td>d</td>
+</tr>
+<tr>
+<td>3</td>
+<td>name</td>
+<td>sf</td>
+</tr>
+<tr>
+<td>3</td>
+<td>sex</td>
+<td>m</td>
+</tr>
+<tr>
+<td>3</td>
+<td>age</td>
+<td>30</td>
+</tr>
+</tbody></table>
+<p>查询 sex=f and age&lt;30 and age&gt;25 的用户信息</p>
+<p>select * from t where uid in (select uid from t where uid in (select uid from t where key=’sex’ and value= ‘f’) and key=’age’ and value&lt;30 and value&gt;25)</p>
+<p>如此看来，其缺点很明显：</p>
+<ol>
+<li>uid，key 存在大量冗余，数据量存储巨大</li>
+<li>复杂的数据查询很难通过 sql 语句实现，且无法联表查询、分页查询</li>
+</ol>
+<p>这种方案很难适应数据量大，需要复杂查询的场景，如果通过分库分表去解决数据量大的问题，也会对日后的运维和二次开发扩展造成巨大影响，不推荐</p>
+<h4 id="方案-3：-使用文档型数据库存储（推荐）"><a href="#方案-3：-使用文档型数据库存储（推荐）" class="headerlink" title="方案 3： 使用文档型数据库存储（推荐）"></a>方案 3： 使用文档型数据库存储（推荐）</h4><p>其实扩展字段存储，使用 json 格式是最灵活、简洁的，而文档型数据库最为契合这种数据格式的存储，这里将主要基于 MongoDB 数据库进行讨论。</p>
+<p>在 mongodb 4.x 以前，不支持多 document 的事务，只是对数据集分片的一致性做了处理，而 4.x 之后，对多 document 事务进行了支持，理论上可以满足我们业务系统的需求</p>
+<p>eg.</p>
+<p>将方案 2 中的数据转存到 mongo 中，体现出来的 document 如下:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;_id:1,name:&#39;jt&#39;,sex:&#39;f&#39;,age:20&#125;</span><br><span class="line">&#123;_id:2,name:&#39;hjp&#39;,sex:&#39;f&#39;,age:27,remark:&#39;d&#39;&#125;</span><br><span class="line">&#123;_id:3,name:&#39;sf&#39;,sex:&#39;m&#39;,age:30&#125;</span><br></pre></td></tr></table></figure>
+
+<p>不仅数据冗余降低了，而且可以基于扩展 key 建立索引（基于 name、sex、age、remark 都可以建立索引）。</p>
+<p>优点：</p>
+<ol>
+<li>相比较方案 1 和 2，实现起来更加简单</li>
+</ol>
+<p>难点：</p>
+<ol>
+<li>数据结构设计的时候，需要考虑是否使用对象属性，去冗余一些不常变化或者经常使用的数据</li>
+<li>mongodb 联表查询复杂，尽量避免联表查询，这个又回到了难点 1</li>
+<li>在我使用的 mongodb 4.2 版本中，并行事务对于同一条 document 进行 update 某个字段自增的时候，出现了一个事务成功，其他事务抛出写入冲突异常，这个对于高并发的库存扣减等，需要业务端对异常进行捕获，然后重试写入，当前 spring-boot-starter-data-mongdb 2.4 版本暂时没有支持（暂未发现有适合的 api），网上描述修改 mongodb 配置项 maxTransactionLockRequestTimeoutMillis 并没有生效</li>
+</ol>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>扩展方案中，最理想和简单的还是方案 3，但需要解决并行事务问题的写入冲突。而方案 1，是当前最稳定、最成熟的方案，在我司的项目中就是基于方案 1 的实现。方案 2，对于单纯写入、简单查询的场景较为适用，但复杂场景下不建议使用</p>
 
       
     </div>
