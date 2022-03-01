@@ -164,6 +164,125 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://tim-jt.gitee.io/144532265/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Tim">
+      <meta itemprop="description" content="Tim's blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tim's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/144532265/" class="post-title-link" itemprop="url">RestTemplate单例模式下的请求超时配置</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-03-01 15:18:19 / 修改时间：15:37:26" itemprop="dateCreated datePublished" datetime="2022-03-01T15:18:19+08:00">2022-03-01</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/java/" itemprop="url" rel="index"><span itemprop="name">java</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/java/spring/" itemprop="url" rel="index"><span itemprop="name">spring</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/144532265/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/144532265/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <ol start="0">
+<li>比较常见的 RestTemplate 使用方式就是如下，结合 LoadBalanced 注解，生成单例 bean，但这不能满足我们针对每次请求设置超时时间</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="meta">@LoadBalanced</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> RestTemplate <span class="title">restTemplate</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> RestTemplate();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>RestTemplate 所有的请求，最终都是通过<code>org.springframework.web.client.RestTemplate.doExecute</code>执行</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> &lt;T&gt; <span class="function">T <span class="title">doExecute</span><span class="params">(URI url, HttpMethod method, RequestCallback requestCallback,</span></span></span><br><span class="line"><span class="function"><span class="params">        ResponseExtractor&lt;T&gt; responseExtractor)</span> <span class="keyword">throws</span> RestClientException </span>&#123;</span><br><span class="line"></span><br><span class="line">    Assert.notNull(url, <span class="string">&quot;&#x27;url&#x27; must not be null&quot;</span>);</span><br><span class="line">    Assert.notNull(method, <span class="string">&quot;&#x27;method&#x27; must not be null&quot;</span>);</span><br><span class="line">    ClientHttpResponse response = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        ClientHttpRequest request = createRequest(url, method);</span><br><span class="line">        <span class="keyword">if</span> (requestCallback != <span class="keyword">null</span>) &#123;</span><br><span class="line">            requestCallback.doWithRequest(request);</span><br><span class="line">        &#125;</span><br><span class="line">        response = request.execute();</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">        ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>如果指定 ClientHttpRequestFactory 为 HttpComponentsClientHttpRequestFactory，则 Http 的客户端配置都在<code>org.springframework.http.client.HttpComponentsClientHttpRequestFactory.createRequest</code>完成</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> ClientHttpRequest <span class="title">createRequest</span><span class="params">(URI uri, HttpMethod httpMethod)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    HttpUriRequest httpRequest = createHttpUriRequest(httpMethod, uri);</span><br><span class="line">    postProcessHttpRequest(httpRequest);</span><br><span class="line">    HttpContext context = createHttpContext(httpMethod, uri);</span><br><span class="line">    <span class="keyword">if</span> (context == <span class="keyword">null</span>) &#123;</span><br><span class="line">        context = HttpClientContext.create();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Request configuration not set in the context</span></span><br><span class="line">    <span class="keyword">if</span> (context.getAttribute(HttpClientContext.REQUEST_CONFIG) == <span class="keyword">null</span>) &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.bufferRequestBody) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> HttpComponentsClientHttpRequest(getHttpClient(), httpRequest, context);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> HttpComponentsStreamingClientHttpRequest(getHttpClient(), httpRequest, context);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>可以看到<code>org.springframework.http.client.HttpComponentsClientHttpRequestFactory.createHttpContext</code>创建了上下文，但是<code>HttpComponentsClientHttpRequestFactory</code>没有具体实现该方法</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Template methods that creates a &#123;<span class="doctag">@link</span> HttpContext&#125; for the given HTTP method and URI.</span></span><br><span class="line"><span class="comment"> * &lt;p&gt;The default implementation returns &#123;<span class="doctag">@code</span> null&#125;.</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> httpMethod the HTTP method</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> uri the URI</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> the http context</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> HttpContext <span class="title">createHttpContext</span><span class="params">(HttpMethod httpMethod, URI uri)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>因此继承改类，通过 ThreadLocal 来设置每个请求的超时配置，并重写<code>createHttpContext</code>方法，在 HttpContext 中引入 ThreadLocal 中的超时配置</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DynamicTimeoutHttpRequestFactory</span> <span class="keyword">extends</span> <span class="title">HttpComponentsClientHttpRequestFactory</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> ThreadLocal&lt;DynamicTimeoutHttpRequestFactory.CustomTimeout&gt; customTimeoutThreadLocal = <span class="keyword">new</span> ThreadLocal();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">DynamicTimeoutHttpRequestFactory</span><span class="params">(HttpClient httpClient)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(httpClient);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> HttpContext <span class="title">createHttpContext</span><span class="params">(HttpMethod httpMethod, URI uri)</span> </span>&#123;</span><br><span class="line">        HttpContext context = HttpClientContext.create();</span><br><span class="line">        RequestConfig requestConfig = <span class="keyword">this</span>.createRequestConfig(<span class="keyword">this</span>.getHttpClient());</span><br><span class="line">        DynamicTimeoutHttpRequestFactory.CustomTimeout customTimeout = (DynamicTimeoutHttpRequestFactory.CustomTimeout)customTimeoutThreadLocal.get();</span><br><span class="line">        <span class="keyword">if</span> (customTimeout != <span class="keyword">null</span>) &#123;</span><br><span class="line">            Builder copy = RequestConfig.copy(requestConfig);</span><br><span class="line">            <span class="keyword">if</span> (customTimeout.getConnectTimeout() &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">                copy.setConnectTimeout(customTimeout.getConnectTimeout());</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (customTimeout.getReadTimeout() &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">                copy.setSocketTimeout(customTimeout.getReadTimeout());</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            requestConfig = copy.build();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        context.setAttribute(<span class="string">&quot;http.request-config&quot;</span>, requestConfig);</span><br><span class="line">        <span class="keyword">return</span> context;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">customTimeout</span><span class="params">(<span class="keyword">int</span> connectTimeout, <span class="keyword">int</span> readTimeout)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (connectTimeout &gt;= <span class="number">0</span> || readTimeout &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">            DynamicTimeoutHttpRequestFactory.CustomTimeout customTimeout = <span class="keyword">new</span> DynamicTimeoutHttpRequestFactory.CustomTimeout(connectTimeout, readTimeout);</span><br><span class="line">            customTimeoutThreadLocal.set(customTimeout);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">removeCustomTimeout</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        customTimeoutThreadLocal.remove();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">CustomTimeout</span> </span>&#123;</span><br><span class="line">        <span class="keyword">private</span> Integer connectTimeout;</span><br><span class="line">        <span class="keyword">private</span> Integer readTimeout;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="title">CustomTimeout</span><span class="params">(Integer connectTimeout, Integer readTimeout)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">this</span>.connectTimeout = connectTimeout;</span><br><span class="line">            <span class="keyword">this</span>.readTimeout = readTimeout;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> Integer <span class="title">getConnectTimeout</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">this</span>.connectTimeout;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setConnectTimeout</span><span class="params">(Integer connectTimeout)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">this</span>.connectTimeout = connectTimeout;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> Integer <span class="title">getReadTimeout</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">this</span>.readTimeout;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setReadTimeout</span><span class="params">(Integer readTimeout)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">this</span>.readTimeout = readTimeout;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="5">
+<li>启动类上增加</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="meta">@LoadBalanced</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> RestTemplate <span class="title">restTemplate</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    HttpClientBuilder httpClientBuilder = HttpClients.custom();</span><br><span class="line">    Integer poolSize = Runtime.getRuntime().availableProcessors() * <span class="number">2</span> - <span class="number">1</span>;</span><br><span class="line">    poolSize = poolSize &lt; <span class="number">4</span> ? <span class="number">4</span> : poolSize;</span><br><span class="line">    httpClientBuilder.setMaxConnTotal(poolSize * <span class="number">10</span>);</span><br><span class="line">    httpClientBuilder.setMaxConnPerRoute(poolSize);</span><br><span class="line">    httpClientBuilder.disableCookieManagement();</span><br><span class="line">    httpClientBuilder.disableAuthCaching();</span><br><span class="line">    httpClientBuilder.setConnectionTimeToLive(<span class="number">60</span>, TimeUnit.SECONDS);</span><br><span class="line"></span><br><span class="line">    RequestConfig.Builder builder = RequestConfig.custom();</span><br><span class="line">    httpClientBuilder.setDefaultRequestConfig(builder.build());</span><br><span class="line">    httpClientBuilder.setKeepAliveStrategy(DefaultConnectionKeepAliveStrategy.INSTANCE);</span><br><span class="line">    HttpClient httpClient = httpClientBuilder.build();</span><br><span class="line">    ClientHttpRequestFactory httpRequestFactory = <span class="keyword">new</span> DynamicTimeoutHttpRequestFactory(httpClient);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> RestTemplate(httpRequestFactory);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="6">
+<li>请求</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Autowired</span></span><br><span class="line"><span class="keyword">private</span> RestTemplate restTemplate;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test</span><span class="params">()</span></span>&#123;</span><br><span class="line">    DynamicTimeoutHttpRequestFactory.customTimeout(<span class="number">1000</span>,<span class="number">10000</span>);</span><br><span class="line">    User user = restTemplate.getForObject(<span class="string">&quot;http://user-service/get/1&quot;</span>,User.class);</span><br><span class="line">    DynamicTimeoutHttpRequestFactory.removeCustomTimeout();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://tim-jt.gitee.io/439186839/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -653,7 +772,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-09-10 16:03:17" itemprop="dateModified" datetime="2020-09-10T16:03:17+08:00">2020-09-10</time>
+                <time title="修改时间：2022-03-01 15:26:52" itemprop="dateModified" datetime="2022-03-01T15:26:52+08:00">2022-03-01</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -692,26 +811,30 @@
       
           <h2 id="一主一从"><a href="#一主一从" class="headerlink" title="一主一从"></a>一主一从</h2><h3 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h3><p>主库/w1/mysql.cnf</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line">log-bin=mysql-bin #开启二进制日志</span><br><span class="line">server-id=1 #设置server-id</span><br><span class="line">binlog-ignore-db=mysql #忽略mysql数据库的同步，像系统库都可以忽略</span><br><span class="line">binlog-ignore-db=information_schema</span><br><span class="line"><span class="meta">#</span><span class="bash">binlog-do-db=需要复制的主数据库名字</span></span><br><span class="line">binlog_format=STATEMENT #STATEMENT sql复制；ROW 行变化复制；MIXED 混合模式，但是@@hostname 无法解决</span><br></pre></td></tr></table></figure>
+
 <p>从库/r1/mysql.cnf</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line">server-id=2 #设置server-id，必须唯一</span><br><span class="line"><span class="meta">#</span><span class="bash">relay-log=mysql-relay 启用中继日志</span></span><br></pre></td></tr></table></figure>
+
 <h3 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">创建docker网络</span></span><br><span class="line">docker network create --subnet=172.20.0.0/16 --gateway=172.20.0.1 mynet ;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash">启动主mysql</span></span><br><span class="line">docker run -itd -p 13306:3306 -h mysqlw1 --name mysqlw1 --volume &quot;$PWD/w1&quot;:/etc/mysql/conf.d -e MYSQL_ROOT_PASSWORD=123456 --network mynet --ip 172.20.0.2 mysql:5.7;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash">启动从mysql</span></span><br><span class="line">docker run -itd -p 13307:3306 -h mysqlr1 --name mysqlr1 --volume &quot;$PWD/r1&quot;:/etc/mysql/conf.d -e MYSQL_ROOT_PASSWORD=123456 --network mynet --ip 172.20.0.3 mysql:5.7;</span><br></pre></td></tr></table></figure>
+
 <h4 id="主"><a href="#主" class="headerlink" title="主"></a>主</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">创建同步的用户</span></span><br><span class="line">GRANT REPLICATION SLAVE ON *.* TO &#x27;repl&#x27;@&#x27;%&#x27; IDENTIFIED BY &#x27;123456&#x27;;</span><br><span class="line">flush privileges;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash">获取bin日志文件和日志的position</span></span><br><span class="line">SHOW MASTER STATUS;</span><br></pre></td></tr></table></figure>
+
 <h4 id="从"><a href="#从" class="headerlink" title="从"></a>从</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 配置，需要根据master status的信息修改log_file和log_pos的值</span></span><br><span class="line">CHANGE MASTER TO MASTER_HOST=&#x27;172.20.0.2&#x27;, MASTER_USER=&#x27;repl&#x27;, MASTER_PASSWORD=&#x27;123456&#x27;, MASTER_LOG_FILE=&#x27;mysql-bin.000003&#x27;, MASTER_LOG_POS=759;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 开启从服务</span></span><br><span class="line">start slave;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 查看从服务的状态</span></span><br><span class="line">show slave status\G;</span><br></pre></td></tr></table></figure>
 
 <h2 id="双主双从"><a href="#双主双从" class="headerlink" title="双主双从"></a>双主双从</h2><h3 id="准备-1"><a href="#准备-1" class="headerlink" title="准备"></a>准备</h3><p>主库/w1/mysql.cnf</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line"><span class="meta">#</span><span class="bash">开启二进制日志</span></span><br><span class="line">log-bin=mysql-bin </span><br><span class="line"><span class="meta">#</span><span class="bash">设置server-id</span></span><br><span class="line">server-id=1</span><br><span class="line"><span class="meta">#</span><span class="bash">忽略mysql数据库的同步，像系统库都可以忽略</span></span><br><span class="line">binlog-ignore-db=mysql </span><br><span class="line">binlog-ignore-db=information_schema</span><br><span class="line"><span class="meta">#</span><span class="bash">binlog-do-db=需要复制的主数据库名字</span></span><br><span class="line"><span class="meta">#</span><span class="bash">STATEMENT sql复制；ROW 行变化复制；MIXED 混合模式，但是@@hostname 无法解决</span></span><br><span class="line">binlog_format=STATEMENT </span><br><span class="line"><span class="meta">#</span><span class="bash"> 在作为从库的时候，有写入操作也要更新二进制日志的文件</span></span><br><span class="line">log-slave-updates</span><br><span class="line"><span class="meta">#</span><span class="bash"> 自增长步长</span></span><br><span class="line">auto-increment-increment=2</span><br><span class="line"><span class="meta">#</span><span class="bash"> 自增长起始值</span></span><br><span class="line">auto-increment-offset=1</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line"><span class="meta">#</span><span class="bash">开启二进制日志</span></span><br><span class="line">log-bin=mysql-bin</span><br><span class="line"><span class="meta">#</span><span class="bash">设置server-id</span></span><br><span class="line">server-id=1</span><br><span class="line"><span class="meta">#</span><span class="bash">忽略mysql数据库的同步，像系统库都可以忽略</span></span><br><span class="line">binlog-ignore-db=mysql</span><br><span class="line">binlog-ignore-db=information_schema</span><br><span class="line"><span class="meta">#</span><span class="bash">binlog-do-db=需要复制的主数据库名字</span></span><br><span class="line"><span class="meta">#</span><span class="bash">STATEMENT sql复制；ROW 行变化复制；MIXED 混合模式，但是@@hostname 无法解决</span></span><br><span class="line">binlog_format=STATEMENT</span><br><span class="line"><span class="meta">#</span><span class="bash"> 在作为从库的时候，有写入操作也要更新二进制日志的文件</span></span><br><span class="line">log-slave-updates</span><br><span class="line"><span class="meta">#</span><span class="bash"> 自增长步长</span></span><br><span class="line">auto-increment-increment=2</span><br><span class="line"><span class="meta">#</span><span class="bash"> 自增长起始值</span></span><br><span class="line">auto-increment-offset=1</span><br></pre></td></tr></table></figure>
 
-<p>主库2/w2/mysql.cnf</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line">log-bin=mysql-bin</span><br><span class="line">server-id=3</span><br><span class="line">binlog-ignore-db=mysql </span><br><span class="line">binlog-ignore-db=information_schema</span><br><span class="line"><span class="meta">#</span><span class="bash">binlog-do-db=需要复制的主数据库名字</span></span><br><span class="line">binlog_format=STATEMENT</span><br><span class="line">log-slave-updates</span><br><span class="line">auto-increment-increment=2</span><br><span class="line">auto-increment-offset=2</span><br></pre></td></tr></table></figure>
+<p>主库 2/w2/mysql.cnf</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line">log-bin=mysql-bin</span><br><span class="line">server-id=3</span><br><span class="line">binlog-ignore-db=mysql</span><br><span class="line">binlog-ignore-db=information_schema</span><br><span class="line"><span class="meta">#</span><span class="bash">binlog-do-db=需要复制的主数据库名字</span></span><br><span class="line">binlog_format=STATEMENT</span><br><span class="line">log-slave-updates</span><br><span class="line">auto-increment-increment=2</span><br><span class="line">auto-increment-offset=2</span><br></pre></td></tr></table></figure>
 
 <p>从库/r1/mysql.cnf</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line"><span class="meta">#</span><span class="bash">设置server-id，必须唯一</span></span><br><span class="line">server-id=2</span><br><span class="line"><span class="meta">#</span><span class="bash">启用中继日志</span></span><br><span class="line">relay-log=mysql-relay</span><br></pre></td></tr></table></figure>
 
-<p>从库2/r2/mysql.cnf</p>
+<p>从库 2/r2/mysql.cnf</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line">server-id=4</span><br><span class="line">relay-log=mysql-relay</span><br></pre></td></tr></table></figure>
 
 <h3 id="启动后"><a href="#启动后" class="headerlink" title="启动后"></a>启动后</h3><ol>
-<li>启动4个mysql服务后，两台主机需要创建两个备份权限的帐号，命令参照一主一从</li>
+<li>启动 4 个 mysql 服务后，两台主机需要创建两个备份权限的帐号，命令参照一主一从</li>
 <li>然后按照一主一从的模式，分别配置好两套主从服务，s1-&gt;m1，s2-&gt;m2</li>
 <li>两个主机也需要相互配置对方主机的信息，m1-&gt;m2，m2-&gt;m1</li>
 <li>都开启 start slave;并查看 show slave status;</li>
@@ -766,7 +889,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-09-10 15:39:04" itemprop="dateModified" datetime="2020-09-10T15:39:04+08:00">2020-09-10</time>
+                <time title="修改时间：2022-03-01 15:26:54" itemprop="dateModified" datetime="2022-03-01T15:26:54+08:00">2022-03-01</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -774,7 +897,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index"><span itemprop="name">网络</span></a>
+                  <a href="/categories/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE/" itemprop="url" rel="index"><span itemprop="name">网络协议</span></a>
                 </span>
             </span>
 
@@ -804,15 +927,15 @@
 
       
           <blockquote>
-<p>之前很长一段时间，一直以为sftp是ftp加了安全协议，是ftp升级版本，直到最近有个需求，才发现ftp和sftp完全不一样</p>
+<p>之前很长一段时间，一直以为 sftp 是 ftp 加了安全协议，是 ftp 升级版本，直到最近有个需求，才发现 ftp 和 sftp 完全不一样</p>
 </blockquote>
 <h3 id="ftp"><a href="#ftp" class="headerlink" title="ftp"></a>ftp</h3><ul>
 <li>主动模式</li>
 </ul>
 <ol>
-<li>客户端通过命令通道告诉服务端，我要开启端口N作为数据通道端口</li>
+<li>客户端通过命令通道告诉服务端，我要开启端口 N 作为数据通道端口</li>
 <li>服务器告诉客户端收到了</li>
-<li>服务器通过20端口连接客户端端口N</li>
+<li>服务器通过 20 端口连接客户端端口 N</li>
 <li>客户端告诉服务器收到了</li>
 <li>传输数据</li>
 </ol>
@@ -823,15 +946,15 @@
 <li>被动模式</li>
 </ul>
 <ol>
-<li>客户端通过命令通道，发送命令PASV</li>
-<li>服务器返回客户端，我开通了数据端口N</li>
-<li>客户端初始化一个数据端口连接到服务器端口N</li>
-<li>服务器数据端口返回客户端数据端口一个ACK</li>
+<li>客户端通过命令通道，发送命令 PASV</li>
+<li>服务器返回客户端，我开通了数据端口 N</li>
+<li>客户端初始化一个数据端口连接到服务器端口 N</li>
+<li>服务器数据端口返回客户端数据端口一个 ACK</li>
 </ol>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">cmd 通道</span><br><span class="line">client-&gt;server PASV</span><br><span class="line">server-&gt;client PORT 2024</span><br><span class="line"></span><br><span class="line">data 通道</span><br><span class="line">client-&gt;server 连接</span><br><span class="line">server-&gt;client ACK</span><br></pre></td></tr></table></figure>
 
-<h3 id="ftps"><a href="#ftps" class="headerlink" title="ftps"></a>ftps</h3><p>为ftp增加SSL层加密</p>
-<h3 id="sftp"><a href="#sftp" class="headerlink" title="sftp"></a>sftp</h3><p>sftp始终只有一个通道，数据命令在一个通道内执行，效率比ftp低下</p>
+<h3 id="ftps"><a href="#ftps" class="headerlink" title="ftps"></a>ftps</h3><p>为 ftp 增加 SSL 层加密</p>
+<h3 id="sftp"><a href="#sftp" class="headerlink" title="sftp"></a>sftp</h3><p>sftp 始终只有一个通道，数据命令在一个通道内执行，效率比 ftp 低下</p>
 
       
     </div>
@@ -882,7 +1005,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-09-10 16:05:58" itemprop="dateModified" datetime="2020-09-10T16:05:58+08:00">2020-09-10</time>
+                <time title="修改时间：2022-03-01 15:19:42" itemprop="dateModified" datetime="2022-03-01T15:19:42+08:00">2022-03-01</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -924,19 +1047,23 @@
 
       
           <h3 id="实现一个过滤器"><a href="#实现一个过滤器" class="headerlink" title="实现一个过滤器"></a>实现一个过滤器</h3><ol>
-<li>实现javax.servlet.Filter接口</li>
+<li>实现 javax.servlet.Filter 接口</li>
 <li>在自定义的过滤器上，加上<code>@WebFilter</code> 注解，并在启动类上加上<code>@ServletComponentScan</code> 注解</li>
 </ol>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> test;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.servlet.*;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.annotation.WebFilter;</span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Author</span>: jiangtao</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span>: 2019/9/27 11:31</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>:</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@WebFilter(urlPatterns = &quot;/*&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestFilter</span> <span class="keyword">implements</span> <span class="title">Filter</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">(FilterConfig filterConfig)</span> <span class="keyword">throws</span> ServletException </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doFilter</span><span class="params">(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)</span> <span class="keyword">throws</span> IOException, ServletException </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            filterChain.doFilter(servletRequest, servletResponse);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;lalalala&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> test;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.SpringApplication;</span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.autoconfigure.SpringBootApplication;</span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.web.servlet.ServletComponentScan;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Author</span>: jiangtao</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span>: 2019/9/27 11:28</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>:</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@ServletComponentScan</span></span><br><span class="line"><span class="meta">@SpringBootApplication</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Starter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        SpringApplication.run(Starter.class);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
 <p>启动后，可以发现日志中打印出来过滤器的信息</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: <span class="string">&#x27;characterEncodingFilter&#x27;</span> to: [<span class="comment">/*]</span></span><br><span class="line"><span class="comment">2019-09-27 13:54:36.171  INFO 45468 --- [ost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: &#x27;hiddenHttpMethodFilter&#x27; to: [/*]</span></span><br><span class="line"><span class="comment">2019-09-27 13:54:36.171  INFO 45468 --- [ost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: &#x27;httpPutFormContentFilter&#x27; to: [/*]</span></span><br><span class="line"><span class="comment">2019-09-27 13:54:36.171  INFO 45468 --- [ost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: &#x27;requestContextFilter&#x27; to: [/*]</span></span><br><span class="line"><span class="comment">2019-09-27 13:54:36.171  INFO 45468 --- [ost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: &#x27;test.TestFilter&#x27; to urls: [/*]</span></span><br><span class="line"><span class="comment">2019-09-27 13:54:36.171  INFO 45468 --- [ost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: &#x27;test.TestFilter2&#x27; to urls: [/app/*]</span></span><br></pre></td></tr></table></figure>
 
 <h3 id="多个过滤器的执行顺序问题"><a href="#多个过滤器的执行顺序问题" class="headerlink" title="多个过滤器的执行顺序问题"></a>多个过滤器的执行顺序问题</h3><ol>
-<li>按照过滤器类的名称比较排序，名称排序值越小越早执行。<br>如 AFilter 早于 BFilter执行，晚于 BFilter结束。</li>
-<li>通过手动创建过滤器对象，并设置排序值<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">FilterRegistrationBean registration = <span class="keyword">new</span> FilterRegistrationBean(<span class="keyword">new</span> AFilter());</span><br><span class="line">registration.addUrlPatterns(<span class="string">&quot;/*&quot;</span>);</span><br><span class="line">registration.setOrder(Integer.MIN_VALUE);</span><br></pre></td></tr></table></figure>
-<font color=red>注解<code>@Order</code>对过滤器的顺序没有任何影响</font></li>
+<li>按照过滤器类的名称比较排序，名称排序值越小越早执行。<br>如 AFilter 早于 BFilter 执行，晚于 BFilter 结束。</li>
+<li>通过手动创建过滤器对象，并设置排序值</li>
 </ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">FilterRegistrationBean registration = <span class="keyword">new</span> FilterRegistrationBean(<span class="keyword">new</span> AFilter());</span><br><span class="line">registration.addUrlPatterns(<span class="string">&quot;/*&quot;</span>);</span><br><span class="line">registration.setOrder(Integer.MIN_VALUE);</span><br></pre></td></tr></table></figure>
+
+<p><font color=red>注解<code>@Order</code>对过滤器的顺序没有任何影响</font></p>
 
       
     </div>
@@ -987,7 +1114,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-09-10 16:06:13" itemprop="dateModified" datetime="2020-09-10T16:06:13+08:00">2020-09-10</time>
+                <time title="修改时间：2022-03-01 15:27:04" itemprop="dateModified" datetime="2022-03-01T15:27:04+08:00">2022-03-01</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1028,12 +1155,12 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h3 id="Mybatis缓存"><a href="#Mybatis缓存" class="headerlink" title="Mybatis缓存"></a>Mybatis缓存</h3><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/zbuger/article/details/51159694">参考来源：https://blog.csdn.net/zbuger/article/details/51159694</a></p>
-<p>mybatis缓存分成一级缓存和二级缓存</p>
+          <h3 id="Mybatis-缓存"><a href="#Mybatis-缓存" class="headerlink" title="Mybatis 缓存"></a>Mybatis 缓存</h3><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/zbuger/article/details/51159694">参考来源：https://blog.csdn.net/zbuger/article/details/51159694</a></p>
+<p>mybatis 缓存分成一级缓存和二级缓存</p>
 <p><b>一级缓存</b></p>
-<p>MyBatis的一级缓存指的是在一个session域内,session未关闭之前执行的查询会根据SQL为key来缓存(跟mysql缓存一样,修改任何参数的值都会导致缓存失效)</p>
+<p>MyBatis 的一级缓存指的是在一个 session 域内,session 未关闭之前执行的查询会根据 SQL 为 key 来缓存(跟 mysql 缓存一样,修改任何参数的值都会导致缓存失效)</p>
 <p><b>二级缓存</b></p>
-<p>二级缓存就是global caching,它超出session范围之外,可以被所有sqlSession共享,它的实现机制和mysql的缓存一样,开启它只需要在mybatis的配置文件开启settings里的cacheEnabled，需要注意的是global caching的作用域是针对Mapper的Namespace而言的，也就是说只在有在这个Namespace内的查询才能共享这个cache。</p>
+<p>二级缓存就是 global caching,它超出 session 范围之外,可以被所有 sqlSession 共享,它的实现机制和 mysql 的缓存一样,开启它只需要在 mybatis 的配置文件开启 settings 里的 cacheEnabled，需要注意的是 global caching 的作用域是针对 Mapper 的 Namespace 而言的，也就是说只在有在这个 Namespace 内的查询才能共享这个 cache。</p>
 <h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RunWith(SpringRunner.class)</span></span><br><span class="line"><span class="meta">@SpringBootTest</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MybatisCacheTest</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> CheckPlanDao checkPlanDao;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Transactional</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testCache</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        String id = <span class="string">&quot;076973b31f15491c9b1a85a66aa03c15&quot;</span>;</span><br><span class="line">        CheckReportPlanEntity t1 = checkPlanDao.selectById(id);</span><br><span class="line">        CheckReportPlanEntity t2 = checkPlanDao.selectById(t1.getId());</span><br><span class="line">        System.out.println(<span class="string">&quot;从一级缓存查询：&quot;</span> + (t1 == t2));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>1、执行结果</p>
@@ -1042,14 +1169,14 @@
 <p>2、将<code>@Transactional</code>去掉后，执行结果</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">从一级缓存查询：<span class="keyword">false</span></span><br></pre></td></tr></table></figure>
 
-<p>3、修改CheckPlanDao.xml，在select标签内，增加<code>flushCache=&quot;true&quot;</code></p>
+<p>3、修改 CheckPlanDao.xml，在 select 标签内，增加<code>flushCache=&quot;true&quot;</code></p>
 <figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;select id=<span class="string">&quot;selectById&quot;</span> resultType=<span class="string">&quot;CheckReportPlanEntity&quot;</span> flushCache=<span class="string">&quot;true&quot;</span>&gt;</span><br><span class="line">...</span><br><span class="line">&lt;/select&gt;</span><br></pre></td></tr></table></figure>
 
 <p>执行结果</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">从一级缓存查询：<span class="keyword">false</span></span><br></pre></td></tr></table></figure>
 
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>在编写代码的时候，一定要注意mybatis的一级缓存问题，在同一个事务内避免出现相同sql重复查询，且中间没有夹着更新、删除这些操作，此时第二次查询是命中了一级缓存，获取到的对象其实是第一次查询到的对象。</p>
-<p>MySQL在8中已经去掉了查询缓存模块，sql 层面的缓存几乎没有价值，而且容易误导开发人员，还是由业务驱动的缓存更有价值且方便维护</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>在编写代码的时候，一定要注意 mybatis 的一级缓存问题，在同一个事务内避免出现相同 sql 重复查询，且中间没有夹着更新、删除这些操作，此时第二次查询是命中了一级缓存，获取到的对象其实是第一次查询到的对象。</p>
+<p>MySQL 在 8 中已经去掉了查询缓存模块，sql 层面的缓存几乎没有价值，而且容易误导开发人员，还是由业务驱动的缓存更有价值且方便维护</p>
 
       
     </div>
@@ -1100,7 +1227,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-09-10 17:15:06" itemprop="dateModified" datetime="2020-09-10T17:15:06+08:00">2020-09-10</time>
+                <time title="修改时间：2022-03-01 15:26:41" itemprop="dateModified" datetime="2022-03-01T15:26:41+08:00">2022-03-01</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1141,19 +1268,20 @@
 <p>在实现分库分表的时候，需要全面考虑以下的问题：<br>1、持久化服务负载多台的情况下，确保分库分表键对应的目标库表一致；<br>2、根据分库分表键能均匀分配数据；<br>3、涉及到变更库表数量的时候产生的变动最小。</p>
 </blockquote>
 <hr>
-<h2 id="方案一：hash-分库键-库数-hash-分表键-表数"><a href="#方案一：hash-分库键-库数-hash-分表键-表数" class="headerlink" title="方案一：hash(分库键)%库数 + hash(分表键)%表数"></a><del>方案一：hash(分库键)%库数 + hash(分表键)%表数</del></h2><p>这是我最开始想到的方案，它能很快的解决问题1，问题2很难满足，但遇到问题3就需要将所有的数据重新导出再导入一遍，这个性能消耗让人无法接受。</p>
-<h2 id="方案二：一致性hash-分库键-一致性hash-分表键"><a href="#方案二：一致性hash-分库键-一致性hash-分表键" class="headerlink" title="方案二：一致性hash(分库键) + 一致性hash(分表键)"></a>方案二：一致性hash(分库键) + 一致性hash(分表键)</h2><p>由于方案一不能完全满足所有的问题，所以引入了一致性hash。</p>
-<p>分布式解决方案中，为了负载均衡，提供了很多不同场景使用的算法，其中有轮循、哈希、最少连接等，而最快速最常用的就是哈希算法。但根据N取模的hash算法，会随着N变化而产生覆灭式的颠簸，所以一致性哈希算法(Consistent Hashing Algorithm)由此产生，来解决这些问题。</p>
-<p>解决问题1：</p>
-<p>一致性hash算法的原理：</p>
-<p>将N固定为了2^32，即[0, 2^32-1]，将这些点按顺时针组成一个虚拟圆环，然后将服务器hash值模除2^32后，得到服务器在这虚拟圆环上的位置。同理，将数据的hash值也模除2^32后，得到圆环上的位置，并顺时针找到第一个对应的服务器节点，即该数据对应这个数据库节点。如此分布式情况下，只要用于hash的key一致，对应的服务器也一定是一致的。</p>
+<h2 id="方案一：hash-分库键-库数-hash-分表键-表数"><a href="#方案一：hash-分库键-库数-hash-分表键-表数" class="headerlink" title="方案一：hash(分库键)%库数 + hash(分表键)%表数"></a><del>方案一：hash(分库键)%库数 + hash(分表键)%表数</del></h2><p>这是我最开始想到的方案，它能很快的解决问题 1，问题 2 很难满足，但遇到问题 3 就需要将所有的数据重新导出再导入一遍，这个性能消耗让人无法接受。</p>
+<h2 id="方案二：一致性-hash-分库键-一致性-hash-分表键"><a href="#方案二：一致性-hash-分库键-一致性-hash-分表键" class="headerlink" title="方案二：一致性 hash(分库键) + 一致性 hash(分表键)"></a>方案二：一致性 hash(分库键) + 一致性 hash(分表键)</h2><p>由于方案一不能完全满足所有的问题，所以引入了一致性 hash。</p>
+<p>分布式解决方案中，为了负载均衡，提供了很多不同场景使用的算法，其中有轮循、哈希、最少连接等，而最快速最常用的就是哈希算法。但根据 N 取模的 hash 算法，会随着 N 变化而产生覆灭式的颠簸，所以一致性哈希算法(Consistent Hashing Algorithm)由此产生，来解决这些问题。</p>
+<p>解决问题 1：</p>
+<p>一致性 hash 算法的原理：</p>
+<p>将 N 固定为了 2^32，即[0, 2^32-1]，将这些点按顺时针组成一个虚拟圆环，然后将服务器 hash 值模除 2^32 后，得到服务器在这虚拟圆环上的位置。同理，将数据的 hash 值也模除 2^32 后，得到圆环上的位置，并顺时针找到第一个对应的服务器节点，即该数据对应这个数据库节点。如此分布式情况下，只要用于 hash 的 key 一致，对应的服务器也一定是一致的。</p>
 <p><img src="1.png" alt="一致性hash虚拟圆环"></p>
-<p>解决问题2：</p>
+<p>解决问题 2：</p>
 <p>如上图，如果服务器节点太少，容易导致数据分配不均匀，可能会集中在某一块而分配到一个服务器上，这个可以虚拟服务器节点，服务器节点越多则被分配到的数据越平均</p>
-<p>解决问题3：</p>
+<p>解决问题 3：</p>
 <p>当新增或者删除服务器节点的时候，只会影响该服务器节点逆时针到下一个服务器节点之间的数据，并且只要把这部分数据迁移到这些数据顺时针的第一个服务器节点即可</p>
-<p>java代码：</p>
+<p>java 代码：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 需要做一致性hash的节点 接口</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ConsistentHashNode</span> </span>&#123;</span><br><span class="line">    <span class="function">String <span class="title">hashString</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 数据库表节点，实现了hash算法</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TableNode</span> <span class="keyword">implements</span> <span class="title">ConsistentHashNode</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> String tableName; <span class="comment">// 表名</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> index; <span class="comment">// 表下标</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">TableNode</span><span class="params">(String tableName, <span class="keyword">int</span> index)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.tableName = tableName;</span><br><span class="line">        <span class="keyword">this</span>.index = index;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getTableName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> tableName;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setTableName</span><span class="params">(String tableName)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.tableName = tableName;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getIndex</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> index;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setIndex</span><span class="params">(<span class="keyword">int</span> index)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.index = index;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">hashString</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;&quot;</span> + index;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 一致性hash算法</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConsistentHash</span>&lt;<span class="title">T</span> <span class="keyword">extends</span> <span class="title">ConsistentHashNode</span>&gt; </span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 通过treemap天然实现一致性hash的圆环</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">final</span> SortedMap&lt;Integer, T&gt; circle = <span class="keyword">new</span> TreeMap&lt;&gt;();</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 自定义hash方法，我是用md5，这里抽象出来，方便控制</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">protected</span> HashFunction hashFunction;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 备份数，用于新增虚拟节点</span></span><br><span class="line"><span class="comment">     * 越大越负载均衡</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">int</span> replicas = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ConsistentHash</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ConsistentHash</span><span class="params">(HashFunction hashFunction, <span class="keyword">int</span> replicas,</span></span></span><br><span class="line"><span class="function"><span class="params">                          Collection&lt;T&gt; nodes)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.hashFunction = hashFunction;</span><br><span class="line">        <span class="keyword">this</span>.replicas = replicas;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (T node : nodes) &#123;</span><br><span class="line">            add(node);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 初始化表节点，以及虚拟节点</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">add</span><span class="params">(T node)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">1</span>; i &lt;= replicas; i++) &#123;</span><br><span class="line">            <span class="keyword">int</span> hasCode = replicasHashCode(node, i);</span><br><span class="line">            circle.put(hasCode, node);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">remove</span><span class="params">(ConsistentHashNode node)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; replicas; i++) &#123;</span><br><span class="line">            <span class="keyword">int</span> hasCode = replicasHashCode(node, i);</span><br><span class="line">            circle.remove(hasCode);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">contains</span><span class="params">(ConsistentHashNode node)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; replicas; i++) &#123;</span><br><span class="line">            <span class="keyword">int</span> hasCode = replicasHashCode(node, i);</span><br><span class="line">            <span class="keyword">if</span> (circle.containsKey(hasCode)) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 获取key对应的顺时针及比keyhash值大的数据库表节点，若未找到，取circle第一个节点</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> T <span class="title">get</span><span class="params">(Object key)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (circle.isEmpty()) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">int</span> hash = hashFunction.hash(key);</span><br><span class="line">        <span class="keyword">if</span> (!circle.containsKey(hash)) &#123;</span><br><span class="line">            SortedMap&lt;Integer, T&gt; tailMap = circle.tailMap(hash);</span><br><span class="line">            hash = tailMap.isEmpty() ? circle.firstKey() : tailMap.firstKey();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> circle.get(hash);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">replicasHashCode</span><span class="params">(ConsistentHashNode node, <span class="keyword">int</span> replaceNo)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> hashFunction.hash(node.hashString() + <span class="string">&quot;-&quot;</span> + replaceNo);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Collection&lt;T&gt; <span class="title">getAll</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> circle.values();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getReplicas</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> replicas;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setReplicas</span><span class="params">(<span class="keyword">int</span> replicas)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.replicas = replicas;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> HashFunction <span class="title">getHashFunction</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> hashFunction;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setHashFunction</span><span class="params">(HashFunction hashFunction)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.hashFunction = hashFunction;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">clear</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        circle.clear();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
       
     </div>
 
@@ -1203,7 +1331,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-09-10 16:04:44" itemprop="dateModified" datetime="2020-09-10T16:04:44+08:00">2020-09-10</time>
+                <time title="修改时间：2022-03-01 15:27:00" itemprop="dateModified" datetime="2022-03-01T15:27:00+08:00">2022-03-01</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1241,14 +1369,14 @@
 
       
           <blockquote>
-<p>公司的测试环境都是由开发负责部署，虽然有用jinkens简化了部署的复杂度，但是最开始的时候，还是遇到了很多坑，例如应用的端口被防火墙拦截了。。。</p>
+<p>公司的测试环境都是由开发负责部署，虽然有用 jinkens 简化了部署的复杂度，但是最开始的时候，还是遇到了很多坑，例如应用的端口被防火墙拦截了。。。</p>
 </blockquote>
 <hr>
-<h2 id="在centos-6-5下安装iptables"><a href="#在centos-6-5下安装iptables" class="headerlink" title="在centos 6.5下安装iptables"></a>在centos 6.5下安装iptables</h2><p>一般情况下，centos 6.x 系统都是默认安装了iptables。 如果不清楚是否安装，可以通过 <font color=#0000ff >rpm -qa|grep iptables</font> 查询是否安装了iptables。没有，则可以通过 <font color=#0000ff >yum install iptables</font> 进行安装。</p>
-<p><font color=#0000ff >service iptables start</font> 启动iptables服务，如果服务启动失败，去确认是否存在该脚本 <font color=#0000ff >/etc/rc.d/init.d/iptables</font> ，没有需要将iptables添加到服务中。</p>
+<h2 id="在-centos-6-5-下安装-iptables"><a href="#在-centos-6-5-下安装-iptables" class="headerlink" title="在 centos 6.5 下安装 iptables"></a>在 centos 6.5 下安装 iptables</h2><p>一般情况下，centos 6.x 系统都是默认安装了 iptables。 如果不清楚是否安装，可以通过 <font color=#0000ff >rpm -qa|grep iptables</font> 查询是否安装了 iptables。没有，则可以通过 <font color=#0000ff >yum install iptables</font> 进行安装。</p>
+<p><font color=#0000ff >service iptables start</font> 启动 iptables 服务，如果服务启动失败，去确认是否存在该脚本 <font color=#0000ff >/etc/rc.d/init.d/iptables</font> ，没有需要将 iptables 添加到服务中。</p>
 <h2 id="iptables-配置"><a href="#iptables-配置" class="headerlink" title="iptables 配置"></a>iptables 配置</h2><p>配置一般可以通过命令，或者直接改配置文件实现。</p>
 <h3 id="命令方式"><a href="#命令方式" class="headerlink" title="命令方式"></a>命令方式</h3><p>格式：iptables [-t table] COMMAND chain CRETIRIA -j ACTION</p>
-<p>iptables有五个规则链(chain)：</p>
+<p>iptables 有五个规则链(chain)：</p>
 <table>
 <thead>
 <tr>
@@ -1303,19 +1431,19 @@
 </tr>
 </tbody></table>
 <p>COMMAND：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">-P （设置默认策略）</span><br><span class="line">-L （查询详细策略）</span><br><span class="line">-Z （清空策略） </span><br><span class="line">-A （追加策略）</span><br><span class="line">-I num （插入策略）</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">-P （设置默认策略）</span><br><span class="line">-L （查询详细策略）</span><br><span class="line">-Z （清空策略）</span><br><span class="line">-A （追加策略）</span><br><span class="line">-I num （插入策略）</span><br></pre></td></tr></table></figure>
 
 <p>CRETIRIA：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">-p （匹配协议）</span><br><span class="line">    tcp --dport xx：tcp协议，指定端口</span><br><span class="line">    udp --dport xx: udp协议</span><br><span class="line">    icmp --icmp-type 8：请求回显，即ping</span><br><span class="line">                    0：响应，即响应对方的ping </span><br><span class="line">-s （源地址匹配）</span><br><span class="line">-d （目标地址匹配） </span><br><span class="line">-i eth （该网卡流入）</span><br><span class="line">-o eth （该网卡流出）</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">-p （匹配协议）</span><br><span class="line">    tcp --dport xx：tcp协议，指定端口</span><br><span class="line">    udp --dport xx: udp协议</span><br><span class="line">    icmp --icmp-type 8：请求回显，即ping</span><br><span class="line">                    0：响应，即响应对方的ping</span><br><span class="line">-s （源地址匹配）</span><br><span class="line">-d （目标地址匹配）</span><br><span class="line">-i eth （该网卡流入）</span><br><span class="line">-o eth （该网卡流出）</span><br></pre></td></tr></table></figure>
 
 <p>ACTION：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ACCEPT （接受）</span><br><span class="line">DROP （丢弃）</span><br><span class="line">REJECT （拒绝） </span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ACCEPT （接受）</span><br><span class="line">DROP （丢弃）</span><br><span class="line">REJECT （拒绝）</span><br></pre></td></tr></table></figure>
 
-<p>eg：iptables -A INPUT -p tcp –dport 80 -j ACCEPT （接受来自80端口tcp协议的数据）</p>
+<p>eg：iptables -A INPUT -p tcp –dport 80 -j ACCEPT （接受来自 80 端口 tcp 协议的数据）</p>
 <p>添加完之后，命令会马上生效。但需要注意，如果重启，这些命令都会丢失。所以，需要保存到配置文件中,执行 <font color=#0000ff >service iptables save</font></p>
-<h3 id="配置文件方式"><a href="#配置文件方式" class="headerlink" title="配置文件方式"></a>配置文件方式</h3><p>如果通过yum安装的iptables，它的配置文件在 <font color=#0000ff >/etc/sysconfig/iptables</font>。<br>修改完文件，直接执行 <font color=#0000ff >service iptables reload</font></p>
-<h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p><strong><font color=#ff0000 size=4 >如果ssh连接linux，需要注意 执行了 iptables INPUT -P DROP，会断开连接，建议在本机配置，或者通过配置文件配置</font></strong></p>
-<p>附上一份简单的配置，默认拒绝所有请求、转发，允许所有输出；允许80、443端口的tcp请求，以及允许https的三次握手，将无法识别的连接丢弃掉</p>
+<h3 id="配置文件方式"><a href="#配置文件方式" class="headerlink" title="配置文件方式"></a>配置文件方式</h3><p>如果通过 yum 安装的 iptables，它的配置文件在 <font color=#0000ff >/etc/sysconfig/iptables</font>。<br>修改完文件，直接执行 <font color=#0000ff >service iptables reload</font></p>
+<h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p><strong><font color=#ff0000 size=4 >如果 ssh 连接 linux，需要注意 执行了 iptables INPUT -P DROP，会断开连接，建议在本机配置，或者通过配置文件配置</font></strong></p>
+<p>附上一份简单的配置，默认拒绝所有请求、转发，允许所有输出；允许 80、443 端口的 tcp 请求，以及允许 https 的三次握手，将无法识别的连接丢弃掉</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">*filter</span><br><span class="line">:INPUT DROP [0:0]</span><br><span class="line">:FORWARD DROP [0:0]</span><br><span class="line">:OUTPUT ACCEPT [30:3148]</span><br><span class="line">-A INPUT -p tcp -m tcp --dport 80 -j ACCEPT</span><br><span class="line">-A INPUT -p tcp -m tcp --dport 443 -j ACCEPT</span><br><span class="line">-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT</span><br><span class="line">-A INPUT -m state --state INVALID -j DROP</span><br><span class="line">-A INPUT -p icmp -m icmp --icmp-type 0 -j ACCEPT</span><br><span class="line">COMMIT</span><br></pre></td></tr></table></figure>
 
       
@@ -1398,7 +1526,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-count">10</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1411,7 +1539,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-count">16</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -1438,7 +1566,7 @@
 <div class="copyright">
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>

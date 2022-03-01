@@ -20,15 +20,15 @@
     var CONFIG = {"hostname":"tim-jt.gitee.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="公司的测试环境都是由开发负责部署，虽然有用jinkens简化了部署的复杂度，但是最开始的时候，还是遇到了很多坑，例如应用的端口被防火墙拦截了。。。   在centos 6.5下安装iptables一般情况下，centos 6.x 系统都是默认安装了iptables。 如果不清楚是否安装，可以通过 rpm -qa|grep iptables 查询是否安装了iptables。没有，则可以通过 yum">
+  <meta name="description" content="公司的测试环境都是由开发负责部署，虽然有用 jinkens 简化了部署的复杂度，但是最开始的时候，还是遇到了很多坑，例如应用的端口被防火墙拦截了。。。   在 centos 6.5 下安装 iptables一般情况下，centos 6.x 系统都是默认安装了 iptables。 如果不清楚是否安装，可以通过 rpm -qa|grep iptables 查询是否安装了 iptables。没有，则可">
 <meta property="og:type" content="article">
 <meta property="og:title" content="linux防火墙iptables配置">
 <meta property="og:url" content="http://tim-jt.gitee.io/229808583/index.html">
 <meta property="og:site_name" content="Tim&#39;s blog">
-<meta property="og:description" content="公司的测试环境都是由开发负责部署，虽然有用jinkens简化了部署的复杂度，但是最开始的时候，还是遇到了很多坑，例如应用的端口被防火墙拦截了。。。   在centos 6.5下安装iptables一般情况下，centos 6.x 系统都是默认安装了iptables。 如果不清楚是否安装，可以通过 rpm -qa|grep iptables 查询是否安装了iptables。没有，则可以通过 yum">
+<meta property="og:description" content="公司的测试环境都是由开发负责部署，虽然有用 jinkens 简化了部署的复杂度，但是最开始的时候，还是遇到了很多坑，例如应用的端口被防火墙拦截了。。。   在 centos 6.5 下安装 iptables一般情况下，centos 6.x 系统都是默认安装了 iptables。 如果不清楚是否安装，可以通过 rpm -qa|grep iptables 查询是否安装了 iptables。没有，则可">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2018-06-04T08:09:35.000Z">
-<meta property="article:modified_time" content="2020-09-10T08:04:44.019Z">
+<meta property="article:modified_time" content="2022-03-01T07:27:00.490Z">
 <meta property="article:author" content="Tim">
 <meta property="article:tag" content="linux">
 <meta property="article:tag" content="iptables">
@@ -198,7 +198,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-09-10 16:04:44" itemprop="dateModified" datetime="2020-09-10T16:04:44+08:00">2020-09-10</time>
+                <time title="修改时间：2022-03-01 15:27:00" itemprop="dateModified" datetime="2022-03-01T15:27:00+08:00">2022-03-01</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -243,14 +243,14 @@
 
       
         <blockquote>
-<p>公司的测试环境都是由开发负责部署，虽然有用jinkens简化了部署的复杂度，但是最开始的时候，还是遇到了很多坑，例如应用的端口被防火墙拦截了。。。</p>
+<p>公司的测试环境都是由开发负责部署，虽然有用 jinkens 简化了部署的复杂度，但是最开始的时候，还是遇到了很多坑，例如应用的端口被防火墙拦截了。。。</p>
 </blockquote>
 <hr>
-<h2 id="在centos-6-5下安装iptables"><a href="#在centos-6-5下安装iptables" class="headerlink" title="在centos 6.5下安装iptables"></a>在centos 6.5下安装iptables</h2><p>一般情况下，centos 6.x 系统都是默认安装了iptables。 如果不清楚是否安装，可以通过 <font color=#0000ff >rpm -qa|grep iptables</font> 查询是否安装了iptables。没有，则可以通过 <font color=#0000ff >yum install iptables</font> 进行安装。</p>
-<p><font color=#0000ff >service iptables start</font> 启动iptables服务，如果服务启动失败，去确认是否存在该脚本 <font color=#0000ff >/etc/rc.d/init.d/iptables</font> ，没有需要将iptables添加到服务中。</p>
+<h2 id="在-centos-6-5-下安装-iptables"><a href="#在-centos-6-5-下安装-iptables" class="headerlink" title="在 centos 6.5 下安装 iptables"></a>在 centos 6.5 下安装 iptables</h2><p>一般情况下，centos 6.x 系统都是默认安装了 iptables。 如果不清楚是否安装，可以通过 <font color=#0000ff >rpm -qa|grep iptables</font> 查询是否安装了 iptables。没有，则可以通过 <font color=#0000ff >yum install iptables</font> 进行安装。</p>
+<p><font color=#0000ff >service iptables start</font> 启动 iptables 服务，如果服务启动失败，去确认是否存在该脚本 <font color=#0000ff >/etc/rc.d/init.d/iptables</font> ，没有需要将 iptables 添加到服务中。</p>
 <h2 id="iptables-配置"><a href="#iptables-配置" class="headerlink" title="iptables 配置"></a>iptables 配置</h2><p>配置一般可以通过命令，或者直接改配置文件实现。</p>
 <h3 id="命令方式"><a href="#命令方式" class="headerlink" title="命令方式"></a>命令方式</h3><p>格式：iptables [-t table] COMMAND chain CRETIRIA -j ACTION</p>
-<p>iptables有五个规则链(chain)：</p>
+<p>iptables 有五个规则链(chain)：</p>
 <table>
 <thead>
 <tr>
@@ -305,19 +305,19 @@
 </tr>
 </tbody></table>
 <p>COMMAND：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">-P （设置默认策略）</span><br><span class="line">-L （查询详细策略）</span><br><span class="line">-Z （清空策略） </span><br><span class="line">-A （追加策略）</span><br><span class="line">-I num （插入策略）</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">-P （设置默认策略）</span><br><span class="line">-L （查询详细策略）</span><br><span class="line">-Z （清空策略）</span><br><span class="line">-A （追加策略）</span><br><span class="line">-I num （插入策略）</span><br></pre></td></tr></table></figure>
 
 <p>CRETIRIA：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">-p （匹配协议）</span><br><span class="line">    tcp --dport xx：tcp协议，指定端口</span><br><span class="line">    udp --dport xx: udp协议</span><br><span class="line">    icmp --icmp-type 8：请求回显，即ping</span><br><span class="line">                    0：响应，即响应对方的ping </span><br><span class="line">-s （源地址匹配）</span><br><span class="line">-d （目标地址匹配） </span><br><span class="line">-i eth （该网卡流入）</span><br><span class="line">-o eth （该网卡流出）</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">-p （匹配协议）</span><br><span class="line">    tcp --dport xx：tcp协议，指定端口</span><br><span class="line">    udp --dport xx: udp协议</span><br><span class="line">    icmp --icmp-type 8：请求回显，即ping</span><br><span class="line">                    0：响应，即响应对方的ping</span><br><span class="line">-s （源地址匹配）</span><br><span class="line">-d （目标地址匹配）</span><br><span class="line">-i eth （该网卡流入）</span><br><span class="line">-o eth （该网卡流出）</span><br></pre></td></tr></table></figure>
 
 <p>ACTION：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ACCEPT （接受）</span><br><span class="line">DROP （丢弃）</span><br><span class="line">REJECT （拒绝） </span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ACCEPT （接受）</span><br><span class="line">DROP （丢弃）</span><br><span class="line">REJECT （拒绝）</span><br></pre></td></tr></table></figure>
 
-<p>eg：iptables -A INPUT -p tcp –dport 80 -j ACCEPT （接受来自80端口tcp协议的数据）</p>
+<p>eg：iptables -A INPUT -p tcp –dport 80 -j ACCEPT （接受来自 80 端口 tcp 协议的数据）</p>
 <p>添加完之后，命令会马上生效。但需要注意，如果重启，这些命令都会丢失。所以，需要保存到配置文件中,执行 <font color=#0000ff >service iptables save</font></p>
-<h3 id="配置文件方式"><a href="#配置文件方式" class="headerlink" title="配置文件方式"></a>配置文件方式</h3><p>如果通过yum安装的iptables，它的配置文件在 <font color=#0000ff >/etc/sysconfig/iptables</font>。<br>修改完文件，直接执行 <font color=#0000ff >service iptables reload</font></p>
-<h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p><strong><font color=#ff0000 size=4 >如果ssh连接linux，需要注意 执行了 iptables INPUT -P DROP，会断开连接，建议在本机配置，或者通过配置文件配置</font></strong></p>
-<p>附上一份简单的配置，默认拒绝所有请求、转发，允许所有输出；允许80、443端口的tcp请求，以及允许https的三次握手，将无法识别的连接丢弃掉</p>
+<h3 id="配置文件方式"><a href="#配置文件方式" class="headerlink" title="配置文件方式"></a>配置文件方式</h3><p>如果通过 yum 安装的 iptables，它的配置文件在 <font color=#0000ff >/etc/sysconfig/iptables</font>。<br>修改完文件，直接执行 <font color=#0000ff >service iptables reload</font></p>
+<h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p><strong><font color=#ff0000 size=4 >如果 ssh 连接 linux，需要注意 执行了 iptables INPUT -P DROP，会断开连接，建议在本机配置，或者通过配置文件配置</font></strong></p>
+<p>附上一份简单的配置，默认拒绝所有请求、转发，允许所有输出；允许 80、443 端口的 tcp 请求，以及允许 https 的三次握手，将无法识别的连接丢弃掉</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">*filter</span><br><span class="line">:INPUT DROP [0:0]</span><br><span class="line">:FORWARD DROP [0:0]</span><br><span class="line">:OUTPUT ACCEPT [30:3148]</span><br><span class="line">-A INPUT -p tcp -m tcp --dport 80 -j ACCEPT</span><br><span class="line">-A INPUT -p tcp -m tcp --dport 443 -j ACCEPT</span><br><span class="line">-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT</span><br><span class="line">-A INPUT -m state --state INVALID -j DROP</span><br><span class="line">-A INPUT -p icmp -m icmp --icmp-type 0 -j ACCEPT</span><br><span class="line">COMMIT</span><br></pre></td></tr></table></figure>
 
     </div>
@@ -401,7 +401,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8centos-6-5%E4%B8%8B%E5%AE%89%E8%A3%85iptables"><span class="nav-number">1.</span> <span class="nav-text">在centos 6.5下安装iptables</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#iptables-%E9%85%8D%E7%BD%AE"><span class="nav-number">2.</span> <span class="nav-text">iptables 配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%91%BD%E4%BB%A4%E6%96%B9%E5%BC%8F"><span class="nav-number">2.1.</span> <span class="nav-text">命令方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E6%96%B9%E5%BC%8F"><span class="nav-number">2.2.</span> <span class="nav-text">配置文件方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%8E%E8%AE%B0"><span class="nav-number">2.3.</span> <span class="nav-text">后记</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8-centos-6-5-%E4%B8%8B%E5%AE%89%E8%A3%85-iptables"><span class="nav-number">1.</span> <span class="nav-text">在 centos 6.5 下安装 iptables</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#iptables-%E9%85%8D%E7%BD%AE"><span class="nav-number">2.</span> <span class="nav-text">iptables 配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%91%BD%E4%BB%A4%E6%96%B9%E5%BC%8F"><span class="nav-number">2.1.</span> <span class="nav-text">命令方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E6%96%B9%E5%BC%8F"><span class="nav-number">2.2.</span> <span class="nav-text">配置文件方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%8E%E8%AE%B0"><span class="nav-number">2.3.</span> <span class="nav-text">后记</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -415,7 +415,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-count">10</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -428,7 +428,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-count">16</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -455,7 +455,7 @@
 <div class="copyright">
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
