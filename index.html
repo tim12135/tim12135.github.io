@@ -164,6 +164,134 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://tim-jt.gitee.io/1370750478/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Tim">
+      <meta itemprop="description" content="Tim's blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tim's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/1370750478/" class="post-title-link" itemprop="url">2022-03-03招聘总结</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-03-07 11:25:49 / 修改时间：11:28:57" itemprop="dateCreated datePublished" datetime="2022-03-07T11:25:49+08:00">2022-03-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%B7%A5%E4%BD%9C%E6%80%BB%E7%BB%93/" itemprop="url" rel="index"><span itemprop="name">工作总结</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/1370750478/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/1370750478/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="画像（希望招聘到的人）"><a href="#画像（希望招聘到的人）" class="headerlink" title="画像（希望招聘到的人）"></a>画像（希望招聘到的人）</h2><ol>
+<li>熟练使用 Spring，aop（spring 的动态代理方式：jdk(利用拦截器(拦截器必须实现 InvocationHanlder)加上反射机制生成一个实现代理接口的匿名类)、cglib(利用 ASM 开源包，对代理对象类的 class 文件加载进来，通过修改其字节码生成子类来处理)）、事件通知（继承 ApplicationEvent 且监听器实现 ApplicationListener 或者<code>@EventListener、@TransactionalEventListener</code>）、事务（传播机制：required、required_new）、同一对象方法间调用事务失效</li>
+<li>熟练使用 Mybatis，对 Mybatis 的一级缓存（session）、二级缓存(namespace)有所了解，对# 、$知悉，接口绑定方式：注解、xml</li>
+<li>熟练掌握 Mysql，事务的隔离级别（读未提交、读已提交、可重复读、串行），索引类型（B+Tree、hash（=、in、≠）），锁的类型（全局、表、行（键、间隙锁、临键锁）），死锁（原因：（多个进程持有资源不释放，并且需求别的进程占用的资源，而导致死锁），避免：（事务颗粒度小，按顺序访问某一对象））</li>
+<li>数量掌握 SpringCloud，服务注册发现，负载均衡，会使用服务限流、熔断、降级，hystrix（熔断策略：线程池和信号量）、sentinel</li>
+<li>熟练掌握 RabbitMQ、Kafka 等消息中间件，消息队列有什么优缺点，交换器 exchange 的 4 中类型（fanout、direct（默认）、topic（routeKey）、headers），确保消息的有序消费。</li>
+<li>kafka broker、topic、partition，kafka 的消费模式（推、拉（是配置消费速率不同的消费者，没有数据时设置 timeout 控制获取不到数据时的查询等待时间）），怎么能确保消息的有序消费。</li>
+<li>熟练掌握 Redis，基本类型（String(<code>opsForValue</code>),Hash(<code>opsForHash</code>),List,Set,ZSet），缓存击穿(热点数据过期，通过互斥更新，随机退避，热点 key 同时失效则加随机时间)、缓存穿透（不存在的 id 频繁请求，通过记录空表及或者 BloomFilter）、缓存雪崩（服务降级，主从模式和集群模式），</li>
+<li>熟练掌握 POI，对 word、excel(<code>XSSFWorkbook</code>)操作，知道 2003（65536 行，256 列）和 2007（1048576 行，16384 列）的区别</li>
+<li>对字符集（UTF-8、GBK、UTF-8 BOM(头上有 U+FEFF)）了解区别</li>
+<li>线程池，<code>CountDownLatch</code> ，<code>CompletableFuture</code></li>
+<li>熟练使用 git 版本管理，会使用 skywalking 追踪日志</li>
+<li>能单独完成业务需求，从数据结构设计到代码实现以及代码自测和部署</li>
+</ol>
+<h2 id="准备的问题"><a href="#准备的问题" class="headerlink" title="准备的问题"></a>准备的问题</h2><ol>
+<li>简单介绍下自己之前做过的项目以及担任的角色和使用的技术栈</li>
+<li>在项目中有没有碰到什么技术上的难题，怎么解决的</li>
+<li>spring 怎么解决循环依赖的，知道三级缓存，一级缓存日常的 bean，二级属性还没有注入，三级对象工厂</li>
+<li>spring 的事务实现知道吗，同一个对象内的方法级别调用，事务会生效吗？</li>
+<li>spring 的事务传播机制，主要辨识下 Required 和 RequiredNew 的区别</li>
+<li>spring 的事件通知知道吗，讲下怎么使用，继承 ApplicationEvent 实现 ApplicationListener，或者直接加注解<code>@EventListener、@TransactionalEventListener</code></li>
+<li>redis 常用的几种数据类型，以及什么场景使用 redis</li>
+<li>知道 redis 缓存穿透吗，解决方案</li>
+<li>mysql 的索引类型有了解过吗，能讲讲索引优化吗，mysql 的事务隔离级别了解吗（读未提交、读已提交、可重复读、串行）</li>
+<li>死锁的原因，解决方案</li>
+<li>(rocketMq)ONS 和 Kafka 有什么大的区别，各自使用场景？不依赖 zk，避免了主从选举，分区是逻辑概念上的分区，物理文件还是同一个</li>
+<li>微服务的框架 spring cloud 接触过吗，了解服务限流、熔断、降级这些吗</li>
+</ol>
+<h2 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h2><p>总体来讲 T4~T4+</p>
+<ol>
+<li>对数据库，mysql 的使用应该较弱，对索引的认知不够</li>
+<li>对微服务的调用、熔断这块不是很清晰</li>
+<li>对消息中间件了解比较透彻</li>
+<li>对 redis 的使用可能比较片面</li>
+<li>对自定义表单的概念比较模糊，倾向于通过文档型数据库解决</li>
+<li>业务分析能力应该不错</li>
+<li>表述比较积极</li>
+<li>倾向于工具使用，对原理不够深入</li>
+</ol>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ol>
+<li>面试前需要根据对方的简历和预期的画像，提炼出想要问的问题</li>
+<li>提问需要精准有技巧，提问的目的是为了了解面试者的能力，用于判定是否能满足岗位需求</li>
+<li>提问后没有得到预期的答复，在当时不了解的情况下，应该记录下当时面试者的回答，事后再研究其回答的优劣</li>
+<li>重点关注的问题，如果面试者不了解，不一定代表对方不懂，需要稍加引导，关注对方的思路</li>
+<li>已经得到答案之后，不管对错，都不需要再展开这方面的讨论而浪费时间</li>
+<li>在关心技术能力之外，还得观察对方的表述、对方的性格，事后可以做一个比较全面的评价</li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://tim-jt.gitee.io/144532265/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -189,7 +317,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-03-01 15:18:19 / 修改时间：15:37:26" itemprop="dateCreated datePublished" datetime="2022-03-01T15:18:19+08:00">2022-03-01</time>
+              <time title="创建时间：2022-03-01 15:18:19 / 修改时间：16:17:45" itemprop="dateCreated datePublished" datetime="2022-03-01T15:18:19+08:00">2022-03-01</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -197,11 +325,11 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/java/" itemprop="url" rel="index"><span itemprop="name">java</span></a>
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/java/spring/" itemprop="url" rel="index"><span itemprop="name">spring</span></a>
+                  <a href="/categories/Java/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
                 </span>
             </span>
 
@@ -495,7 +623,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/195629511/" class="post-title-link" itemprop="url">webflux踩坑经历</a>
+            <a href="/195629511/" class="post-title-link" itemprop="url">Webflux踩坑经历</a>
         </h2>
 
         <div class="post-meta">
@@ -512,7 +640,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-10-28 15:34:15" itemprop="dateModified" datetime="2020-10-28T15:34:15+08:00">2020-10-28</time>
+                <time title="修改时间：2022-03-01 16:16:47" itemprop="dateModified" datetime="2022-03-01T16:16:47+08:00">2022-03-01</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -520,11 +648,11 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/java/" itemprop="url" rel="index"><span itemprop="name">java</span></a>
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/java/spring/" itemprop="url" rel="index"><span itemprop="name">spring</span></a>
+                  <a href="/categories/Java/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
                 </span>
             </span>
 
@@ -631,21 +759,27 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2020-09-17 10:25:41 / 修改时间：10:32:12" itemprop="dateCreated datePublished" datetime="2020-09-17T10:25:41+08:00">2020-09-17</time>
+              <time title="创建时间：2020-09-17 10:25:41" itemprop="dateCreated datePublished" datetime="2020-09-17T10:25:41+08:00">2020-09-17</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-03-01 16:18:04" itemprop="dateModified" datetime="2022-03-01T16:18:04+08:00">2022-03-01</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/java/" itemprop="url" rel="index"><span itemprop="name">java</span></a>
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/java/mybatis/" itemprop="url" rel="index"><span itemprop="name">mybatis</span></a>
+                  <a href="/categories/Java/Mybatis/" itemprop="url" rel="index"><span itemprop="name">Mybatis</span></a>
                 </span>
             </span>
 
@@ -772,7 +906,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-03-01 15:26:52" itemprop="dateModified" datetime="2022-03-01T15:26:52+08:00">2022-03-01</time>
+                <time title="修改时间：2022-03-01 16:18:58" itemprop="dateModified" datetime="2022-03-01T16:18:58+08:00">2022-03-01</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -780,7 +914,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/docker/" itemprop="url" rel="index"><span itemprop="name">docker</span></a>
+                  <a href="/categories/Docker/" itemprop="url" rel="index"><span itemprop="name">Docker</span></a>
                 </span>
             </span>
 
@@ -1005,7 +1139,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-03-01 15:19:42" itemprop="dateModified" datetime="2022-03-01T15:19:42+08:00">2022-03-01</time>
+                <time title="修改时间：2022-03-01 16:17:25" itemprop="dateModified" datetime="2022-03-01T16:17:25+08:00">2022-03-01</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1013,11 +1147,11 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/java/" itemprop="url" rel="index"><span itemprop="name">java</span></a>
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/java/spring/" itemprop="url" rel="index"><span itemprop="name">spring</span></a>
+                  <a href="/categories/Java/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
                 </span>
             </span>
 
@@ -1050,9 +1184,9 @@
 <li>实现 javax.servlet.Filter 接口</li>
 <li>在自定义的过滤器上，加上<code>@WebFilter</code> 注解，并在启动类上加上<code>@ServletComponentScan</code> 注解</li>
 </ol>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> test;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.servlet.*;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.annotation.WebFilter;</span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Author</span>: jiangtao</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span>: 2019/9/27 11:31</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>:</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@WebFilter(urlPatterns = &quot;/*&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestFilter</span> <span class="keyword">implements</span> <span class="title">Filter</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">(FilterConfig filterConfig)</span> <span class="keyword">throws</span> ServletException </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doFilter</span><span class="params">(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)</span> <span class="keyword">throws</span> IOException, ServletException </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            filterChain.doFilter(servletRequest, servletResponse);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;lalalala&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> test;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.servlet.*;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.annotation.WebFilter;</span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"></span><br><span class="line"><span class="meta">@WebFilter(urlPatterns = &quot;/*&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestFilter</span> <span class="keyword">implements</span> <span class="title">Filter</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">(FilterConfig filterConfig)</span> <span class="keyword">throws</span> ServletException </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doFilter</span><span class="params">(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)</span> <span class="keyword">throws</span> IOException, ServletException </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            filterChain.doFilter(servletRequest, servletResponse);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;lalalala&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> test;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.SpringApplication;</span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.autoconfigure.SpringBootApplication;</span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.web.servlet.ServletComponentScan;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Author</span>: jiangtao</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span>: 2019/9/27 11:28</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>:</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@ServletComponentScan</span></span><br><span class="line"><span class="meta">@SpringBootApplication</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Starter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        SpringApplication.run(Starter.class);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> test;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.SpringApplication;</span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.autoconfigure.SpringBootApplication;</span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.web.servlet.ServletComponentScan;</span><br><span class="line"></span><br><span class="line"><span class="meta">@ServletComponentScan</span></span><br><span class="line"><span class="meta">@SpringBootApplication</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Starter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        SpringApplication.run(Starter.class);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>启动后，可以发现日志中打印出来过滤器的信息</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: <span class="string">&#x27;characterEncodingFilter&#x27;</span> to: [<span class="comment">/*]</span></span><br><span class="line"><span class="comment">2019-09-27 13:54:36.171  INFO 45468 --- [ost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: &#x27;hiddenHttpMethodFilter&#x27; to: [/*]</span></span><br><span class="line"><span class="comment">2019-09-27 13:54:36.171  INFO 45468 --- [ost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: &#x27;httpPutFormContentFilter&#x27; to: [/*]</span></span><br><span class="line"><span class="comment">2019-09-27 13:54:36.171  INFO 45468 --- [ost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: &#x27;requestContextFilter&#x27; to: [/*]</span></span><br><span class="line"><span class="comment">2019-09-27 13:54:36.171  INFO 45468 --- [ost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: &#x27;test.TestFilter&#x27; to urls: [/*]</span></span><br><span class="line"><span class="comment">2019-09-27 13:54:36.171  INFO 45468 --- [ost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: &#x27;test.TestFilter2&#x27; to urls: [/app/*]</span></span><br></pre></td></tr></table></figure>
@@ -1114,7 +1248,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-03-01 15:27:04" itemprop="dateModified" datetime="2022-03-01T15:27:04+08:00">2022-03-01</time>
+                <time title="修改时间：2022-03-01 16:18:22" itemprop="dateModified" datetime="2022-03-01T16:18:22+08:00">2022-03-01</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1122,11 +1256,11 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/java/" itemprop="url" rel="index"><span itemprop="name">java</span></a>
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/java/mybatis/" itemprop="url" rel="index"><span itemprop="name">mybatis</span></a>
+                  <a href="/categories/Java/Mybatis/" itemprop="url" rel="index"><span itemprop="name">Mybatis</span></a>
                 </span>
             </span>
 
@@ -1296,172 +1430,11 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://tim-jt.gitee.io/229808583/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Tim">
-      <meta itemprop="description" content="Tim's blog">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Tim's blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/229808583/" class="post-title-link" itemprop="url">linux防火墙iptables配置</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2018-06-04 16:09:35" itemprop="dateCreated datePublished" datetime="2018-06-04T16:09:35+08:00">2018-06-04</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-03-01 15:27:00" itemprop="dateModified" datetime="2022-03-01T15:27:00+08:00">2022-03-01</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/linux/" itemprop="url" rel="index"><span itemprop="name">linux</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/229808583/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/229808583/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <blockquote>
-<p>公司的测试环境都是由开发负责部署，虽然有用 jinkens 简化了部署的复杂度，但是最开始的时候，还是遇到了很多坑，例如应用的端口被防火墙拦截了。。。</p>
-</blockquote>
-<hr>
-<h2 id="在-centos-6-5-下安装-iptables"><a href="#在-centos-6-5-下安装-iptables" class="headerlink" title="在 centos 6.5 下安装 iptables"></a>在 centos 6.5 下安装 iptables</h2><p>一般情况下，centos 6.x 系统都是默认安装了 iptables。 如果不清楚是否安装，可以通过 <font color=#0000ff >rpm -qa|grep iptables</font> 查询是否安装了 iptables。没有，则可以通过 <font color=#0000ff >yum install iptables</font> 进行安装。</p>
-<p><font color=#0000ff >service iptables start</font> 启动 iptables 服务，如果服务启动失败，去确认是否存在该脚本 <font color=#0000ff >/etc/rc.d/init.d/iptables</font> ，没有需要将 iptables 添加到服务中。</p>
-<h2 id="iptables-配置"><a href="#iptables-配置" class="headerlink" title="iptables 配置"></a>iptables 配置</h2><p>配置一般可以通过命令，或者直接改配置文件实现。</p>
-<h3 id="命令方式"><a href="#命令方式" class="headerlink" title="命令方式"></a>命令方式</h3><p>格式：iptables [-t table] COMMAND chain CRETIRIA -j ACTION</p>
-<p>iptables 有五个规则链(chain)：</p>
-<table>
-<thead>
-<tr>
-<th>规则链</th>
-<th>含义</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>PREROUTING</td>
-<td>路由前</td>
-</tr>
-<tr>
-<td>INPUT</td>
-<td>数据包入口</td>
-</tr>
-<tr>
-<td>FORWARD</td>
-<td>转发</td>
-</tr>
-<tr>
-<td>OUTPUT</td>
-<td>数据包出口</td>
-</tr>
-<tr>
-<td>POSTROUTING</td>
-<td>路由后</td>
-</tr>
-</tbody></table>
-<p>table：</p>
-<table>
-<thead>
-<tr>
-<th>表</th>
-<th>含义</th>
-<th>影响的规则链</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>filter</td>
-<td>过滤</td>
-<td>INPUT，OUTPUT，FORWARD</td>
-</tr>
-<tr>
-<td>nat</td>
-<td>地址</td>
-<td>PREROUTING，OUTPUT，POSTROUTING</td>
-</tr>
-<tr>
-<td>mangle</td>
-<td>报文</td>
-<td>PREROUTING，INPUT，FORWARD，OUTPUT，POSTROUTING</td>
-</tr>
-</tbody></table>
-<p>COMMAND：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">-P （设置默认策略）</span><br><span class="line">-L （查询详细策略）</span><br><span class="line">-Z （清空策略）</span><br><span class="line">-A （追加策略）</span><br><span class="line">-I num （插入策略）</span><br></pre></td></tr></table></figure>
-
-<p>CRETIRIA：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">-p （匹配协议）</span><br><span class="line">    tcp --dport xx：tcp协议，指定端口</span><br><span class="line">    udp --dport xx: udp协议</span><br><span class="line">    icmp --icmp-type 8：请求回显，即ping</span><br><span class="line">                    0：响应，即响应对方的ping</span><br><span class="line">-s （源地址匹配）</span><br><span class="line">-d （目标地址匹配）</span><br><span class="line">-i eth （该网卡流入）</span><br><span class="line">-o eth （该网卡流出）</span><br></pre></td></tr></table></figure>
-
-<p>ACTION：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ACCEPT （接受）</span><br><span class="line">DROP （丢弃）</span><br><span class="line">REJECT （拒绝）</span><br></pre></td></tr></table></figure>
-
-<p>eg：iptables -A INPUT -p tcp –dport 80 -j ACCEPT （接受来自 80 端口 tcp 协议的数据）</p>
-<p>添加完之后，命令会马上生效。但需要注意，如果重启，这些命令都会丢失。所以，需要保存到配置文件中,执行 <font color=#0000ff >service iptables save</font></p>
-<h3 id="配置文件方式"><a href="#配置文件方式" class="headerlink" title="配置文件方式"></a>配置文件方式</h3><p>如果通过 yum 安装的 iptables，它的配置文件在 <font color=#0000ff >/etc/sysconfig/iptables</font>。<br>修改完文件，直接执行 <font color=#0000ff >service iptables reload</font></p>
-<h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p><strong><font color=#ff0000 size=4 >如果 ssh 连接 linux，需要注意 执行了 iptables INPUT -P DROP，会断开连接，建议在本机配置，或者通过配置文件配置</font></strong></p>
-<p>附上一份简单的配置，默认拒绝所有请求、转发，允许所有输出；允许 80、443 端口的 tcp 请求，以及允许 https 的三次握手，将无法识别的连接丢弃掉</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">*filter</span><br><span class="line">:INPUT DROP [0:0]</span><br><span class="line">:FORWARD DROP [0:0]</span><br><span class="line">:OUTPUT ACCEPT [30:3148]</span><br><span class="line">-A INPUT -p tcp -m tcp --dport 80 -j ACCEPT</span><br><span class="line">-A INPUT -p tcp -m tcp --dport 443 -j ACCEPT</span><br><span class="line">-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT</span><br><span class="line">-A INPUT -m state --state INVALID -j DROP</span><br><span class="line">-A INPUT -p icmp -m icmp --icmp-type 0 -j ACCEPT</span><br><span class="line">COMMIT</span><br></pre></td></tr></table></figure>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
+  <nav class="pagination">
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+  </nav>
 
 
 
@@ -1526,20 +1499,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-count">11</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-count">17</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
