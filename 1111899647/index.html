@@ -20,22 +20,20 @@
     var CONFIG = {"hostname":"tim-jt.gitee.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="之前很长一段时间，一直以为 sftp 是 ftp 加了安全协议，是 ftp 升级版本，直到最近有个需求，才发现 ftp 和 sftp 完全不一样  ftp 主动模式   客户端通过命令通道告诉服务端，我要开启端口 N 作为数据通道端口 服务器告诉客户端收到了 服务器通过 20 端口连接客户端端口 N 客户端告诉服务器收到了 传输数据  缺点：连接客户端的端口可能被客户端的防火墙拦截 123456">
+  <meta name="description" content="Spring Cloud 搭建微服务的时候，比较常用的客户端工具就是 Feign，以其声明的方式来编写 HTTP 请求。涉及到微服务请求，就一定要设置请求超时时间和熔断策略，来避免因为单一服务卡死导致的集群雪崩等灾难性事件。  具体的 Feign 和 Hystrix 如何集成，Spring 官方都有对应的 Demo，下面主要是分析一下熔断策略的配置。  hystrix.command.defau">
 <meta property="og:type" content="article">
-<meta property="og:title" content="ftp、ftps、sftp区别">
-<meta property="og:url" content="http://tim-jt.gitee.io/369552271/index.html">
+<meta property="og:title" content="Hystrix配置总结">
+<meta property="og:url" content="http://tim-jt.gitee.io/1111899647/index.html">
 <meta property="og:site_name" content="Tim&#39;s blog">
-<meta property="og:description" content="之前很长一段时间，一直以为 sftp 是 ftp 加了安全协议，是 ftp 升级版本，直到最近有个需求，才发现 ftp 和 sftp 完全不一样  ftp 主动模式   客户端通过命令通道告诉服务端，我要开启端口 N 作为数据通道端口 服务器告诉客户端收到了 服务器通过 20 端口连接客户端端口 N 客户端告诉服务器收到了 传输数据  缺点：连接客户端的端口可能被客户端的防火墙拦截 123456">
+<meta property="og:description" content="Spring Cloud 搭建微服务的时候，比较常用的客户端工具就是 Feign，以其声明的方式来编写 HTTP 请求。涉及到微服务请求，就一定要设置请求超时时间和熔断策略，来避免因为单一服务卡死导致的集群雪崩等灾难性事件。  具体的 Feign 和 Hystrix 如何集成，Spring 官方都有对应的 Demo，下面主要是分析一下熔断策略的配置。  hystrix.command.defau">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2019-10-31T07:35:18.000Z">
-<meta property="article:modified_time" content="2022-03-01T07:26:54.219Z">
+<meta property="article:published_time" content="2022-10-28T05:43:02.000Z">
+<meta property="article:modified_time" content="2022-10-28T07:10:02.944Z">
 <meta property="article:author" content="Tim">
-<meta property="article:tag" content="ftp">
-<meta property="article:tag" content="ftps">
-<meta property="article:tag" content="sftp">
+<meta property="article:tag" content="Hystrix">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://tim-jt.gitee.io/369552271/">
+<link rel="canonical" href="http://tim-jt.gitee.io/1111899647/">
 
 
 <script id="page-configurations">
@@ -48,7 +46,7 @@
   };
 </script>
 
-  <title>ftp、ftps、sftp区别 | Tim's blog</title>
+  <title>Hystrix配置总结 | Tim's blog</title>
   
 
 
@@ -169,7 +167,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://tim-jt.gitee.io/369552271/">
+    <link itemprop="mainEntityOfPage" href="http://tim-jt.gitee.io/1111899647/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -182,7 +180,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          ftp、ftps、sftp区别
+          Hystrix配置总结
         </h1>
 
         <div class="post-meta">
@@ -191,23 +189,21 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
+              
 
-              <time title="创建时间：2019-10-31 15:35:18" itemprop="dateCreated datePublished" datetime="2019-10-31T15:35:18+08:00">2019-10-31</time>
+              <time title="创建时间：2022-10-28 13:43:02 / 修改时间：15:10:02" itemprop="dateCreated datePublished" datetime="2022-10-28T13:43:02+08:00">2022-10-28</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-03-01 15:26:54" itemprop="dateModified" datetime="2022-03-01T15:26:54+08:00">2022-03-01</time>
-              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE/" itemprop="url" rel="index"><span itemprop="name">网络协议</span></a>
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
                 </span>
             </span>
 
@@ -227,8 +223,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/369552271/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/369552271/" itemprop="commentCount"></span>
+    <a title="valine" href="/1111899647/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/1111899647/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -244,34 +240,27 @@
 
       
         <blockquote>
-<p>之前很长一段时间，一直以为 sftp 是 ftp 加了安全协议，是 ftp 升级版本，直到最近有个需求，才发现 ftp 和 sftp 完全不一样</p>
+<p>Spring Cloud 搭建微服务的时候，比较常用的客户端工具就是 Feign，以其声明的方式来编写 HTTP 请求。涉及到微服务请求，就一定要设置请求超时时间和熔断策略，来避免因为单一服务卡死导致的集群雪崩等灾难性事件。</p>
 </blockquote>
-<h3 id="ftp"><a href="#ftp" class="headerlink" title="ftp"></a>ftp</h3><ul>
-<li>主动模式</li>
-</ul>
-<ol>
-<li>客户端通过命令通道告诉服务端，我要开启端口 N 作为数据通道端口</li>
-<li>服务器告诉客户端收到了</li>
-<li>服务器通过 20 端口连接客户端端口 N</li>
-<li>客户端告诉服务器收到了</li>
-<li>传输数据</li>
-</ol>
-<p>缺点：连接客户端的端口可能被客户端的防火墙拦截</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">cmd 通道</span><br><span class="line">client-&gt;server PORT 1027</span><br><span class="line">server-&gt;client ACK</span><br><span class="line"></span><br><span class="line">data 通道</span><br><span class="line">server-&gt;client 连接</span><br><span class="line">client-&gt;server ACK</span><br></pre></td></tr></table></figure>
-
+<p>具体的 Feign 和 Hystrix 如何集成，Spring 官方都有对应的 Demo，下面主要是分析一下熔断策略的配置。</p>
 <ul>
-<li>被动模式</li>
+<li><p><code>hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds</code> 请求超时时间。超时后会直接中断请求，调用 fallback 方法。</p>
+</li>
+<li><p><code>hystrix.command.default.metrics.rollingStats.timeInMilliseconds</code> 滚动窗口的时间范围。所有的接口请求是否超时等指标进行累计统计的时间范围。该值越小，则时间窗越小，占用的内存会更小。反之则时间窗越大，占用的内存越多。</p>
+</li>
+<li><p><code>hystrix.command.default.circuitBreaker.requestVolumeThreshold</code> 滚动窗口内相同 CommandKey 的请求数量达到多少并发量，才会触发熔断的判断机制。此处一定要注意，是<strong>相同 CommandKey</strong>。在 Feign 的默认机制中，<strong>CommandKey=类名+方法签名</strong>，也就是<strong>单个 HTTP API 接口</strong>。</p>
+</li>
+<li><p><code>hystrix.command.default.circuitBreaker.errorThresholdPercentage</code> 滚动窗口内触发熔断的最低失败线程的百分比，即在滚动窗口内达到了并发量 requestVolumeThreshold 以上，且失败线程&gt;并发线程数*errorThresholdPercentage，就会触发熔断。</p>
+</li>
+<li><p><code>hystrix.command.default.circuitBreaker.sleepWindowInMilliseconds</code> 一旦触发熔断后，熔断器打开的时间长度，这段时间内，会直接调用 fallback 方法而不请求目标服务。过了这段时间范围后被请求，则会用一个线程尝试请求目标服务，如果目标服务健康访问，则取消熔断，反之继续开启熔断。</p>
+</li>
 </ul>
-<ol>
-<li>客户端通过命令通道，发送命令 PASV</li>
-<li>服务器返回客户端，我开通了数据端口 N</li>
-<li>客户端初始化一个数据端口连接到服务器端口 N</li>
-<li>服务器数据端口返回客户端数据端口一个 ACK</li>
-</ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">cmd 通道</span><br><span class="line">client-&gt;server PASV</span><br><span class="line">server-&gt;client PORT 2024</span><br><span class="line"></span><br><span class="line">data 通道</span><br><span class="line">client-&gt;server 连接</span><br><span class="line">server-&gt;client ACK</span><br></pre></td></tr></table></figure>
+<p>如果 requestVolumeThreshold 设置过大，thread.timeoutInMilliseconds &gt; rollingStats.timeInMilliseconds，而 Web 容器的并发数比较小，可能会导致永远不会熔断。</p>
+<p>如：Undertow 默认的并发数是 CPU 核数*8，4 核心就是 32 个线程，而 requestVolumeThreshold 设置 20，thread.timeoutInMilliseconds=15000，rollingStats.timeInMilliseconds=10000 的背景下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">http:&#x2F;&#x2F;A-SERVICE&#x2F;a 请求量 10</span><br><span class="line">http:&#x2F;&#x2F;A-SERVICE&#x2F;b 请求量 10</span><br><span class="line">http:&#x2F;&#x2F;A-SERVICE&#x2F;c 请求量 10</span><br><span class="line">http:&#x2F;&#x2F;A-SERVICE&#x2F;q 请求量 2</span><br></pre></td></tr></table></figure>
 
-<h3 id="ftps"><a href="#ftps" class="headerlink" title="ftps"></a>ftps</h3><p>为 ftp 增加 SSL 层加密</p>
-<h3 id="sftp"><a href="#sftp" class="headerlink" title="sftp"></a>sftp</h3><p>sftp 始终只有一个通道，数据命令在一个通道内执行，效率比 ftp 低下</p>
+<p>此时，没有一个 CommandKey 达到熔断判断的最小并发量 20 的要求，不会判定熔断，等到接口 15 秒后超时，滚动窗口因为是 10 秒，此时已经清空了 15 秒前的接口统计数据，此时再来这么一批请求，还是不会触发熔断。</p>
+<p>结论：thread.timeoutInMilliseconds 一般要小于 rollingStats.timeInMilliseconds。如果不行的话，就得降低 requestVolumeThreshold 并发量，让单个页面上调用的微服务接口能在 Web 容器的并发数限制下达到熔断判断的最低并发量。这样如果目标服务挂了，客户频繁刷新页面也能靠着熔断打开，快速 fallback，不至于耗尽 web 容器的线程数而导致应用瘫痪。</p>
 
     </div>
 
@@ -281,9 +270,7 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/ftp/" rel="tag"># ftp</a>
-              <a href="/tags/ftps/" rel="tag"># ftps</a>
-              <a href="/tags/sftp/" rel="tag"># sftp</a>
+              <a href="/tags/Hystrix/" rel="tag"># Hystrix</a>
           </div>
 
         
@@ -292,13 +279,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/189048717/" rel="prev" title="Spring-WebFilter笔记">
-      <i class="fa fa-chevron-left"></i> Spring-WebFilter笔记
+    <a href="/2777437261/" rel="prev" title="Mysql查询空格相关问题">
+      <i class="fa fa-chevron-left"></i> Mysql查询空格相关问题
     </a></div>
-      <div class="post-nav-item">
-    <a href="/183042282/" rel="next" title="Docker构建Mysql主从服务">
-      Docker构建Mysql主从服务 <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -358,7 +342,6 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#ftp"><span class="nav-number">1.</span> <span class="nav-text">ftp</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ftps"><span class="nav-number">2.</span> <span class="nav-text">ftps</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sftp"><span class="nav-number">3.</span> <span class="nav-text">sftp</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
