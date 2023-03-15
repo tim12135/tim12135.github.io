@@ -164,6 +164,118 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://tim-jt.gitee.io/1346865043/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Tim">
+      <meta itemprop="description" content="Tim's blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tim's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/1346865043/" class="post-title-link" itemprop="url">RequestAbortedException的一次排查</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-03-15 19:59:59 / 修改时间：22:12:51" itemprop="dateCreated datePublished" datetime="2023-03-15T19:59:59+08:00">2023-03-15</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/1346865043/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/1346865043/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <blockquote>
+<p>近期正式环境的日志经常出现<code>org.springframework.web.client.ResourceAccessException: I/O error on GET request for &quot;http://xxx/xxx&quot;: Request aborted; nested exception is org.apache.http.impl.execchain.RequestAbortedException: Request aborted</code>这个异常，原以为是服务端断开了请求，后面排查才发现 http 请求里还有这么多门道。</p>
+</blockquote>
+<p>公司的微服务调用，有些项目用的是 OpenFeign，有的直接用了 RestTemplate。用 RestTemplate 作为 Http 客户端的微服务，在启动类上都有加一段 RestTemplate 的 Bean 实例配置，就是设置了 RestTemplate 使用的 HttpClient 它的连接池最大连接数，以及 http 请求默认的连接超时和读取超时。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="function">RestTemplate <span class="title">restTemplate</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    HttpClientBuilder httpClientBuilder = HttpClients.custom();</span><br><span class="line">    Integer poolSize = Runtime.getRuntime().availableProcessors() * <span class="number">2</span> - <span class="number">1</span>;</span><br><span class="line">    poolSize = poolSize &lt; <span class="number">4</span> ? <span class="number">4</span> : poolSize;</span><br><span class="line">    httpClientBuilder.setMaxConnTotal(poolSize * <span class="number">10</span>);</span><br><span class="line">    httpClientBuilder.setMaxConnPerRoute(poolSize);</span><br><span class="line">    httpClientBuilder.disableCookieManagement();</span><br><span class="line">    httpClientBuilder.disableAuthCaching();</span><br><span class="line">    httpClientBuilder.setConnectionTimeToLive(<span class="number">60</span>, TimeUnit.SECONDS);</span><br><span class="line">    RequestConfig.Builder builder = RequestConfig.custom();</span><br><span class="line">    builder.setConnectionRequestTimeout(<span class="number">30000</span>).setConnectTimeout(<span class="number">30000</span>).setSocketTimeout(<span class="number">30000</span>);</span><br><span class="line">    httpClientBuilder.setDefaultRequestConfig(builder.build());</span><br><span class="line">    httpClientBuilder.setKeepAliveStrategy(DefaultConnectionKeepAliveStrategy.INSTANCE);</span><br><span class="line">    HttpClient httpClient = httpClientBuilder.build();</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> DynamicTimeoutHttpRequestFactory(httpClient);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上述配置的连接数配置估计也是 CV 大法过来，不知道具体含义。这里排查问题的时候也了解了下：</p>
+<ul>
+<li><code>maxConnTotal</code>同一时间最大连接数</li>
+<li><code>maxConnPerRoute</code>同一域名同一时间最大连接数</li>
+<li><code>connectionRequestTimout</code>从连接池获取连接的 timeout</li>
+<li><code>connectTimeout</code>客户端和服务器建立连接的 timeout</li>
+<li><code>socketTimeout</code>客户端从服务器读取数据的 timeout</li>
+</ul>
+<p>上述的配置看起来就是建立了一个连接数是<code>（cpu线程数*2-1）*10</code>的连接池，相同域名同一时间最多连接数是<code>（cpu线程数*2-1）</code>，按照线上配置是 4 核心 8 线程，最大连接数是 150，相同域名最多同时就是 15。一旦用完就会阻塞在获取 httpclient 连接的位置。根据异常的堆栈日志：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">Caused by: org.apache.http.impl.execchain.RequestAbortedException: Request aborted</span><br><span class="line">	at org.apache.http.impl.execchain.MainClientExec.execute(MainClientExec.java:<span class="number">194</span>)</span><br><span class="line">	at org.apache.http.impl.execchain.ProtocolExec.execute(ProtocolExec.java:<span class="number">185</span>)</span><br><span class="line">	at org.apache.http.impl.execchain.RetryExec.execute(RetryExec.java:<span class="number">89</span>)</span><br><span class="line">	at org.apache.http.impl.execchain.RedirectExec.execute(RedirectExec.java:<span class="number">111</span>)</span><br><span class="line">	at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:<span class="number">185</span>)</span><br><span class="line">	at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:<span class="number">83</span>)</span><br><span class="line">	at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:<span class="number">56</span>)</span><br><span class="line">	at org.springframework.http.client.HttpComponentsClientHttpRequest.executeInternal(HttpComponentsClientHttpRequest.java:<span class="number">89</span>)</span><br><span class="line">	at org.springframework.http.client.AbstractBufferingClientHttpRequest.executeInternal(AbstractBufferingClientHttpRequest.java:<span class="number">48</span>)</span><br><span class="line">	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:<span class="number">53</span>)</span><br><span class="line">	at org.springframework.http.client.InterceptingClientHttpRequest$InterceptingRequestExecution.execute(InterceptingClientHttpRequest.java:<span class="number">112</span>)</span><br><span class="line">	at com.taimeitech.architecture.gateway.kubernetes.devtool.resttemplate.K8sDevSupportClientHttpRequestInterceptor.intercept(K8sDevSupportClientHttpRequestInterceptor.java:<span class="number">37</span>)</span><br><span class="line">	at org.springframework.http.client.InterceptingClientHttpRequest$InterceptingRequestExecution.execute(InterceptingClientHttpRequest.java:<span class="number">88</span>)</span><br><span class="line">	at org.springframework.http.client.InterceptingClientHttpRequest.executeInternal(InterceptingClientHttpRequest.java:<span class="number">72</span>)</span><br><span class="line">	at org.springframework.http.client.AbstractBufferingClientHttpRequest.executeInternal(AbstractBufferingClientHttpRequest.java:<span class="number">48</span>)</span><br><span class="line">	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:<span class="number">53</span>)</span><br><span class="line">	at org.springframework.web.client.RestTemplate.doExecute(RestTemplate.java:<span class="number">660</span>)</span><br><span class="line">	... <span class="number">35</span> more</span><br><span class="line">Caused by: java.lang.InterruptedException</span><br><span class="line">	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.reportInterruptAfterWait(AbstractQueuedSynchronizer.java:<span class="number">2014</span>)</span><br><span class="line">	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.awaitUntil(AbstractQueuedSynchronizer.java:<span class="number">2129</span>)</span><br><span class="line">	at org.apache.http.pool.AbstractConnPool.getPoolEntryBlocking(AbstractConnPool.java:<span class="number">378</span>)</span><br><span class="line">	at org.apache.http.pool.AbstractConnPool.access$<span class="number">200</span>(AbstractConnPool.java:<span class="number">69</span>)</span><br><span class="line">	at org.apache.http.pool.AbstractConnPool$<span class="number">2.</span>get(AbstractConnPool.java:<span class="number">246</span>)</span><br><span class="line">	at org.apache.http.pool.AbstractConnPool$<span class="number">2.</span>get(AbstractConnPool.java:<span class="number">193</span>)</span><br><span class="line">	at org.apache.http.impl.conn.PoolingHttpClientConnectionManager.leaseConnection(PoolingHttpClientConnectionManager.java:<span class="number">303</span>)</span><br><span class="line">	at org.apache.http.impl.conn.PoolingHttpClientConnectionManager$<span class="number">1.</span>get(PoolingHttpClientConnectionManager.java:<span class="number">279</span>)</span><br><span class="line">	at org.apache.http.impl.execchain.MainClientExec.execute(MainClientExec.java:<span class="number">191</span>)</span><br><span class="line">	... <span class="number">51</span> more</span><br></pre></td></tr></table></figure>
+
+<p>可以定位到这两行<code>at org.apache.http.impl.execchain.MainClientExec.execute(MainClientExec.java:194)</code>。这行对应的代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//MainClientExec.java:194</span></span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">int</span> timeout = config.getConnectionRequestTimeout();</span><br><span class="line">    managedConn = connRequest.get(timeout &gt; <span class="number">0</span> ? timeout : <span class="number">0</span>, TimeUnit.MILLISECONDS);</span><br><span class="line">&#125; <span class="keyword">catch</span>(<span class="keyword">final</span> InterruptedException interrupted) &#123;</span><br><span class="line">    Thread.currentThread().interrupt();</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> RequestAbortedException(<span class="string">&quot;Request aborted&quot;</span>, interrupted);</span><br><span class="line">&#125; <span class="keyword">catch</span>(<span class="keyword">final</span> ExecutionException ex) &#123;</span><br><span class="line">    Throwable cause = ex.getCause();</span><br><span class="line">    <span class="keyword">if</span> (cause == <span class="keyword">null</span>) &#123;</span><br><span class="line">        cause = ex;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> RequestAbortedException(<span class="string">&quot;Request execution failed&quot;</span>, cause);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里可以看到再获取<code>HttpClientConnection</code>的时候，线程被 interrupt 了，然后被包装成了<code>RequestAbortedException</code>抛出。</p>
+<p>看到这里我以为是<code>connectionRequestTimeout</code>超时导致的这个异常，但是看了 apm 内的时间线和 30 秒的比对。</p>
+<p><img src="apm.png" alt="apm日志"></p>
+<p>发现并没有获取连接超时，并且发现日志中还有对应 Hystrix 的报错<code>xxx timed-out and no fallback available.</code>，这个异常是 HystrixCommand 超时且没有 fallback 才会抛出的异常。这就很奇怪了，因为 Hystrix 的超时配置我设置的是 30 秒，我们 Hystrix 开启的时间点是方法入口，按照这个逻辑整个方法应该执行了 30 秒，但是看 apm 日志，整个 HystrixCommand 只执行了 15 秒左右。还有 15 秒去哪了？</p>
+<p>反复查看日志和 Hystrix 文档，才发现 HystrixCommand 的执行，原来要分成两部分，在 Hystrix Thread 模式下，HystrixCommand execute 后，如果对应的 threadPool coresize 有可用的，则直接执行，如果没有可用的，则进入队列等待。而 execute 后，Hystrix 还开启了一个 time 线程用来计时，此时如果 Command 没有可用线程进入队列等待，但 time 线程还是会计时，这里耗掉了那丢失的 15 秒。</p>
+<p>而后有空余线程来执行 Command 的时候，在发起 http 请求时，由于 HttpClient 连接池连接数不够，处于阻塞状态，又过了 15 秒，此时已超过了 Hystrix 超时的 30 秒，time 线程发起了超时 fallback，对执行命令的线程发起了 interrupt，此时获取连接而阻塞的线程就抛出了异常，然后被包装成了 RequestAbortedException 抛出。</p>
+<p><img src="sequence.png" alt="时序"></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://tim-jt.gitee.io/1111899647/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -189,7 +301,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-10-28 13:43:02 / 修改时间：15:10:02" itemprop="dateCreated datePublished" datetime="2022-10-28T13:43:02+08:00">2022-10-28</time>
+              <time title="创建时间：2022-10-28 13:43:02 / 修改时间：15:10:19" itemprop="dateCreated datePublished" datetime="2022-10-28T13:43:02+08:00">2022-10-28</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1300,123 +1412,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://tim-jt.gitee.io/183042282/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Tim">
-      <meta itemprop="description" content="Tim's blog">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Tim's blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/183042282/" class="post-title-link" itemprop="url">Docker构建Mysql主从服务</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-02-24 15:32:02" itemprop="dateCreated datePublished" datetime="2020-02-24T15:32:02+08:00">2020-02-24</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-03-01 16:18:58" itemprop="dateModified" datetime="2022-03-01T16:18:58+08:00">2022-03-01</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Docker/" itemprop="url" rel="index"><span itemprop="name">Docker</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/183042282/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/183042282/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="一主一从"><a href="#一主一从" class="headerlink" title="一主一从"></a>一主一从</h2><h3 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h3><p>主库/w1/mysql.cnf</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line">log-bin=mysql-bin #开启二进制日志</span><br><span class="line">server-id=1 #设置server-id</span><br><span class="line">binlog-ignore-db=mysql #忽略mysql数据库的同步，像系统库都可以忽略</span><br><span class="line">binlog-ignore-db=information_schema</span><br><span class="line"><span class="meta">#</span><span class="bash">binlog-do-db=需要复制的主数据库名字</span></span><br><span class="line">binlog_format=STATEMENT #STATEMENT sql复制；ROW 行变化复制；MIXED 混合模式，但是@@hostname 无法解决</span><br></pre></td></tr></table></figure>
-
-<p>从库/r1/mysql.cnf</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line">server-id=2 #设置server-id，必须唯一</span><br><span class="line"><span class="meta">#</span><span class="bash">relay-log=mysql-relay 启用中继日志</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">创建docker网络</span></span><br><span class="line">docker network create --subnet=172.20.0.0/16 --gateway=172.20.0.1 mynet ;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash">启动主mysql</span></span><br><span class="line">docker run -itd -p 13306:3306 -h mysqlw1 --name mysqlw1 --volume &quot;$PWD/w1&quot;:/etc/mysql/conf.d -e MYSQL_ROOT_PASSWORD=123456 --network mynet --ip 172.20.0.2 mysql:5.7;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash">启动从mysql</span></span><br><span class="line">docker run -itd -p 13307:3306 -h mysqlr1 --name mysqlr1 --volume &quot;$PWD/r1&quot;:/etc/mysql/conf.d -e MYSQL_ROOT_PASSWORD=123456 --network mynet --ip 172.20.0.3 mysql:5.7;</span><br></pre></td></tr></table></figure>
-
-<h4 id="主"><a href="#主" class="headerlink" title="主"></a>主</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">创建同步的用户</span></span><br><span class="line">GRANT REPLICATION SLAVE ON *.* TO &#x27;repl&#x27;@&#x27;%&#x27; IDENTIFIED BY &#x27;123456&#x27;;</span><br><span class="line">flush privileges;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash">获取bin日志文件和日志的position</span></span><br><span class="line">SHOW MASTER STATUS;</span><br></pre></td></tr></table></figure>
-
-<h4 id="从"><a href="#从" class="headerlink" title="从"></a>从</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 配置，需要根据master status的信息修改log_file和log_pos的值</span></span><br><span class="line">CHANGE MASTER TO MASTER_HOST=&#x27;172.20.0.2&#x27;, MASTER_USER=&#x27;repl&#x27;, MASTER_PASSWORD=&#x27;123456&#x27;, MASTER_LOG_FILE=&#x27;mysql-bin.000003&#x27;, MASTER_LOG_POS=759;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 开启从服务</span></span><br><span class="line">start slave;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 查看从服务的状态</span></span><br><span class="line">show slave status\G;</span><br></pre></td></tr></table></figure>
-
-<h2 id="双主双从"><a href="#双主双从" class="headerlink" title="双主双从"></a>双主双从</h2><h3 id="准备-1"><a href="#准备-1" class="headerlink" title="准备"></a>准备</h3><p>主库/w1/mysql.cnf</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line"><span class="meta">#</span><span class="bash">开启二进制日志</span></span><br><span class="line">log-bin=mysql-bin</span><br><span class="line"><span class="meta">#</span><span class="bash">设置server-id</span></span><br><span class="line">server-id=1</span><br><span class="line"><span class="meta">#</span><span class="bash">忽略mysql数据库的同步，像系统库都可以忽略</span></span><br><span class="line">binlog-ignore-db=mysql</span><br><span class="line">binlog-ignore-db=information_schema</span><br><span class="line"><span class="meta">#</span><span class="bash">binlog-do-db=需要复制的主数据库名字</span></span><br><span class="line"><span class="meta">#</span><span class="bash">STATEMENT sql复制；ROW 行变化复制；MIXED 混合模式，但是@@hostname 无法解决</span></span><br><span class="line">binlog_format=STATEMENT</span><br><span class="line"><span class="meta">#</span><span class="bash"> 在作为从库的时候，有写入操作也要更新二进制日志的文件</span></span><br><span class="line">log-slave-updates</span><br><span class="line"><span class="meta">#</span><span class="bash"> 自增长步长</span></span><br><span class="line">auto-increment-increment=2</span><br><span class="line"><span class="meta">#</span><span class="bash"> 自增长起始值</span></span><br><span class="line">auto-increment-offset=1</span><br></pre></td></tr></table></figure>
-
-<p>主库 2/w2/mysql.cnf</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line">log-bin=mysql-bin</span><br><span class="line">server-id=3</span><br><span class="line">binlog-ignore-db=mysql</span><br><span class="line">binlog-ignore-db=information_schema</span><br><span class="line"><span class="meta">#</span><span class="bash">binlog-do-db=需要复制的主数据库名字</span></span><br><span class="line">binlog_format=STATEMENT</span><br><span class="line">log-slave-updates</span><br><span class="line">auto-increment-increment=2</span><br><span class="line">auto-increment-offset=2</span><br></pre></td></tr></table></figure>
-
-<p>从库/r1/mysql.cnf</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line"><span class="meta">#</span><span class="bash">设置server-id，必须唯一</span></span><br><span class="line">server-id=2</span><br><span class="line"><span class="meta">#</span><span class="bash">启用中继日志</span></span><br><span class="line">relay-log=mysql-relay</span><br></pre></td></tr></table></figure>
-
-<p>从库 2/r2/mysql.cnf</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line">server-id=4</span><br><span class="line">relay-log=mysql-relay</span><br></pre></td></tr></table></figure>
-
-<h3 id="启动后"><a href="#启动后" class="headerlink" title="启动后"></a>启动后</h3><ol>
-<li>启动 4 个 mysql 服务后，两台主机需要创建两个备份权限的帐号，命令参照一主一从</li>
-<li>然后按照一主一从的模式，分别配置好两套主从服务，s1-&gt;m1，s2-&gt;m2</li>
-<li>两个主机也需要相互配置对方主机的信息，m1-&gt;m2，m2-&gt;m1</li>
-<li>都开启 start slave;并查看 show slave status;</li>
-</ol>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1486,7 +1481,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-count">16</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1499,7 +1494,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-count">23</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -1526,7 +1521,7 @@
 <div class="copyright">
   
   &copy; 
-  <span itemprop="copyrightYear">2022</span>
+  <span itemprop="copyrightYear">2023</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
