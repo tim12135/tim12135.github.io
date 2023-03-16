@@ -14,28 +14,29 @@
 
 
 <link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"tim-jt.gitee.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"tim-jt.gitee.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
   <meta name="description" content="近期正式环境的日志经常出现org.springframework.web.client.ResourceAccessException: I&#x2F;O error on GET request for &quot;http:&#x2F;&#x2F;xxx&#x2F;xxx&quot;: Request aborted; nested exception is org.apache.http.impl.execchain.Reque">
 <meta property="og:type" content="article">
 <meta property="og:title" content="RequestAbortedException的一次排查">
 <meta property="og:url" content="http://tim-jt.gitee.io/1346865043/index.html">
-<meta property="og:site_name" content="Tim&#39;s blog">
+<meta property="og:site_name" content="Tim">
 <meta property="og:description" content="近期正式环境的日志经常出现org.springframework.web.client.ResourceAccessException: I&#x2F;O error on GET request for &quot;http:&#x2F;&#x2F;xxx&#x2F;xxx&quot;: Request aborted; nested exception is org.apache.http.impl.execchain.Reque">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://tim-jt.gitee.io/1346865043/apm.png">
-<meta property="og:image" content="http://tim-jt.gitee.io/1346865043/sequence.png">
+<meta property="og:image" content="http://tim-jt.gitee.io/1346865043/RequestAbortedException%E7%9A%84%E4%B8%80%E6%AC%A1%E6%8E%92%E6%9F%A5/apm.png">
+<meta property="og:image" content="http://tim-jt.gitee.io/1346865043/RequestAbortedException%E7%9A%84%E4%B8%80%E6%AC%A1%E6%8E%92%E6%9F%A5/sequence.png">
 <meta property="article:published_time" content="2023-03-15T11:59:59.000Z">
-<meta property="article:modified_time" content="2023-03-15T14:12:51.019Z">
+<meta property="article:modified_time" content="2023-03-16T01:36:58.445Z">
 <meta property="article:author" content="Tim">
 <meta property="article:tag" content="HttpClient">
 <meta property="article:tag" content="Exception">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://tim-jt.gitee.io/1346865043/apm.png">
+<meta name="twitter:image" content="http://tim-jt.gitee.io/1346865043/RequestAbortedException%E7%9A%84%E4%B8%80%E6%AC%A1%E6%8E%92%E6%9F%A5/apm.png">
 
 <link rel="canonical" href="http://tim-jt.gitee.io/1346865043/">
 
@@ -50,7 +51,7 @@
   };
 </script>
 
-  <title>RequestAbortedException的一次排查 | Tim's blog</title>
+  <title>RequestAbortedException的一次排查 | Tim</title>
   
 
 
@@ -101,10 +102,9 @@
 
     <a href="/" class="brand" rel="start">
       <span class="logo-line-before"><i></i></span>
-      <h1 class="site-title">Tim's blog</h1>
+      <h1 class="site-title">Tim</h1>
       <span class="logo-line-after"><i></i></span>
     </a>
-      <p class="site-subtitle" itemprop="description">Tim's blog</p>
   </div>
 
   <div class="site-nav-right">
@@ -121,11 +121,6 @@
         <li class="menu-item menu-item-home">
 
     <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
-
-  </li>
-        <li class="menu-item menu-item-about">
-
-    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
 
   </li>
         <li class="menu-item menu-item-categories">
@@ -180,7 +175,7 @@
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Tim's blog">
+      <meta itemprop="name" content="Tim">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
@@ -193,10 +188,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2023-03-15 19:59:59 / 修改时间：22:12:51" itemprop="dateCreated datePublished" datetime="2023-03-15T19:59:59+08:00">2023-03-15</time>
+              <time title="创建时间：2023-03-15 19:59:59" itemprop="dateCreated datePublished" datetime="2023-03-15T19:59:59+08:00">2023-03-15</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-03-16 09:36:58" itemprop="dateModified" datetime="2023-03-16T09:36:58+08:00">2023-03-16</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -265,11 +266,11 @@
 
 <p>这里可以看到再获取<code>HttpClientConnection</code>的时候，线程被 interrupt 了，然后被包装成了<code>RequestAbortedException</code>抛出。</p>
 <p>看到这里我以为是<code>connectionRequestTimeout</code>超时导致的这个异常，但是看了 apm 内的时间线和 30 秒的比对。</p>
-<p><img src="apm.png" alt="apm日志"></p>
+<p><img src="RequestAbortedException%E7%9A%84%E4%B8%80%E6%AC%A1%E6%8E%92%E6%9F%A5/apm.png" alt="apm日志"></p>
 <p>发现并没有获取连接超时，并且发现日志中还有对应 Hystrix 的报错<code>xxx timed-out and no fallback available.</code>，这个异常是 HystrixCommand 超时且没有 fallback 才会抛出的异常。这就很奇怪了，因为 Hystrix 的超时配置我设置的是 30 秒，我们 Hystrix 开启的时间点是方法入口，按照这个逻辑整个方法应该执行了 30 秒，但是看 apm 日志，整个 HystrixCommand 只执行了 15 秒左右。还有 15 秒去哪了？</p>
 <p>反复查看日志和 Hystrix 文档，才发现 HystrixCommand 的执行，原来要分成两部分，在 Hystrix Thread 模式下，HystrixCommand execute 后，如果对应的 threadPool coresize 有可用的，则直接执行，如果没有可用的，则进入队列等待。而 execute 后，Hystrix 还开启了一个 time 线程用来计时，此时如果 Command 没有可用线程进入队列等待，但 time 线程还是会计时，这里耗掉了那丢失的 15 秒。</p>
 <p>而后有空余线程来执行 Command 的时候，在发起 http 请求时，由于 HttpClient 连接池连接数不够，处于阻塞状态，又过了 15 秒，此时已超过了 Hystrix 超时的 30 秒，time 线程发起了超时 fallback，对执行命令的线程发起了 interrupt，此时获取连接而阻塞的线程就抛出了异常，然后被包装成了 RequestAbortedException 抛出。</p>
-<p><img src="sequence.png" alt="时序"></p>
+<p><img src="RequestAbortedException%E7%9A%84%E4%B8%80%E6%AC%A1%E6%8E%92%E6%9F%A5/sequence.png" alt="时序"></p>
 
     </div>
 
@@ -447,6 +448,8 @@
 
   
   <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
 
@@ -455,7 +458,7 @@
 <script src="/js/motion.js"></script>
 
 
-<script src="/js/schemes/muse.js"></script>
+<script src="/js/schemes/pisces.js"></script>
 
 
 <script src="/js/next-boot.js"></script>
