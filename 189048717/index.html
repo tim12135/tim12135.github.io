@@ -18,13 +18,13 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"tim-jt.gitee.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"tim-jt.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
   <meta name="description" content="实现一个过滤器 实现 javax.servlet.Filter 接口 在自定义的过滤器上，加上@WebFilter 注解，并在启动类上加上@ServletComponentScan 注解  123456789101112131415161718192021222324package test;import javax.servlet.*;import javax.servlet.annotatio">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Spring-WebFilter笔记">
-<meta property="og:url" content="http://tim-jt.gitee.io/189048717/index.html">
+<meta property="og:url" content="http://tim-jt.github.io/189048717/index.html">
 <meta property="og:site_name" content="Tim">
 <meta property="og:description" content="实现一个过滤器 实现 javax.servlet.Filter 接口 在自定义的过滤器上，加上@WebFilter 注解，并在启动类上加上@ServletComponentScan 注解  123456789101112131415161718192021222324package test;import javax.servlet.*;import javax.servlet.annotatio">
 <meta property="og:locale" content="zh_CN">
@@ -35,7 +35,7 @@
 <meta property="article:tag" content="Webfilter">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://tim-jt.gitee.io/189048717/">
+<link rel="canonical" href="http://tim-jt.github.io/189048717/">
 
 
 <script id="page-configurations">
@@ -163,7 +163,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://tim-jt.gitee.io/189048717/">
+    <link itemprop="mainEntityOfPage" href="http://tim-jt.github.io/189048717/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -258,7 +258,7 @@
 </ol>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">FilterRegistrationBean registration = <span class="keyword">new</span> FilterRegistrationBean(<span class="keyword">new</span> AFilter());</span><br><span class="line">registration.addUrlPatterns(<span class="string">&quot;/*&quot;</span>);</span><br><span class="line">registration.setOrder(Integer.MIN_VALUE);</span><br></pre></td></tr></table></figure>
 
-<p><font color=red>注解<code>@Order</code>对过滤器的顺序没有任何影响</font></p>
+<p><font color="red">注解<code>@Order</code>对过滤器的顺序没有任何影响</font></p>
 
     </div>
 

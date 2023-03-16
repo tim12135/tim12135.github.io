@@ -18,13 +18,13 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"tim-jt.gitee.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"tim-jt.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
   <meta name="description" content="近期公司提倡使用 webflux 进行响应式编程，在开发了一个功能模块期间，遇到了很多问题。更加痛苦的是，国内关于 webflux 的问答或者教程还是太基础，没有实战内容，特此记录下期间遇到的问题和解决方案。  项目技术栈 MonoDB 4.2.6 搭建的复制集（mongo 4.x 后支持多文档事务） Spring boot 2.3.3.RELEASE spring-boot-starter-w">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Webflux踩坑经历">
-<meta property="og:url" content="http://tim-jt.gitee.io/195629511/index.html">
+<meta property="og:url" content="http://tim-jt.github.io/195629511/index.html">
 <meta property="og:site_name" content="Tim">
 <meta property="og:description" content="近期公司提倡使用 webflux 进行响应式编程，在开发了一个功能模块期间，遇到了很多问题。更加痛苦的是，国内关于 webflux 的问答或者教程还是太基础，没有实战内容，特此记录下期间遇到的问题和解决方案。  项目技术栈 MonoDB 4.2.6 搭建的复制集（mongo 4.x 后支持多文档事务） Spring boot 2.3.3.RELEASE spring-boot-starter-w">
 <meta property="og:locale" content="zh_CN">
@@ -35,7 +35,7 @@
 <meta property="article:tag" content="Webflux">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://tim-jt.gitee.io/195629511/">
+<link rel="canonical" href="http://tim-jt.github.io/195629511/">
 
 
 <script id="page-configurations">
@@ -163,7 +163,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://tim-jt.gitee.io/195629511/">
+    <link itemprop="mainEntityOfPage" href="http://tim-jt.github.io/195629511/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">

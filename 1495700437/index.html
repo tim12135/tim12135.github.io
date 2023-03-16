@@ -18,13 +18,13 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"tim-jt.gitee.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"tim-jt.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
   <meta name="description" content="最近在公司业务中碰到了比较有趣的问题：树形结构的数据，设置父级的时候，形成了循环依赖。如：C 的父级是 B，B 的父级是 A，结果还设置了 A 的父级是 C，导致该类数据的递归运算时直接死循环后栈溢出了  有两种场景的判断方案，可以根据场景来选择单项更新的时候，进行判断是否有环路 新增的时候，选择父级，一定是不会出现环路的，因为当前项还没有子项。删除也是，删除的时候会将当前项以及所有子项删除，不">
 <meta property="og:type" content="article">
 <meta property="og:title" content="链路结构是否存在环判断">
-<meta property="og:url" content="http://tim-jt.gitee.io/1495700437/index.html">
+<meta property="og:url" content="http://tim-jt.github.io/1495700437/index.html">
 <meta property="og:site_name" content="Tim">
 <meta property="og:description" content="最近在公司业务中碰到了比较有趣的问题：树形结构的数据，设置父级的时候，形成了循环依赖。如：C 的父级是 B，B 的父级是 A，结果还设置了 A 的父级是 C，导致该类数据的递归运算时直接死循环后栈溢出了  有两种场景的判断方案，可以根据场景来选择单项更新的时候，进行判断是否有环路 新增的时候，选择父级，一定是不会出现环路的，因为当前项还没有子项。删除也是，删除的时候会将当前项以及所有子项删除，不">
 <meta property="og:locale" content="zh_CN">
@@ -34,7 +34,7 @@
 <meta property="article:tag" content="链路环判断">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://tim-jt.gitee.io/1495700437/">
+<link rel="canonical" href="http://tim-jt.github.io/1495700437/">
 
 
 <script id="page-configurations">
@@ -162,7 +162,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://tim-jt.gitee.io/1495700437/">
+    <link itemprop="mainEntityOfPage" href="http://tim-jt.github.io/1495700437/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
