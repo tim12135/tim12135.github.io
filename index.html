@@ -159,6 +159,100 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://tim-jt.github.io/992799982/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Tim">
+      <meta itemprop="description" content="Tim's blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tim">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/992799982/" class="post-title-link" itemprop="url">SpringBoot升级到2.0后默认时间格式变化</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-04-03 10:18:46 / 修改时间：10:41:56" itemprop="dateCreated datePublished" datetime="2023-04-03T10:18:46+08:00">2023-04-03</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/992799982/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/992799982/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <ul>
+<li>背景：项目从 SpringBoot 1.5 升级到了 2.4</li>
+<li>问题：http 请求返回前端数据的时候，2.4 版本 Date 类型转换成了 UTC 格式的字符串，而 1.5 是转换成数值类型的时间戳</li>
+<li>解决：在配置中增加<code>spring.jackson.serialization.write-dates-as-timestamps=true</code></li>
+</ul>
+<h2 id="根本原因"><a href="#根本原因" class="headerlink" title="根本原因"></a>根本原因</h2><p>Spring 处理 HTTP 请求的时候，返回值会被 HttpMessageConverter 写入输出流，其中对 application/json 格式的请求，最终会被 MappingJackson2HttpMessageConverter 处理。</p>
+<p>而 Jackson 的默认配置可以参照<code>com.fasterxml.jackson.databind.SerializationFeature</code>，但<code>WRITE_DATES_AS_TIMESTAMPS(true)</code>对 Date 类型的处理默认是转换成时间戳，理论上应该没有问题才对。</p>
+<p>最终发现，SpringBoot2.x 在<code>org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration</code>中修改了对 Date 类型的转换配置，如下代码：静态块中关闭了转换成时间戳的功能</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration(proxyBeanMethods = false)</span></span><br><span class="line"><span class="meta">@ConditionalOnClass(ObjectMapper.class)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">JacksonAutoConfiguration</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Map&lt;?, Boolean&gt; FEATURE_DEFAULTS;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">static</span> &#123;</span><br><span class="line">		Map&lt;Object, Boolean&gt; featureDefaults = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">		featureDefaults.put(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, <span class="keyword">false</span>);</span><br><span class="line">		featureDefaults.put(SerializationFeature.WRITE_DURATIONS_AS_TIMESTAMPS, <span class="keyword">false</span>);</span><br><span class="line">		FEATURE_DEFAULTS = Collections.unmodifiableMap(featureDefaults);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Bean</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> JsonComponentModule <span class="title">jsonComponentModule</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> JsonComponentModule();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Configuration(proxyBeanMethods = false)</span></span><br><span class="line">	<span class="meta">@ConditionalOnClass(Jackson2ObjectMapperBuilder.class)</span></span><br><span class="line">	<span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">JacksonObjectMapperConfiguration</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">		<span class="meta">@Bean</span></span><br><span class="line">		<span class="meta">@Primary</span></span><br><span class="line">		<span class="meta">@ConditionalOnMissingBean</span></span><br><span class="line">		<span class="function">ObjectMapper <span class="title">jacksonObjectMapper</span><span class="params">(Jackson2ObjectMapperBuilder builder)</span> </span>&#123;</span><br><span class="line">			<span class="keyword">return</span> builder.createXmlMapper(<span class="keyword">false</span>).build();</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Configuration(proxyBeanMethods = false)</span></span><br><span class="line">	<span class="meta">@ConditionalOnClass(ParameterNamesModule.class)</span></span><br><span class="line">	<span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">ParameterNamesModuleConfiguration</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">		<span class="meta">@Bean</span></span><br><span class="line">		<span class="meta">@ConditionalOnMissingBean</span></span><br><span class="line">		<span class="function">ParameterNamesModule <span class="title">parameterNamesModule</span><span class="params">()</span> </span>&#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">new</span> ParameterNamesModule(JsonCreator.Mode.DEFAULT);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Configuration(proxyBeanMethods = false)</span></span><br><span class="line">	<span class="meta">@ConditionalOnClass(Jackson2ObjectMapperBuilder.class)</span></span><br><span class="line">	<span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">JacksonObjectMapperBuilderConfiguration</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">		<span class="meta">@Bean</span></span><br><span class="line">		<span class="meta">@Scope(&quot;prototype&quot;)</span></span><br><span class="line">		<span class="meta">@ConditionalOnMissingBean</span></span><br><span class="line">		<span class="function">Jackson2ObjectMapperBuilder <span class="title">jacksonObjectMapperBuilder</span><span class="params">(ApplicationContext applicationContext,</span></span></span><br><span class="line"><span class="function"><span class="params">				List&lt;Jackson2ObjectMapperBuilderCustomizer&gt; customizers)</span> </span>&#123;</span><br><span class="line">			Jackson2ObjectMapperBuilder builder = <span class="keyword">new</span> Jackson2ObjectMapperBuilder();</span><br><span class="line">			builder.applicationContext(applicationContext);</span><br><span class="line">			customize(builder, customizers);</span><br><span class="line">			<span class="keyword">return</span> builder;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">customize</span><span class="params">(Jackson2ObjectMapperBuilder builder,</span></span></span><br><span class="line"><span class="function"><span class="params">				List&lt;Jackson2ObjectMapperBuilderCustomizer&gt; customizers)</span> </span>&#123;</span><br><span class="line">			<span class="keyword">for</span> (Jackson2ObjectMapperBuilderCustomizer customizer : customizers) &#123;</span><br><span class="line">				customizer.customize(builder);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Configuration(proxyBeanMethods = false)</span></span><br><span class="line">	<span class="meta">@ConditionalOnClass(Jackson2ObjectMapperBuilder.class)</span></span><br><span class="line">	<span class="meta">@EnableConfigurationProperties(JacksonProperties.class)</span></span><br><span class="line">	<span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Jackson2ObjectMapperBuilderCustomizerConfiguration</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">		<span class="meta">@Bean</span></span><br><span class="line">		<span class="function">StandardJackson2ObjectMapperBuilderCustomizer <span class="title">standardJacksonObjectMapperBuilderCustomizer</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">				ApplicationContext applicationContext, JacksonProperties jacksonProperties)</span> </span>&#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">new</span> StandardJackson2ObjectMapperBuilderCustomizer(applicationContext, jacksonProperties);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">static</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">StandardJackson2ObjectMapperBuilderCustomizer</span></span></span><br><span class="line"><span class="class">				<span class="keyword">implements</span> <span class="title">Jackson2ObjectMapperBuilderCustomizer</span>, <span class="title">Ordered</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">private</span> <span class="keyword">final</span> ApplicationContext applicationContext;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">private</span> <span class="keyword">final</span> JacksonProperties jacksonProperties;</span><br><span class="line"></span><br><span class="line">			StandardJackson2ObjectMapperBuilderCustomizer(ApplicationContext applicationContext,</span><br><span class="line">					JacksonProperties jacksonProperties) &#123;</span><br><span class="line">				<span class="keyword">this</span>.applicationContext = applicationContext;</span><br><span class="line">				<span class="keyword">this</span>.jacksonProperties = jacksonProperties;</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			<span class="meta">@Override</span></span><br><span class="line">			<span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getOrder</span><span class="params">()</span> </span>&#123;</span><br><span class="line">				<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			<span class="meta">@Override</span></span><br><span class="line">			<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">customize</span><span class="params">(Jackson2ObjectMapperBuilder builder)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">				<span class="keyword">if</span> (<span class="keyword">this</span>.jacksonProperties.getDefaultPropertyInclusion() != <span class="keyword">null</span>) &#123;</span><br><span class="line">					builder.serializationInclusion(<span class="keyword">this</span>.jacksonProperties.getDefaultPropertyInclusion());</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">if</span> (<span class="keyword">this</span>.jacksonProperties.getTimeZone() != <span class="keyword">null</span>) &#123;</span><br><span class="line">					builder.timeZone(<span class="keyword">this</span>.jacksonProperties.getTimeZone());</span><br><span class="line">				&#125;</span><br><span class="line">				configureFeatures(builder, FEATURE_DEFAULTS);</span><br><span class="line">				configureVisibility(builder, <span class="keyword">this</span>.jacksonProperties.getVisibility());</span><br><span class="line">				configureFeatures(builder, <span class="keyword">this</span>.jacksonProperties.getDeserialization());</span><br><span class="line">				configureFeatures(builder, <span class="keyword">this</span>.jacksonProperties.getSerialization());</span><br><span class="line">				configureFeatures(builder, <span class="keyword">this</span>.jacksonProperties.getMapper());</span><br><span class="line">				configureFeatures(builder, <span class="keyword">this</span>.jacksonProperties.getParser());</span><br><span class="line">				configureFeatures(builder, <span class="keyword">this</span>.jacksonProperties.getGenerator());</span><br><span class="line">				configureDateFormat(builder);</span><br><span class="line">				configurePropertyNamingStrategy(builder);</span><br><span class="line">				configureModules(builder);</span><br><span class="line">				configureLocale(builder);</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">configureFeatures</span><span class="params">(Jackson2ObjectMapperBuilder builder, Map&lt;?, Boolean&gt; features)</span> </span>&#123;</span><br><span class="line">				features.forEach((feature, value) -&gt; &#123;</span><br><span class="line">					<span class="keyword">if</span> (value != <span class="keyword">null</span>) &#123;</span><br><span class="line">						<span class="keyword">if</span> (value) &#123;</span><br><span class="line">							builder.featuresToEnable(feature);</span><br><span class="line">						&#125;</span><br><span class="line">						<span class="keyword">else</span> &#123;</span><br><span class="line">							builder.featuresToDisable(feature);</span><br><span class="line">						&#125;</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;);</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">configureVisibility</span><span class="params">(Jackson2ObjectMapperBuilder builder,</span></span></span><br><span class="line"><span class="function"><span class="params">					Map&lt;PropertyAccessor, JsonAutoDetect.Visibility&gt; visibilities)</span> </span>&#123;</span><br><span class="line">				visibilities.forEach(builder::visibility);</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">configureDateFormat</span><span class="params">(Jackson2ObjectMapperBuilder builder)</span> </span>&#123;</span><br><span class="line">				<span class="comment">// We support a fully qualified class name extending DateFormat or a date</span></span><br><span class="line">				<span class="comment">// pattern string value</span></span><br><span class="line">				String dateFormat = <span class="keyword">this</span>.jacksonProperties.getDateFormat();</span><br><span class="line">				<span class="keyword">if</span> (dateFormat != <span class="keyword">null</span>) &#123;</span><br><span class="line">					<span class="keyword">try</span> &#123;</span><br><span class="line">						Class&lt;?&gt; dateFormatClass = ClassUtils.forName(dateFormat, <span class="keyword">null</span>);</span><br><span class="line">						builder.dateFormat((DateFormat) BeanUtils.instantiateClass(dateFormatClass));</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">catch</span> (ClassNotFoundException ex) &#123;</span><br><span class="line">						SimpleDateFormat simpleDateFormat = <span class="keyword">new</span> SimpleDateFormat(dateFormat);</span><br><span class="line">						<span class="comment">// Since Jackson 2.6.3 we always need to set a TimeZone (see</span></span><br><span class="line">						<span class="comment">// gh-4170). If none in our properties fallback to the Jackson&#x27;s</span></span><br><span class="line">						<span class="comment">// default</span></span><br><span class="line">						TimeZone timeZone = <span class="keyword">this</span>.jacksonProperties.getTimeZone();</span><br><span class="line">						<span class="keyword">if</span> (timeZone == <span class="keyword">null</span>) &#123;</span><br><span class="line">							timeZone = <span class="keyword">new</span> ObjectMapper().getSerializationConfig().getTimeZone();</span><br><span class="line">						&#125;</span><br><span class="line">						simpleDateFormat.setTimeZone(timeZone);</span><br><span class="line">						builder.dateFormat(simpleDateFormat);</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">configurePropertyNamingStrategy</span><span class="params">(Jackson2ObjectMapperBuilder builder)</span> </span>&#123;</span><br><span class="line">				<span class="comment">// We support a fully qualified class name extending Jackson&#x27;s</span></span><br><span class="line">				<span class="comment">// PropertyNamingStrategy or a string value corresponding to the constant</span></span><br><span class="line">				<span class="comment">// names in PropertyNamingStrategy which hold default provided</span></span><br><span class="line">				<span class="comment">// implementations</span></span><br><span class="line">				String strategy = <span class="keyword">this</span>.jacksonProperties.getPropertyNamingStrategy();</span><br><span class="line">				<span class="keyword">if</span> (strategy != <span class="keyword">null</span>) &#123;</span><br><span class="line">					<span class="keyword">try</span> &#123;</span><br><span class="line">						configurePropertyNamingStrategyClass(builder, ClassUtils.forName(strategy, <span class="keyword">null</span>));</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">catch</span> (ClassNotFoundException ex) &#123;</span><br><span class="line">						configurePropertyNamingStrategyField(builder, strategy);</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">configurePropertyNamingStrategyClass</span><span class="params">(Jackson2ObjectMapperBuilder builder,</span></span></span><br><span class="line"><span class="function"><span class="params">					Class&lt;?&gt; propertyNamingStrategyClass)</span> </span>&#123;</span><br><span class="line">				builder.propertyNamingStrategy(</span><br><span class="line">						(PropertyNamingStrategy) BeanUtils.instantiateClass(propertyNamingStrategyClass));</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">configurePropertyNamingStrategyField</span><span class="params">(Jackson2ObjectMapperBuilder builder, String fieldName)</span> </span>&#123;</span><br><span class="line">				<span class="comment">// Find the field (this way we automatically support new constants</span></span><br><span class="line">				<span class="comment">// that may be added by Jackson in the future)</span></span><br><span class="line">				Field field = ReflectionUtils.findField(PropertyNamingStrategy.class, fieldName,</span><br><span class="line">						PropertyNamingStrategy.class);</span><br><span class="line">				Assert.notNull(field, () -&gt; <span class="string">&quot;Constant named &#x27;&quot;</span> + fieldName + <span class="string">&quot;&#x27; not found on &quot;</span></span><br><span class="line">						+ PropertyNamingStrategy.class.getName());</span><br><span class="line">				<span class="keyword">try</span> &#123;</span><br><span class="line">					builder.propertyNamingStrategy((PropertyNamingStrategy) field.get(<span class="keyword">null</span>));</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">					<span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(ex);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">configureModules</span><span class="params">(Jackson2ObjectMapperBuilder builder)</span> </span>&#123;</span><br><span class="line">				Collection&lt;Module&gt; moduleBeans = getBeans(<span class="keyword">this</span>.applicationContext, Module.class);</span><br><span class="line">				builder.modulesToInstall(moduleBeans.toArray(<span class="keyword">new</span> Module[<span class="number">0</span>]));</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">configureLocale</span><span class="params">(Jackson2ObjectMapperBuilder builder)</span> </span>&#123;</span><br><span class="line">				Locale locale = <span class="keyword">this</span>.jacksonProperties.getLocale();</span><br><span class="line">				<span class="keyword">if</span> (locale != <span class="keyword">null</span>) &#123;</span><br><span class="line">					builder.locale(locale);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">private</span> <span class="keyword">static</span> &lt;T&gt; <span class="function">Collection&lt;T&gt; <span class="title">getBeans</span><span class="params">(ListableBeanFactory beanFactory, Class&lt;T&gt; type)</span> </span>&#123;</span><br><span class="line">				<span class="keyword">return</span> BeanFactoryUtils.beansOfTypeIncludingAncestors(beanFactory, type).values();</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://tim-jt.github.io/1346865043/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1274,145 +1368,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://tim-jt.github.io/429807150/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Tim">
-      <meta itemprop="description" content="Tim's blog">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Tim">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/429807150/" class="post-title-link" itemprop="url">Mybatis拦截器解析</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-09-17 10:25:41" itemprop="dateCreated datePublished" datetime="2020-09-17T10:25:41+08:00">2020-09-17</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-03-01 16:18:04" itemprop="dateModified" datetime="2022-03-01T16:18:04+08:00">2022-03-01</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/Mybatis/" itemprop="url" rel="index"><span itemprop="name">Mybatis</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/429807150/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/429807150/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="Configuration-初始化"><a href="#Configuration-初始化" class="headerlink" title="Configuration 初始化"></a>Configuration 初始化</h2><ol>
-<li>org.apache.ibatis.session.Configuration#addInterceptor 添加拦截器</li>
-<li>org.apache.ibatis.plugin.InterceptorChain#addInterceptor 实际调用的是 InterceptorChain 的 addInterceptor</li>
-</ol>
-<h2 id="Executor-StatementHandler-ParameterHandler-ResultSetHandler-实例化的时机"><a href="#Executor-StatementHandler-ParameterHandler-ResultSetHandler-实例化的时机" class="headerlink" title="Executor|StatementHandler|ParameterHandler|ResultSetHandler 实例化的时机"></a>Executor|StatementHandler|ParameterHandler|ResultSetHandler 实例化的时机</h2><ol>
-<li>org.apache.ibatis.session.defaults.DefaultSqlSessionFactory#openSessionFromConnection 开启 session</li>
-<li>org.apache.ibatis.session.Configuration#newExecutor(org.apache.ibatis.transaction.Transaction, org.apache.ibatis.session.ExecutorType) 创建了 executor</li>
-<li>org.apache.ibatis.plugin.InterceptorChain#pluginAll 获取所有的插件，此时循环调用了 interceptor 的 plugin 方法，将 interceptor 和 executor 包装成一个代理对象，代理对象实现了 iterceport 类注解@Intercepts 内所有@Signature 的 type 类型</li>
-</ol>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// target： 继承了Executor|StatementHandler|ParameterHandler|ResultSetHandler的实现类 或者 实现了这些接口的代理类</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Object <span class="title">wrap</span><span class="params">(Object target, Interceptor interceptor)</span></span></span><br></pre></td></tr></table></figure>
-
-<ol start="4">
-<li>executor 执行时，会调用 org.apache.ibatis.session.Configuration#newStatementHandler 生成 statementHandler</li>
-</ol>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> StatementHandler <span class="title">newStatementHandler</span><span class="params">(Executor executor, MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql)</span> </span>&#123;</span><br><span class="line">  StatementHandler statementHandler = <span class="keyword">new</span> RoutingStatementHandler(executor, mappedStatement, parameterObject, rowBounds, resultHandler, boundSql);</span><br><span class="line">  statementHandler = (StatementHandler) interceptorChain.pluginAll(statementHandler);</span><br><span class="line">  <span class="keyword">return</span> statementHandler;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<ol start="5">
-<li>statementHandler 构造器中又去生成了 parameterHandler 和 resultSetHandler</li>
-</ol>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="title">BaseStatementHandler</span><span class="params">(Executor executor, MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql)</span> </span>&#123;</span><br><span class="line">   ...</span><br><span class="line">   省略</span><br><span class="line">   ...</span><br><span class="line">   <span class="keyword">this</span>.parameterHandler = configuration.newParameterHandler(mappedStatement, parameterObject, boundSql);</span><br><span class="line">   <span class="keyword">this</span>.resultSetHandler = configuration.newResultSetHandler(executor, mappedStatement, rowBounds, parameterHandler, resultHandler, boundSql);</span><br><span class="line"> &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<ol start="6">
-<li>因此调用 org.apache.ibatis.plugin.InterceptorChain#pluginAll 的顺序，statementHandler 在 parameterHandler、resultSetHandler 后面</li>
-</ol>
-<h2 id="执行逻辑"><a href="#执行逻辑" class="headerlink" title="执行逻辑"></a>执行逻辑</h2><ol>
-<li>触发增删改操作</li>
-</ol>
-<p>executor 执行</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">org.apache.ibatis.executor.BaseExecutor#doUpdate</span><br><span class="line">org.apache.ibatis.executor.BaseExecutor#doQuery</span><br><span class="line">org.apache.ibatis.executor.BaseExecutor#doQueryCursor</span><br></pre></td></tr></table></figure>
-
-<p>这几个抽象方法时，会生成 statementHandler</p>
-<ol start="2">
-<li>创建 statement</li>
-</ol>
-<p>也就是上面 4.描述的，并且调用 org.apache.ibatis.executor.SimpleExecutor#prepareStatement</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> Statement <span class="title">prepareStatement</span><span class="params">(StatementHandler handler, Log statementLog)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">  Statement stmt;</span><br><span class="line">  Connection connection = getConnection(statementLog);</span><br><span class="line">  stmt = handler.prepare(connection, transaction.getTimeout());</span><br><span class="line">  handler.parameterize(stmt);</span><br><span class="line">  <span class="keyword">return</span> stmt;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<ol start="3">
-<li>如果是 PrepareStatement | CallableStatementHandler，则设置参数 handler.parameterize(stmt);</li>
-</ol>
-<p>会调用 org.apache.ibatis.executor.parameter.ParameterHandler#setParameters，前提是实现了 parameterize 方法的 StatementHandler</p>
-<ol start="4">
-<li>执行 sql</li>
-</ol>
-<p>如果是 query 方法，则调用 resultSetHandler，处理执行后的 statement</p>
-<ol start="5">
-<li>关闭 statement</li>
-</ol>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1482,7 +1437,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">16</span>
+          <span class="site-state-item-count">17</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1495,7 +1450,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-count">24</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
