@@ -10,36 +10,36 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/images/logo16.png">
   <link rel="mask-icon" href="/images/logo.svg" color="#222">
 
-<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="css/main.css">
 
 
-<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+<link rel="stylesheet" href="lib/font-awesome/css/all.min.css">
   <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"tim-jt.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"http:/tim12135.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
   <meta name="description" content="背景原先的项目一部分在使用 SpringBoot 2.4，但 2.4 的版本中对于线程池没有默认的监控，需要自己去实现。但是在 2.6 版本有默认实现监控，所以想将项目升级到 2.6。 升级&amp;问题SpringBoot 和 SpringCloud 版本的对应关系，参考：https:&#x2F;&#x2F;start.spring.io&#x2F;actuator&#x2F;info 修改好 pom 后，刷新 maven 没有报错，">
 <meta property="og:type" content="article">
 <meta property="og:title" content="SpringBoot升级swagger启动报错">
-<meta property="og:url" content="http://tim-jt.github.io/2997510128/index.html">
+<meta property="og:url" content="2997510128/index.html">
 <meta property="og:site_name" content="Tim">
 <meta property="og:description" content="背景原先的项目一部分在使用 SpringBoot 2.4，但 2.4 的版本中对于线程池没有默认的监控，需要自己去实现。但是在 2.6 版本有默认实现监控，所以想将项目升级到 2.6。 升级&amp;问题SpringBoot 和 SpringCloud 版本的对应关系，参考：https:&#x2F;&#x2F;start.spring.io&#x2F;actuator&#x2F;info 修改好 pom 后，刷新 maven 没有报错，">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://tim-jt.github.io/2997510128/1.png">
-<meta property="og:image" content="http://tim-jt.github.io/2997510128/springdoc.png">
-<meta property="og:image" content="http://tim-jt.github.io/2997510128/knife.png">
+<meta property="og:image" content="/1.png">
+<meta property="og:image" content="/springdoc.png">
+<meta property="og:image" content="/knife.png">
 <meta property="article:published_time" content="2023-04-11T09:30:56.000Z">
 <meta property="article:modified_time" content="2023-04-11T10:03:56.609Z">
 <meta property="article:author" content="Tim">
 <meta property="article:tag" content="Spring">
 <meta property="article:tag" content="swagger">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://tim-jt.github.io/2997510128/1.png">
+<meta name="twitter:image" content="/1.png">
 
-<link rel="canonical" href="http://tim-jt.github.io/2997510128/">
+<link rel="canonical" href="2997510128/">
 
 
 <script id="page-configurations">
@@ -167,10 +167,10 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://tim-jt.github.io/2997510128/">
+    <link itemprop="mainEntityOfPage" href="2997510128/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="image" content="images/avatar.gif">
       <meta itemprop="name" content="Tim">
       <meta itemprop="description" content="Tim's blog">
     </span>
@@ -199,11 +199,11 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                  <a href="categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
+                  <a href="categories/Java/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
                 </span>
             </span>
 
@@ -223,8 +223,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2997510128/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2997510128/" itemprop="commentCount"></span>
+    <a title="valine" href="2997510128/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="2997510128/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -252,7 +252,7 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> BeanPostProcessor <span class="title">springfoxHandlerProviderBeanPostProcessor</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> BeanPostProcessor() &#123;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> Object <span class="title">postProcessAfterInitialization</span><span class="params">(Object bean, String beanName)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">            <span class="keyword">if</span> (bean <span class="keyword">instanceof</span> WebMvcRequestHandlerProvider || bean <span class="keyword">instanceof</span> WebFluxRequestHandlerProvider) &#123;</span><br><span class="line">                customizeSpringfoxHandlerMappings(getHandlerMappings(bean));</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> bean;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">private</span> &lt;T extends RequestMappingInfoHandlerMapping&gt; <span class="function"><span class="keyword">void</span> <span class="title">customizeSpringfoxHandlerMappings</span><span class="params">(List&lt;T&gt; mappings)</span> </span>&#123;</span><br><span class="line">            List&lt;T&gt; copy = mappings.stream()</span><br><span class="line">                    .filter(mapping -&gt; mapping.getPatternParser() == <span class="keyword">null</span>)</span><br><span class="line">                    .collect(Collectors.toList());</span><br><span class="line">            mappings.clear();</span><br><span class="line">            mappings.addAll(copy);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@SuppressWarnings(&quot;unchecked&quot;)</span></span><br><span class="line">        <span class="function"><span class="keyword">private</span> List&lt;RequestMappingInfoHandlerMapping&gt; <span class="title">getHandlerMappings</span><span class="params">(Object bean)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                Field field = ReflectionUtils.findField(bean.getClass(), <span class="string">&quot;handlerMappings&quot;</span>);</span><br><span class="line">                field.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">                <span class="keyword">return</span> (List&lt;RequestMappingInfoHandlerMapping&gt;) field.get(bean);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (IllegalArgumentException | IllegalAccessException e) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>具体可参考：<a target="_blank" rel="noopener" href="https://github.com/springfox/springfox/issues/3462">https://github.com/springfox/springfox/issues/3462</a></p>
-<h3 id="适应新版本的解决方案"><a href="#适应新版本的解决方案" class="headerlink" title="适应新版本的解决方案"></a>适应新版本的解决方案</h3><p>上述的方案，试过没有什么问题，但是感觉侵入性太强，修改了 spring 升级的内容，仔细看了 issue 的回复<br><img src="/2997510128/1.png" alt="issue信息"><br>spring 官方其实已经推出了新的 springdoc 来作为 springfox 的替代。</p>
+<h3 id="适应新版本的解决方案"><a href="#适应新版本的解决方案" class="headerlink" title="适应新版本的解决方案"></a>适应新版本的解决方案</h3><p>上述的方案，试过没有什么问题，但是感觉侵入性太强，修改了 spring 升级的内容，仔细看了 issue 的回复<br><img src="/1.png" alt="issue信息"><br>spring 官方其实已经推出了新的 springdoc 来作为 springfox 的替代。</p>
 <p>按照文档进行迁移：<a target="_blank" rel="noopener" href="https://springdoc.org/migrating-from-springfox.html%EF%BC%8C%E5%85%B6%E5%AE%9E%E5%B0%B1%E4%B8%A4%E6%AD%A5%EF%BC%9A">https://springdoc.org/migrating-from-springfox.html，其实就两步：</a></p>
 <ol>
 <li>删除 swagger 的 jar 包和相关配置</li>
@@ -268,7 +268,7 @@
 <ol start="4">
 <li>刷新 maven，启动，访问/swagger-ui.html 即可跳转到/swagger-ui/index.html</li>
 </ol>
-<p><img src="/2997510128/springdoc.png" alt="springdoc效果"></p>
+<p><img src="/springdoc.png" alt="springdoc效果"></p>
 <h3 id="使用-knife4j-的-ui"><a href="#使用-knife4j-的-ui" class="headerlink" title="使用 knife4j 的 ui"></a>使用 knife4j 的 ui</h3><p>如果不喜欢原生的 ui 风格和操作方式，个人推荐使用 xiaoymin 的 knife4j 的 ui，他提供了比较友好的界面<br>使用步骤也很简单，如下：</p>
 <ol>
 <li>引入 jar 包，这里注意下版本，具体看官方文档：<a target="_blank" rel="noopener" href="https://doc.xiaominfo.com/%EF%BC%8C%E6%88%91%E8%BF%99%E8%BE%B9%E7%94%A8%E7%9A%84%E6%98%AF">https://doc.xiaominfo.com/，我这边用的是</a> spring boot 2.6，所以对应使用</li>
@@ -284,7 +284,7 @@
 <ol start="3">
 <li>刷新 maven 启动，访问/doc.html</li>
 </ol>
-<p><img src="/2997510128/knife.png" alt="knife效果"></p>
+<p><img src="/knife.png" alt="knife效果"></p>
 
     </div>
 
@@ -294,8 +294,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/Spring/" rel="tag"># Spring</a>
-              <a href="/tags/swagger/" rel="tag"># swagger</a>
+              <a href="tags/Spring/" rel="tag"># Spring</a>
+              <a href="tags/swagger/" rel="tag"># swagger</a>
           </div>
 
         
@@ -304,7 +304,7 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/992799982/" rel="prev" title="SpringBoot升级到2.0后默认时间格式变化">
+    <a href="992799982/" rel="prev" title="SpringBoot升级到2.0后默认时间格式变化">
       <i class="fa fa-chevron-left"></i> SpringBoot升级到2.0后默认时间格式变化
     </a></div>
       <div class="post-nav-item"></div>
@@ -462,21 +462,21 @@
   </div>
 
   
-  <script src="/lib/anime.min.js"></script>
+  <script src="lib/anime.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
   <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
-  <script src="/lib/velocity/velocity.min.js"></script>
-  <script src="/lib/velocity/velocity.ui.min.js"></script>
+  <script src="lib/velocity/velocity.min.js"></script>
+  <script src="lib/velocity/velocity.ui.min.js"></script>
 
-<script src="/js/utils.js"></script>
+<script src="js/utils.js"></script>
 
-<script src="/js/motion.js"></script>
-
-
-<script src="/js/schemes/pisces.js"></script>
+<script src="js/motion.js"></script>
 
 
-<script src="/js/next-boot.js"></script>
+<script src="js/schemes/pisces.js"></script>
+
+
+<script src="js/next-boot.js"></script>
 
 
 

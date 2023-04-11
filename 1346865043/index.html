@@ -10,35 +10,35 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/images/logo16.png">
   <link rel="mask-icon" href="/images/logo.svg" color="#222">
 
-<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="css/main.css">
 
 
-<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+<link rel="stylesheet" href="lib/font-awesome/css/all.min.css">
   <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"tim-jt.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"http:/tim12135.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
   <meta name="description" content="近期正式环境的日志经常出现org.springframework.web.client.ResourceAccessException: I&#x2F;O error on GET request for &quot;http:&#x2F;&#x2F;xxx&#x2F;xxx&quot;: Request aborted; nested exception is org.apache.http.impl.execchain.Reque">
 <meta property="og:type" content="article">
 <meta property="og:title" content="RequestAbortedException的一次排查">
-<meta property="og:url" content="http://tim-jt.github.io/1346865043/index.html">
+<meta property="og:url" content="1346865043/index.html">
 <meta property="og:site_name" content="Tim">
 <meta property="og:description" content="近期正式环境的日志经常出现org.springframework.web.client.ResourceAccessException: I&#x2F;O error on GET request for &quot;http:&#x2F;&#x2F;xxx&#x2F;xxx&quot;: Request aborted; nested exception is org.apache.http.impl.execchain.Reque">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://tim-jt.github.io/1346865043/apm.png">
-<meta property="og:image" content="http://tim-jt.github.io/1346865043/sequence.png">
+<meta property="og:image" content="/apm.png">
+<meta property="og:image" content="/sequence.png">
 <meta property="article:published_time" content="2023-03-15T11:59:59.000Z">
 <meta property="article:modified_time" content="2023-03-16T07:59:46.263Z">
 <meta property="article:author" content="Tim">
 <meta property="article:tag" content="HttpClient">
 <meta property="article:tag" content="Exception">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://tim-jt.github.io/1346865043/apm.png">
+<meta name="twitter:image" content="/apm.png">
 
-<link rel="canonical" href="http://tim-jt.github.io/1346865043/">
+<link rel="canonical" href="1346865043/">
 
 
 <script id="page-configurations">
@@ -166,10 +166,10 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://tim-jt.github.io/1346865043/">
+    <link itemprop="mainEntityOfPage" href="1346865043/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="image" content="images/avatar.gif">
       <meta itemprop="name" content="Tim">
       <meta itemprop="description" content="Tim's blog">
     </span>
@@ -204,11 +204,11 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                  <a href="categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
+                  <a href="categories/Java/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
                 </span>
             </span>
 
@@ -228,8 +228,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/1346865043/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/1346865043/" itemprop="commentCount"></span>
+    <a title="valine" href="1346865043/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="1346865043/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -266,11 +266,11 @@
 
 <p>这里可以看到再获取<code>HttpClientConnection</code>的时候，线程被 interrupt 了，然后被包装成了<code>RequestAbortedException</code>抛出。</p>
 <p>看到这里我以为是<code>connectionRequestTimeout</code>超时导致的这个异常，但是看了 apm 内的时间线和 30 秒的比对。</p>
-<p><img src="/1346865043/apm.png" alt="apm日志"></p>
+<p><img src="/apm.png" alt="apm日志"></p>
 <p>发现并没有获取连接超时，并且发现日志中还有对应 Hystrix 的报错<code>xxx timed-out and no fallback available.</code>，这个异常是 HystrixCommand 超时且没有 fallback 才会抛出的异常。这就很奇怪了，因为 Hystrix 的超时配置我设置的是 30 秒，我们 Hystrix 开启的时间点是方法入口，按照这个逻辑整个方法应该执行了 30 秒，但是看 apm 日志，整个 HystrixCommand 只执行了 15 秒左右。还有 15 秒去哪了？</p>
 <p>反复查看日志和 Hystrix 文档，才发现 HystrixCommand 的执行，原来要分成两部分，在 Hystrix Thread 模式下，HystrixCommand execute 后，如果对应的 threadPool coresize 有可用的，则直接执行，如果没有可用的，则进入队列等待。而 execute 后，Hystrix 还开启了一个 time 线程用来计时，此时如果 Command 没有可用线程进入队列等待，但 time 线程还是会计时，这里耗掉了那丢失的 15 秒。</p>
 <p>而后有空余线程来执行 Command 的时候，在发起 http 请求时，由于 HttpClient 连接池连接数不够，处于阻塞状态，又过了 15 秒，此时已超过了 Hystrix 超时的 30 秒，time 线程发起了超时 fallback，对执行命令的线程发起了 interrupt，此时获取连接而阻塞的线程就抛出了异常，然后被包装成了 RequestAbortedException 抛出。</p>
-<p><img src="/1346865043/sequence.png" alt="时序"></p>
+<p><img src="/sequence.png" alt="时序"></p>
 
     </div>
 
@@ -280,8 +280,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/HttpClient/" rel="tag"># HttpClient</a>
-              <a href="/tags/Exception/" rel="tag"># Exception</a>
+              <a href="tags/HttpClient/" rel="tag"># HttpClient</a>
+              <a href="tags/Exception/" rel="tag"># Exception</a>
           </div>
 
         
@@ -290,11 +290,11 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/1111899647/" rel="prev" title="Hystrix配置总结">
+    <a href="1111899647/" rel="prev" title="Hystrix配置总结">
       <i class="fa fa-chevron-left"></i> Hystrix配置总结
     </a></div>
       <div class="post-nav-item">
-    <a href="/992799982/" rel="next" title="SpringBoot升级到2.0后默认时间格式变化">
+    <a href="992799982/" rel="next" title="SpringBoot升级到2.0后默认时间格式变化">
       SpringBoot升级到2.0后默认时间格式变化 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
@@ -450,21 +450,21 @@
   </div>
 
   
-  <script src="/lib/anime.min.js"></script>
+  <script src="lib/anime.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
   <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
-  <script src="/lib/velocity/velocity.min.js"></script>
-  <script src="/lib/velocity/velocity.ui.min.js"></script>
+  <script src="lib/velocity/velocity.min.js"></script>
+  <script src="lib/velocity/velocity.ui.min.js"></script>
 
-<script src="/js/utils.js"></script>
+<script src="js/utils.js"></script>
 
-<script src="/js/motion.js"></script>
-
-
-<script src="/js/schemes/pisces.js"></script>
+<script src="js/motion.js"></script>
 
 
-<script src="/js/next-boot.js"></script>
+<script src="js/schemes/pisces.js"></script>
+
+
+<script src="js/next-boot.js"></script>
 
 
 

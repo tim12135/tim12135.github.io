@@ -10,21 +10,21 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/images/logo16.png">
   <link rel="mask-icon" href="/images/logo.svg" color="#222">
 
-<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="css/main.css">
 
 
-<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+<link rel="stylesheet" href="lib/font-awesome/css/all.min.css">
   <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"tim-jt.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"http:/tim12135.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
   <meta name="description" content="Spring Cloud 搭建微服务的时候，比较常用的客户端工具就是 Feign，以其声明的方式来编写 HTTP 请求。涉及到微服务请求，就一定要设置请求超时时间和熔断策略，来避免因为单一服务卡死导致的集群雪崩等灾难性事件。  具体的 Feign 和 Hystrix 如何集成，Spring 官方都有对应的 Demo，下面主要是分析一下熔断策略的配置。  hystrix.command.defau">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Hystrix配置总结">
-<meta property="og:url" content="http://tim-jt.github.io/1111899647/index.html">
+<meta property="og:url" content="1111899647/index.html">
 <meta property="og:site_name" content="Tim">
 <meta property="og:description" content="Spring Cloud 搭建微服务的时候，比较常用的客户端工具就是 Feign，以其声明的方式来编写 HTTP 请求。涉及到微服务请求，就一定要设置请求超时时间和熔断策略，来避免因为单一服务卡死导致的集群雪崩等灾难性事件。  具体的 Feign 和 Hystrix 如何集成，Spring 官方都有对应的 Demo，下面主要是分析一下熔断策略的配置。  hystrix.command.defau">
 <meta property="og:locale" content="zh_CN">
@@ -34,7 +34,7 @@
 <meta property="article:tag" content="Hystrix">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://tim-jt.github.io/1111899647/">
+<link rel="canonical" href="1111899647/">
 
 
 <script id="page-configurations">
@@ -162,10 +162,10 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://tim-jt.github.io/1111899647/">
+    <link itemprop="mainEntityOfPage" href="1111899647/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="image" content="images/avatar.gif">
       <meta itemprop="name" content="Tim">
       <meta itemprop="description" content="Tim's blog">
     </span>
@@ -194,11 +194,11 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                  <a href="categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
+                  <a href="categories/Java/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
                 </span>
             </span>
 
@@ -218,8 +218,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/1111899647/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/1111899647/" itemprop="commentCount"></span>
+    <a title="valine" href="1111899647/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="1111899647/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -265,7 +265,7 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/Hystrix/" rel="tag"># Hystrix</a>
+              <a href="tags/Hystrix/" rel="tag"># Hystrix</a>
           </div>
 
         
@@ -274,11 +274,11 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2777437261/" rel="prev" title="Mysql查询空格相关问题">
+    <a href="2777437261/" rel="prev" title="Mysql查询空格相关问题">
       <i class="fa fa-chevron-left"></i> Mysql查询空格相关问题
     </a></div>
       <div class="post-nav-item">
-    <a href="/1346865043/" rel="next" title="RequestAbortedException的一次排查">
+    <a href="1346865043/" rel="next" title="RequestAbortedException的一次排查">
       RequestAbortedException的一次排查 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
@@ -434,21 +434,21 @@
   </div>
 
   
-  <script src="/lib/anime.min.js"></script>
+  <script src="lib/anime.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
   <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
-  <script src="/lib/velocity/velocity.min.js"></script>
-  <script src="/lib/velocity/velocity.ui.min.js"></script>
+  <script src="lib/velocity/velocity.min.js"></script>
+  <script src="lib/velocity/velocity.ui.min.js"></script>
 
-<script src="/js/utils.js"></script>
+<script src="js/utils.js"></script>
 
-<script src="/js/motion.js"></script>
-
-
-<script src="/js/schemes/pisces.js"></script>
+<script src="js/motion.js"></script>
 
 
-<script src="/js/next-boot.js"></script>
+<script src="js/schemes/pisces.js"></script>
+
+
+<script src="js/next-boot.js"></script>
 
 
 

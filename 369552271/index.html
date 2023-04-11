@@ -10,21 +10,21 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/images/logo16.png">
   <link rel="mask-icon" href="/images/logo.svg" color="#222">
 
-<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="css/main.css">
 
 
-<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+<link rel="stylesheet" href="lib/font-awesome/css/all.min.css">
   <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"tim-jt.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"http:/tim12135.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
   <meta name="description" content="之前很长一段时间，一直以为 sftp 是 ftp 加了安全协议，是 ftp 升级版本，直到最近有个需求，才发现 ftp 和 sftp 完全不一样  ftp 主动模式   客户端通过命令通道告诉服务端，我要开启端口 N 作为数据通道端口 服务器告诉客户端收到了 服务器通过 20 端口连接客户端端口 N 客户端告诉服务器收到了 传输数据  缺点：连接客户端的端口可能被客户端的防火墙拦截 123456">
 <meta property="og:type" content="article">
 <meta property="og:title" content="ftp、ftps、sftp区别">
-<meta property="og:url" content="http://tim-jt.github.io/369552271/index.html">
+<meta property="og:url" content="369552271/index.html">
 <meta property="og:site_name" content="Tim">
 <meta property="og:description" content="之前很长一段时间，一直以为 sftp 是 ftp 加了安全协议，是 ftp 升级版本，直到最近有个需求，才发现 ftp 和 sftp 完全不一样  ftp 主动模式   客户端通过命令通道告诉服务端，我要开启端口 N 作为数据通道端口 服务器告诉客户端收到了 服务器通过 20 端口连接客户端端口 N 客户端告诉服务器收到了 传输数据  缺点：连接客户端的端口可能被客户端的防火墙拦截 123456">
 <meta property="og:locale" content="zh_CN">
@@ -36,7 +36,7 @@
 <meta property="article:tag" content="sftp">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://tim-jt.github.io/369552271/">
+<link rel="canonical" href="369552271/">
 
 
 <script id="page-configurations">
@@ -164,10 +164,10 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://tim-jt.github.io/369552271/">
+    <link itemprop="mainEntityOfPage" href="369552271/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="image" content="images/avatar.gif">
       <meta itemprop="name" content="Tim">
       <meta itemprop="description" content="Tim's blog">
     </span>
@@ -202,7 +202,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE/" itemprop="url" rel="index"><span itemprop="name">网络协议</span></a>
+                  <a href="categories/网络协议/" itemprop="url" rel="index"><span itemprop="name">网络协议</span></a>
                 </span>
             </span>
 
@@ -222,8 +222,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/369552271/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/369552271/" itemprop="commentCount"></span>
+    <a title="valine" href="369552271/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="369552271/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -276,9 +276,9 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/ftp/" rel="tag"># ftp</a>
-              <a href="/tags/ftps/" rel="tag"># ftps</a>
-              <a href="/tags/sftp/" rel="tag"># sftp</a>
+              <a href="tags/ftp/" rel="tag"># ftp</a>
+              <a href="tags/ftps/" rel="tag"># ftps</a>
+              <a href="tags/sftp/" rel="tag"># sftp</a>
           </div>
 
         
@@ -287,11 +287,11 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/189048717/" rel="prev" title="Spring-WebFilter笔记">
+    <a href="189048717/" rel="prev" title="Spring-WebFilter笔记">
       <i class="fa fa-chevron-left"></i> Spring-WebFilter笔记
     </a></div>
       <div class="post-nav-item">
-    <a href="/183042282/" rel="next" title="Docker构建Mysql主从服务">
+    <a href="183042282/" rel="next" title="Docker构建Mysql主从服务">
       Docker构建Mysql主从服务 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
@@ -448,21 +448,21 @@
   </div>
 
   
-  <script src="/lib/anime.min.js"></script>
+  <script src="lib/anime.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
   <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
-  <script src="/lib/velocity/velocity.min.js"></script>
-  <script src="/lib/velocity/velocity.ui.min.js"></script>
+  <script src="lib/velocity/velocity.min.js"></script>
+  <script src="lib/velocity/velocity.ui.min.js"></script>
 
-<script src="/js/utils.js"></script>
+<script src="js/utils.js"></script>
 
-<script src="/js/motion.js"></script>
-
-
-<script src="/js/schemes/pisces.js"></script>
+<script src="js/motion.js"></script>
 
 
-<script src="/js/next-boot.js"></script>
+<script src="js/schemes/pisces.js"></script>
+
+
+<script src="js/next-boot.js"></script>
 
 
 
