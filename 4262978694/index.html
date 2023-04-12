@@ -10,21 +10,21 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/images/logo16.png">
   <link rel="mask-icon" href="/images/logo.svg" color="#222">
 
-<link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="/css/main.css">
 
 
-<link rel="stylesheet" href="lib/font-awesome/css/all.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
   <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"http:/tim12135.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"tim12135.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
   <meta name="description" content="Mybatis 缓存参考来源：https:&#x2F;&#x2F;blog.csdn.net&#x2F;zbuger&#x2F;article&#x2F;details&#x2F;51159694 mybatis 缓存分成一级缓存和二级缓存 一级缓存 MyBatis 的一级缓存指的是在一个 session 域内,session 未关闭之前执行的查询会根据 SQL 为 key 来缓存(跟 mysql 缓存一样,修改任何参数的值都会导致缓存失效) 二级缓存 二">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Mybatis缓存">
-<meta property="og:url" content="4262978694/index.html">
+<meta property="og:url" content="https://tim12135.github.io/4262978694/index.html">
 <meta property="og:site_name" content="Tim">
 <meta property="og:description" content="Mybatis 缓存参考来源：https:&#x2F;&#x2F;blog.csdn.net&#x2F;zbuger&#x2F;article&#x2F;details&#x2F;51159694 mybatis 缓存分成一级缓存和二级缓存 一级缓存 MyBatis 的一级缓存指的是在一个 session 域内,session 未关闭之前执行的查询会根据 SQL 为 key 来缓存(跟 mysql 缓存一样,修改任何参数的值都会导致缓存失效) 二级缓存 二">
 <meta property="og:locale" content="zh_CN">
@@ -34,7 +34,7 @@
 <meta property="article:tag" content="Mybatis">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="4262978694/">
+<link rel="canonical" href="https://tim12135.github.io/4262978694/">
 
 
 <script id="page-configurations">
@@ -162,10 +162,10 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="4262978694/">
+    <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/4262978694/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="images/avatar.gif">
+      <meta itemprop="image" content="/images/avatar.gif">
       <meta itemprop="name" content="Tim">
       <meta itemprop="description" content="Tim's blog">
     </span>
@@ -200,11 +200,11 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="categories/Java/Mybatis/" itemprop="url" rel="index"><span itemprop="name">Mybatis</span></a>
+                  <a href="/categories/Java/Mybatis/" itemprop="url" rel="index"><span itemprop="name">Mybatis</span></a>
                 </span>
             </span>
 
@@ -224,8 +224,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="4262978694/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="4262978694/" itemprop="commentCount"></span>
+    <a title="valine" href="/4262978694/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/4262978694/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -271,7 +271,7 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="tags/Mybatis/" rel="tag"># Mybatis</a>
+              <a href="/tags/Mybatis/" rel="tag"># Mybatis</a>
           </div>
 
         
@@ -280,11 +280,11 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="2050760044/" rel="prev" title="一致性哈希">
+    <a href="/2050760044/" rel="prev" title="一致性哈希">
       <i class="fa fa-chevron-left"></i> 一致性哈希
     </a></div>
       <div class="post-nav-item">
-    <a href="189048717/" rel="next" title="Spring-WebFilter笔记">
+    <a href="/189048717/" rel="next" title="Spring-WebFilter笔记">
       Spring-WebFilter笔记 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
@@ -441,21 +441,21 @@
   </div>
 
   
-  <script src="lib/anime.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
   <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
-  <script src="lib/velocity/velocity.min.js"></script>
-  <script src="lib/velocity/velocity.ui.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
 
-<script src="js/utils.js"></script>
+<script src="/js/utils.js"></script>
 
-<script src="js/motion.js"></script>
-
-
-<script src="js/schemes/pisces.js"></script>
+<script src="/js/motion.js"></script>
 
 
-<script src="js/next-boot.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
 
 
 

@@ -10,21 +10,21 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/images/logo16.png">
   <link rel="mask-icon" href="/images/logo.svg" color="#222">
 
-<link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="/css/main.css">
 
 
-<link rel="stylesheet" href="lib/font-awesome/css/all.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
   <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"http:/tim12135.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"tim12135.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
   <meta name="description" content="比较常见的 RestTemplate 使用方式就是如下，结合 LoadBalanced 注解，生成单例 bean，但这不能满足我们针对每次请求设置超时时间  12345@Bean@LoadBalancedpublic RestTemplate restTemplate() &amp;#123;    return new RestTemplate();&amp;#125;   RestTemplate 所有的请">
 <meta property="og:type" content="article">
 <meta property="og:title" content="RestTemplate单例模式下的请求超时配置">
-<meta property="og:url" content="144532265/index.html">
+<meta property="og:url" content="https://tim12135.github.io/144532265/index.html">
 <meta property="og:site_name" content="Tim">
 <meta property="og:description" content="比较常见的 RestTemplate 使用方式就是如下，结合 LoadBalanced 注解，生成单例 bean，但这不能满足我们针对每次请求设置超时时间  12345@Bean@LoadBalancedpublic RestTemplate restTemplate() &amp;#123;    return new RestTemplate();&amp;#125;   RestTemplate 所有的请">
 <meta property="og:locale" content="zh_CN">
@@ -35,7 +35,7 @@
 <meta property="article:tag" content="RestTemplate">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="144532265/">
+<link rel="canonical" href="https://tim12135.github.io/144532265/">
 
 
 <script id="page-configurations">
@@ -163,10 +163,10 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="144532265/">
+    <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/144532265/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="images/avatar.gif">
+      <meta itemprop="image" content="/images/avatar.gif">
       <meta itemprop="name" content="Tim">
       <meta itemprop="description" content="Tim's blog">
     </span>
@@ -195,11 +195,11 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="categories/Java/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
+                  <a href="/categories/Java/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
                 </span>
             </span>
 
@@ -219,8 +219,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="144532265/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="144532265/" itemprop="commentCount"></span>
+    <a title="valine" href="/144532265/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/144532265/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -278,8 +278,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="tags/Spring/" rel="tag"># Spring</a>
-              <a href="tags/RestTemplate/" rel="tag"># RestTemplate</a>
+              <a href="/tags/Spring/" rel="tag"># Spring</a>
+              <a href="/tags/RestTemplate/" rel="tag"># RestTemplate</a>
           </div>
 
         
@@ -288,11 +288,11 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="439186839/" rel="prev" title="数据表扩展方案">
+    <a href="/439186839/" rel="prev" title="数据表扩展方案">
       <i class="fa fa-chevron-left"></i> 数据表扩展方案
     </a></div>
       <div class="post-nav-item">
-    <a href="1370750478/" rel="next" title="2022-03-03招聘总结">
+    <a href="/1370750478/" rel="next" title="2022-03-03招聘总结">
       2022-03-03招聘总结 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
@@ -448,21 +448,21 @@
   </div>
 
   
-  <script src="lib/anime.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
   <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
-  <script src="lib/velocity/velocity.min.js"></script>
-  <script src="lib/velocity/velocity.ui.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
 
-<script src="js/utils.js"></script>
+<script src="/js/utils.js"></script>
 
-<script src="js/motion.js"></script>
-
-
-<script src="js/schemes/pisces.js"></script>
+<script src="/js/motion.js"></script>
 
 
-<script src="js/next-boot.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
 
 
 
