@@ -159,6 +159,112 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/4026186378/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Tim">
+      <meta itemprop="description" content="Tim's blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tim">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/4026186378/" class="post-title-link" itemprop="url">雪花算法自动生成workId</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-04-26 15:32:17 / 修改时间：16:30:12" itemprop="dateCreated datePublished" datetime="2023-04-26T15:32:17+08:00">2023-04-26</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">算法</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/4026186378/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/4026186378/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <blockquote>
+<p>Twitter 的雪花算法大部分人应该都知道，用于生成有序的数值类型的 id。算法的原理也很简单，通过划分了 64 位比特：1 位符号位固定为 0 表示正数，41 位时间戳，5 位数据中心 id，5 位机器 id，12 位有序序号。其中 5 位数据中心 id 和 5 位机器 id，接下来我将合并成 10 位 workid 来做讨论，含义是一样的，总共可以分配 1024 台机器用于生成相同业务的主键。</p>
+</blockquote>
+<h2 id="为啥要区分-workid？"><a href="#为啥要区分-workid？" class="headerlink" title="为啥要区分 workid？"></a>为啥要区分 workid？</h2><p>同一种业务他的主键一定是唯一的。如商品服务，则商品表内的主键肯定是不能重复的。但如果发布多个商品服务实例，此时 id 如果是有商品服务自己生成，则不区分 workid，那么在相同毫秒下如果出现并发请求且请求到了不同的实例，理论上是会出现 id 重复的。虽然概率很小，但是在一些集中时间高并发的业务是可能出现的，我们还是应该要劲量避免这种问题。</p>
+<h2 id="怎么解决"><a href="#怎么解决" class="headerlink" title="怎么解决"></a>怎么解决</h2><ol>
+<li><p>手动配置<br>单机情况下，我们一般在实现该算法的时候，可能就直接指定了 workid 为一个固定的整数（0~1023）。或者集群环境下，有一台或多台服务专门提供生成主键的服务，此时也可以通过手动分配（硬编码或者配置文件）的方式来指定 workid。</p>
+<p>但是随着容器化自动部署，共用配置中心，相同的服务用的是同一套配置中心，很难通过手动的配置方式来指定 workid。即使可以做到，对于后期的运维也是很麻烦的事情。</p>
+</li>
+<li><p>美团 leaf<br>市面上，当前有美团的开源项目 leaf，将业务服务的 ip+port 添加到 zookeeper 上，通过 zookeeper 的分布式一致性以及它的持久性节点，来避免抢占相同的 workid，同时 leaf 还通过定时任务上传业务服务的时间信息，来避免时钟回拨的问题，可以仔细阅读下代码，这块代码还是很好理解的<a target="_blank" rel="noopener" href="https://github.com/Meituan-Dianping/Leaf">https://github.com/Meituan-Dianping/Leaf</a></p>
+<p>但是我司在 k8s 上部署服务的时候，并没有指定 ip，每次发布 ip 都是动态分配的，也就意味着相同业务实例它的 workid 会随着发布次数的变多，就会超过 1024 个，有人也提了 issue：<a target="_blank" rel="noopener" href="https://github.com/Meituan-Dianping/Leaf/issues/84%EF%BC%8C%E6%9C%89%E7%83%AD%E5%BF%83%E5%B8%82%E6%B0%91%E4%B9%9F%E7%BB%99%E5%87%BA%E4%BA%86%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%EF%BC%9Ahttps://github.com/NotFound9/Leaf%E3%80%82">https://github.com/Meituan-Dianping/Leaf/issues/84，有热心市民也给出了解决方案：https://github.com/NotFound9/Leaf。</a></p>
+</li>
+</ol>
+<h2 id="自己实现"><a href="#自己实现" class="headerlink" title="自己实现"></a>自己实现</h2><p>基于 zookeeper 的临时节点的特性，即客户端断开连接，就会删除节点。可以实现一个自动生成不重复的 workId 的功能。</p>
+<ol>
+<li>参考美团的 snowflake 算法，我把 workId 给暴露出去，同时提供了 init 和 destroy 方法，用于容器内的初始化和销毁，主要用于 zk 客户端</li>
+<li>创建了一个 ZKSnowflake 继承 Snowflake</li>
+<li>在 init 方法中，通过分布式锁先锁住对应业务类型的节点，用于该业务类型多实例发布的时候避免抢占。</li>
+<li>遍历该业务节点下的所有节点，然后再 0~1023 这个范围内遍历，选出还没有被使用的节点，将这个下标作为 workid，并创建到 zk 中作为一个临时节点。</li>
+<li>zk 客户端增加监听，对重连的事件，进行重新获取 workid，期间内不允许生成 id。（该类情况可以根据业务的实际场景来判断，其实如果都是指定时间发布的，后续不做修改也可以，只要在按批发布的时候区分好 workid 即可）</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Snowflake</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Random RANDOM = <span class="keyword">new</span> Random();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> twepoch = <span class="number">1288834974657L</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> workerIdBits = <span class="number">10L</span>;</span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">final</span> <span class="keyword">long</span> minWorkerId = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">final</span> <span class="keyword">long</span> maxWorkerId = ~(-<span class="number">1L</span> &lt;&lt; workerIdBits);</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> sequenceBits = <span class="number">12L</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> workerIdShift = sequenceBits;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> timestampLeftShift = sequenceBits + workerIdBits;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> sequenceMask = ~(-<span class="number">1L</span> &lt;&lt; sequenceBits);</span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">long</span> workerId;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> sequence = <span class="number">0L</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> lastTimestamp = -<span class="number">1L</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">long</span> <span class="title">nextId</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">long</span> timestamp = timeGen();</span><br><span class="line">        <span class="keyword">if</span> (timestamp &lt; lastTimestamp) &#123;</span><br><span class="line">            <span class="keyword">long</span> offset = lastTimestamp - timestamp;</span><br><span class="line">            <span class="keyword">if</span> (offset &lt;= <span class="number">5</span>) &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    wait(offset &lt;&lt; <span class="number">1</span>);</span><br><span class="line">                    timestamp = timeGen();</span><br><span class="line">                    <span class="keyword">if</span> (timestamp &lt; lastTimestamp) &#123;</span><br><span class="line">                        <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(</span><br><span class="line">                                String.format(<span class="string">&quot;Clock moved backwards. Refusing to generate id for %d milliseconds&quot;</span>, lastTimestamp - timestamp));</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                    <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">&quot;Wait interrupted&quot;</span>);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(</span><br><span class="line">                        String.format(<span class="string">&quot;Clock moved backwards. Refusing to generate id for %d milliseconds&quot;</span>, lastTimestamp - timestamp));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (lastTimestamp == timestamp) &#123;</span><br><span class="line">            sequence = (sequence + <span class="number">1</span>) &amp; sequenceMask;</span><br><span class="line">            <span class="keyword">if</span> (sequence == <span class="number">0</span>) &#123;</span><br><span class="line">                <span class="comment">//seq 为0的时候表示是下一毫秒时间开始对seq做随机</span></span><br><span class="line">                sequence = RANDOM.nextInt(<span class="number">100</span>);</span><br><span class="line">                timestamp = tilNextMillis(lastTimestamp);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">//如果是新的ms开始</span></span><br><span class="line">            sequence = RANDOM.nextInt(<span class="number">100</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        lastTimestamp = timestamp;</span><br><span class="line">        <span class="keyword">return</span> ((timestamp - twepoch) &lt;&lt; timestampLeftShift) | (workerId &lt;&lt; workerIdShift) | sequence;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">long</span> <span class="title">tilNextMillis</span><span class="params">(<span class="keyword">long</span> lastTimestamp)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">long</span> timestamp = timeGen();</span><br><span class="line">        <span class="keyword">while</span> (timestamp &lt;= lastTimestamp) &#123;</span><br><span class="line">            timestamp = timeGen();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> timestamp;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">long</span> <span class="title">timeGen</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> System.currentTimeMillis();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Slf4j</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ZkSnowflake</span> <span class="keyword">extends</span> <span class="title">Snowflake</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String ROOT = <span class="string">&quot;/snowflake/&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String LOCK = <span class="string">&quot;/lock/&quot;</span>;</span><br><span class="line">    <span class="keyword">private</span> String zkAddress;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String lockPath;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String groupPath;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> CuratorFramework client;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> <span class="keyword">boolean</span> prepare = <span class="keyword">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">long</span> <span class="title">nextId</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (!prepare) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">&quot;workId未装载完毕&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">super</span>.nextId();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ZkSnowflake</span><span class="params">(String zkAddress, String groupName)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.zkAddress = zkAddress;</span><br><span class="line">        <span class="keyword">this</span>.lockPath = LOCK + groupName;</span><br><span class="line">        <span class="keyword">this</span>.groupPath = ROOT + groupName;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        client = CuratorFrameworkFactory.builder().connectString(zkAddress).sessionTimeoutMs(<span class="number">5000</span>).connectionTimeoutMs(<span class="number">5000</span>).retryPolicy(<span class="keyword">new</span> ExponentialBackoffRetry(<span class="number">1000</span>, <span class="number">3</span>)).build();</span><br><span class="line">        client.start();</span><br><span class="line"></span><br><span class="line">        genWorkId(client);</span><br><span class="line"></span><br><span class="line">        client.getConnectionStateListenable().addListener((cli, connectionState) -&gt; &#123;</span><br><span class="line">            <span class="keyword">if</span> (connectionState == ConnectionState.RECONNECTED) &#123;</span><br><span class="line">                log.error(<span class="string">&quot;zk重连&quot;</span>);</span><br><span class="line">                genWorkId(cli);</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (connectionState == ConnectionState.LOST) &#123;</span><br><span class="line">                log.error(<span class="string">&quot;zk失连&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        log.info(<span class="string">&quot;snowflake启动成功，workId：&#123;&#125;&quot;</span>, workerId);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        client.close();</span><br><span class="line">        log.info(<span class="string">&quot;zk客户端关闭&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">genWorkId</span><span class="params">(CuratorFramework client)</span> </span>&#123;</span><br><span class="line">        prepare = <span class="keyword">false</span>;</span><br><span class="line">        InterProcessMutex lock = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            lock = <span class="keyword">new</span> InterProcessMutex(client, lockPath);</span><br><span class="line">            lock.acquire();</span><br><span class="line"></span><br><span class="line">            Stat stat = client.checkExists().forPath(groupPath);</span><br><span class="line">            <span class="keyword">if</span> (stat == <span class="keyword">null</span>) &#123;</span><br><span class="line">                client.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT).forPath(groupPath);</span><br><span class="line">            &#125;</span><br><span class="line">            List&lt;String&gt; children = client.getChildren().forPath(groupPath);</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">long</span> workerId = minWorkerId; workerId &lt;= maxWorkerId; workerId++) &#123;</span><br><span class="line">                String workerIdStr = String.valueOf(workerId);</span><br><span class="line">                <span class="keyword">if</span> (!children.contains(workerIdStr)) &#123;</span><br><span class="line">                    String nodePath = groupPath + <span class="string">&quot;/&quot;</span> + workerIdStr;</span><br><span class="line">                    client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(nodePath);</span><br><span class="line">                    <span class="keyword">this</span>.workerId = workerId;</span><br><span class="line">                    prepare = <span class="keyword">true</span>;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (!prepare) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">&quot;workId已超范围无法分配&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(e);</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (lock != <span class="keyword">null</span>) &#123;</span><br><span class="line">                    lock.release();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                log.error(e.getMessage(), e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>相比于美团的，自己实现的方法比较简单，但是没法解决时钟回拨的问题（因为无法知道该服务实例上一次生成 id 的时间戳），也可能会遇到 zk 丢失节点（临时节点）等一些问题。</p>
+<p>网上也有基于 redis 的方案，等有空了再整合下。</p>
+<p>后续再学习下有没有更好的方案~~</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/2997510128/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1174,204 +1280,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/439186839/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Tim">
-      <meta itemprop="description" content="Tim's blog">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Tim">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/439186839/" class="post-title-link" itemprop="url">数据表扩展方案</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-02-01 14:49:51" itemprop="dateCreated datePublished" datetime="2021-02-01T14:49:51+08:00">2021-02-01</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-03-01 15:26:45" itemprop="dateModified" datetime="2022-03-01T15:26:45+08:00">2022-03-01</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%96%B9%E6%A1%88%E8%AE%BE%E8%AE%A1/" itemprop="url" rel="index"><span itemprop="name">方案设计</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/439186839/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/439186839/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>eg. 针对项目信息这个业务，在 a 租户下项目信息需要<strong>项目名称、项目编号、项目描述、项目经理、联系电话</strong>，而在 b 租户下项目信息需要<strong>项目名称、项目开始时间、项目状态、项目联系人</strong>，甚至于每个租户对于项目信息的诉求都不相同。此时通过固化项目信息属性的方式是不可取的，应该提供给客户自定义配置的功能，由客户自己配置需要的属性。</p>
-<p>还有很多场景，需要自定义配置去满足不同客户的各种业务需求，此外还需要对录入的数据做二次加工、分析，如：</p>
-<ol>
-<li>电商平台配置商品属性，不同种类的商品属性不同</li>
-<li>工作流程中，不同场景下相同业务的表单有不同的表单填写项</li>
-</ol>
-<h2 id="方案"><a href="#方案" class="headerlink" title="方案"></a>方案</h2><p>通常使用如下方法来实现数据扩展：<strong>预留字段、扩展字段行存储、使用文档型数据库存储</strong>。不管使用哪种方法，核心还是对<strong>扩展属性的描述</strong>以及<strong>扩展属性值的存储</strong></p>
-<h3 id="扩展属性的描述"><a href="#扩展属性的描述" class="headerlink" title="扩展属性的描述"></a>扩展属性的描述</h3><p>类似数据库描述表的某一列，它的列名、类型、注释、是否主键、外键信息、默认值等等。我们描述扩展属性也需要按照业务场景去约束规范属性的维度。如：扩展属性唯一标识、显示名称、显示的 ui 类型、填写值的长度、值格式、是否必填、是否允许修改必填属性等等</p>
-<p>有扩展属性，自然有对应的扩展表，扩展属性归属于哪张扩展表，这样才能将不同业务抽象出来。扩展表也类似数据库描述表信息一样。如：扩展表唯一标识、显示名称、实际数据库表名、所属租户等等</p>
-<h3 id="扩展属性的存储"><a href="#扩展属性的存储" class="headerlink" title="扩展属性的存储"></a>扩展属性的存储</h3><h4 id="方案-1：预留字段"><a href="#方案-1：预留字段" class="headerlink" title="方案 1：预留字段"></a>方案 1：预留字段</h4><p>业务中的往往都会有一些公共属性和基于租户等维度的自定义属性，公共属性产生的数据我们用固定表存储，而自定义属性产生的数据我们用扩展表存储。</p>
-<p>通过在数据库中新建一张 ExtData 的扩展表，存储自定义属性的值，表字段：<code>id,table_id,biz_id,tenant_id,create_time,update_time,version,create_by,update_by,value_1,value_2,value_3,...,value_190</code>，扩展属性的值存储在 value_1 至 value_190 列中。</p>
-<p>在自定义属性的定义描述中需要增加 column_index ，用于映射 ExtData 中的 value 列，以此来关联自定义属性的定义描述和自定义属性的值。</p>
-<blockquote>
-<p>极端情况，当 value_190 列不够用后，可以动态创建 ExtData_2 表，扩展属性定义中需要增加 table_index 属性，用于映射哪张 ExtData 表</p>
-</blockquote>
-<p>数据的新增、更新、查询，都需要读取扩展表定义（根据实际数据库表名、加上租户或者其他条件查询）</p>
-<blockquote>
-<p>可以优化的点：</p>
-<ol>
-<li>扩展表定义需要频繁获取，但不会经常更新，可以放入缓存中</li>
-<li>读取扩展表定义和新增、查询、更新可以封装起来，提供简单接口给上层使用</li>
-<li>自定义字段如果要关联查询，并且数据量大的话，可以再建立一张索引表，实现索引逻辑</li>
-</ol>
-</blockquote>
-<h4 id="方案-2：扩展字段行存储（不推荐）"><a href="#方案-2：扩展字段行存储（不推荐）" class="headerlink" title="方案 2：扩展字段行存储（不推荐）"></a>方案 2：扩展字段行存储（不推荐）</h4><p>扩展字段行存储，其实就是 EAV（Entity-Attribute-value）模型，表字段：<code>uid, key, value</code>。</p>
-<p>eg.</p>
-<table>
-<thead>
-<tr>
-<th>uid</th>
-<th>key</th>
-<th>value</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>1</td>
-<td>name</td>
-<td>jt</td>
-</tr>
-<tr>
-<td>1</td>
-<td>sex</td>
-<td>f</td>
-</tr>
-<tr>
-<td>1</td>
-<td>age</td>
-<td>20</td>
-</tr>
-<tr>
-<td>2</td>
-<td>name</td>
-<td>hjp</td>
-</tr>
-<tr>
-<td>2</td>
-<td>sex</td>
-<td>f</td>
-</tr>
-<tr>
-<td>2</td>
-<td>age</td>
-<td>27</td>
-</tr>
-<tr>
-<td>2</td>
-<td>remark</td>
-<td>d</td>
-</tr>
-<tr>
-<td>3</td>
-<td>name</td>
-<td>sf</td>
-</tr>
-<tr>
-<td>3</td>
-<td>sex</td>
-<td>m</td>
-</tr>
-<tr>
-<td>3</td>
-<td>age</td>
-<td>30</td>
-</tr>
-</tbody></table>
-<p>查询 sex=f and age&lt;30 and age&gt;25 的用户信息</p>
-<p><code>select * from t where uid in (select uid from t where uid in (select uid from t where key=&#39;sex&#39; and value= &#39;f&#39;) and key=&#39;age&#39; and value&lt;30 and value&gt;25)</code></p>
-<p>如此看来，其缺点很明显：</p>
-<ol>
-<li>uid，key 存在大量冗余，数据量存储巨大</li>
-<li>复杂的数据查询很难通过 sql 语句实现，且无法联表查询、分页查询</li>
-</ol>
-<p>这种方案很难适应数据量大，需要复杂查询的场景，如果通过分库分表去解决数据量大的问题，也会对日后的运维和二次开发扩展造成巨大影响，不推荐</p>
-<h4 id="方案-3：-使用文档型数据库存储（推荐）"><a href="#方案-3：-使用文档型数据库存储（推荐）" class="headerlink" title="方案 3： 使用文档型数据库存储（推荐）"></a>方案 3： 使用文档型数据库存储（推荐）</h4><p>其实扩展字段存储，使用 json 格式是最灵活、简洁的，而文档型数据库最为契合这种数据格式的存储，这里将主要基于 MongoDB 数据库进行讨论。</p>
-<p>在 mongodb 4.x 以前，不支持多 document 的事务，只是对数据集分片的一致性做了处理，而 4.x 之后，对多 document 事务进行了支持，理论上可以满足我们业务系统的需求</p>
-<p>eg.</p>
-<p>将方案 2 中的数据转存到 mongo 中，体现出来的 document 如下:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;_id:1,name:&#39;jt&#39;,sex:&#39;f&#39;,age:20&#125;</span><br><span class="line">&#123;_id:2,name:&#39;hjp&#39;,sex:&#39;f&#39;,age:27,remark:&#39;d&#39;&#125;</span><br><span class="line">&#123;_id:3,name:&#39;sf&#39;,sex:&#39;m&#39;,age:30&#125;</span><br></pre></td></tr></table></figure>
-
-<p>不仅数据冗余降低了，而且可以基于扩展 key 建立索引（基于 name、sex、age、remark 都可以建立索引）。</p>
-<p>优点：</p>
-<ol>
-<li>相比较方案 1 和 2，实现起来更加简单</li>
-</ol>
-<p>难点：</p>
-<ol>
-<li>数据结构设计的时候，需要考虑是否使用对象属性，去冗余一些不常变化或者经常使用的数据</li>
-<li>mongodb 联表查询复杂，尽量避免联表查询，这个又回到了难点 1</li>
-<li>在我使用的 mongodb 4.2 版本中，并行事务对于同一条 document 进行 update 某个字段自增的时候，出现了一个事务成功，其他事务抛出写入冲突异常，这个对于高并发的库存扣减等，需要业务端对异常进行捕获，然后重试写入，当前 spring-boot-starter-data-mongdb 2.4 版本暂时没有支持（暂未发现有适合的 api），网上描述修改 mongodb 配置项 maxTransactionLockRequestTimeoutMillis 并没有生效</li>
-</ol>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>扩展方案中，最理想和简单的还是方案 3，但需要解决并行事务问题的写入冲突。而方案 1，是当前最稳定、最成熟的方案，在我司的项目中就是基于方案 1 的实现。方案 2，对于单纯写入、简单查询的场景较为适用，但复杂场景下不建议使用</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1441,7 +1349,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">18</span>
+          <span class="site-state-item-count">19</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1454,7 +1362,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-count">26</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
