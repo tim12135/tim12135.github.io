@@ -1018,7 +1018,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-03-01 16:18:45" itemprop="dateModified" datetime="2022-03-01T16:18:45+08:00">2022-03-01</time>
+                <time title="修改时间：2023-05-18 17:32:32" itemprop="dateModified" datetime="2023-05-18T17:32:32+08:00">2023-05-18</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1069,7 +1069,7 @@
 <li>传输数据</li>
 </ol>
 <p>缺点：连接客户端的端口可能被客户端的防火墙拦截</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">cmd 通道</span><br><span class="line">client-&gt;server PORT 1027</span><br><span class="line">server-&gt;client ACK</span><br><span class="line"></span><br><span class="line">data 通道</span><br><span class="line">server-&gt;client 连接</span><br><span class="line">client-&gt;server ACK</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">cmd 通道</span><br><span class="line"><span class="meta">client-&gt;</span><span class="bash">server PORT 1027</span></span><br><span class="line"><span class="meta">server-&gt;</span><span class="bash">client ACK</span></span><br><span class="line"></span><br><span class="line">data 通道</span><br><span class="line"><span class="meta">server-&gt;</span><span class="bash">client 连接</span></span><br><span class="line"><span class="meta">client-&gt;</span><span class="bash">server ACK</span></span><br></pre></td></tr></table></figure>
 
 <ul>
 <li>被动模式</li>
@@ -1080,7 +1080,7 @@
 <li>客户端初始化一个数据端口连接到服务器端口 N</li>
 <li>服务器数据端口返回客户端数据端口一个 ACK</li>
 </ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">cmd 通道</span><br><span class="line">client-&gt;server PASV</span><br><span class="line">server-&gt;client PORT 2024</span><br><span class="line"></span><br><span class="line">data 通道</span><br><span class="line">client-&gt;server 连接</span><br><span class="line">server-&gt;client ACK</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">cmd 通道</span><br><span class="line"><span class="meta">client-&gt;</span><span class="bash">server PASV</span></span><br><span class="line"><span class="meta">server-&gt;</span><span class="bash">client PORT 2024</span></span><br><span class="line"></span><br><span class="line">data 通道</span><br><span class="line"><span class="meta">client-&gt;</span><span class="bash">server 连接</span></span><br><span class="line"><span class="meta">server-&gt;</span><span class="bash">client ACK</span></span><br></pre></td></tr></table></figure>
 
 <h3 id="ftps"><a href="#ftps" class="headerlink" title="ftps"></a>ftps</h3><p>为 ftp 增加 SSL 层加密</p>
 <h3 id="sftp"><a href="#sftp" class="headerlink" title="sftp"></a>sftp</h3><p>sftp 始终只有一个通道，数据命令在一个通道内执行，效率比 ftp 低下</p>
@@ -1243,7 +1243,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-03-01 16:18:22" itemprop="dateModified" datetime="2022-03-01T16:18:22+08:00">2022-03-01</time>
+                <time title="修改时间：2023-05-18 17:34:25" itemprop="dateModified" datetime="2023-05-18T17:34:25+08:00">2023-05-18</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1293,16 +1293,16 @@
 <h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RunWith(SpringRunner.class)</span></span><br><span class="line"><span class="meta">@SpringBootTest</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MybatisCacheTest</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> CheckPlanDao checkPlanDao;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Transactional</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testCache</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        String id = <span class="string">&quot;076973b31f15491c9b1a85a66aa03c15&quot;</span>;</span><br><span class="line">        CheckReportPlanEntity t1 = checkPlanDao.selectById(id);</span><br><span class="line">        CheckReportPlanEntity t2 = checkPlanDao.selectById(t1.getId());</span><br><span class="line">        System.out.println(<span class="string">&quot;从一级缓存查询：&quot;</span> + (t1 == t2));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>1、执行结果</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">从一级缓存查询：<span class="keyword">true</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">从一级缓存查询：true</span><br></pre></td></tr></table></figure>
 
 <p>2、将<code>@Transactional</code>去掉后，执行结果</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">从一级缓存查询：<span class="keyword">false</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">从一级缓存查询：false</span><br></pre></td></tr></table></figure>
 
 <p>3、修改 CheckPlanDao.xml，在 select 标签内，增加<code>flushCache=&quot;true&quot;</code></p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;select id=<span class="string">&quot;selectById&quot;</span> resultType=<span class="string">&quot;CheckReportPlanEntity&quot;</span> flushCache=<span class="string">&quot;true&quot;</span>&gt;</span><br><span class="line">...</span><br><span class="line">&lt;/select&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">select</span> <span class="attr">id</span>=<span class="string">&quot;selectById&quot;</span> <span class="attr">resultType</span>=<span class="string">&quot;CheckReportPlanEntity&quot;</span> <span class="attr">flushCache</span>=<span class="string">&quot;true&quot;</span>&gt;</span></span><br><span class="line">...</span><br><span class="line"><span class="tag">&lt;/<span class="name">select</span>&gt;</span></span><br></pre></td></tr></table></figure>
 
 <p>执行结果</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">从一级缓存查询：<span class="keyword">false</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">从一级缓存查询：false</span><br></pre></td></tr></table></figure>
 
 <h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>在编写代码的时候，一定要注意 mybatis 的一级缓存问题，在同一个事务内避免出现相同 sql 重复查询，且中间没有夹着更新、删除这些操作，此时第二次查询是命中了一级缓存，获取到的对象其实是第一次查询到的对象。</p>
 <p>MySQL 在 8 中已经去掉了查询缓存模块，sql 层面的缓存几乎没有价值，而且容易误导开发人员，还是由业务驱动的缓存更有价值且方便维护</p>
