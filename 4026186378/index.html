@@ -29,7 +29,7 @@
 <meta property="og:description" content="Twitter 的雪花算法大部分人应该都知道，用于生成有序的数值类型的 id。算法的原理也很简单，通过划分了 64 位比特：1 位符号位固定为 0 表示正数，41 位时间戳，5 位数据中心 id，5 位机器 id，12 位有序序号。其中 5 位数据中心 id 和 5 位机器 id，接下来我将合并成 10 位 workid 来做讨论，含义是一样的，总共可以分配 1024 台机器用于生成相同业务的主">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-04-26T07:32:17.000Z">
-<meta property="article:modified_time" content="2023-04-26T08:30:18.435Z">
+<meta property="article:modified_time" content="2023-05-25T06:23:02.899Z">
 <meta property="article:author" content="Tim">
 <meta property="article:tag" content="zookeeper">
 <meta name="twitter:card" content="summary">
@@ -184,10 +184,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2023-04-26 15:32:17 / 修改时间：16:30:18" itemprop="dateCreated datePublished" datetime="2023-04-26T15:32:17+08:00">2023-04-26</time>
+              <time title="创建时间：2023-04-26 15:32:17" itemprop="dateCreated datePublished" datetime="2023-04-26T15:32:17+08:00">2023-04-26</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-05-25 14:23:02" itemprop="dateModified" datetime="2023-05-25T14:23:02+08:00">2023-05-25</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -238,8 +244,8 @@
 <li><p>手动配置<br>单机情况下，我们一般在实现该算法的时候，可能就直接指定了 workid 为一个固定的整数（0~1023）。或者集群环境下，有一台或多台服务专门提供生成主键的服务，此时也可以通过手动分配（硬编码或者配置文件）的方式来指定 workid。</p>
 <p>但是随着容器化自动部署，共用配置中心，相同的服务用的是同一套配置中心，很难通过手动的配置方式来指定 workid。即使可以做到，对于后期的运维也是很麻烦的事情。</p>
 </li>
-<li><p>美团 leaf<br>市面上，当前有美团的开源项目 leaf，将业务服务的 ip+port 添加到 zookeeper 上，通过 zookeeper 的分布式一致性以及它的持久性节点，来避免抢占相同的 workid，同时 leaf 还通过定时任务上传业务服务的时间信息，来避免时钟回拨的问题，可以仔细阅读下代码，这块代码还是很好理解的<a target="_blank" rel="noopener" href="https://github.com/Meituan-Dianping/Leaf">https://github.com/Meituan-Dianping/Leaf</a></p>
-<p>但是我司在 k8s 上部署服务的时候，并没有指定 ip，每次发布 ip 都是动态分配的，也就意味着相同业务实例它的 workid 会随着发布次数的变多，就会超过 1024 个，有人也提了 issue：<a target="_blank" rel="noopener" href="https://github.com/Meituan-Dianping/Leaf/issues/84%EF%BC%8C%E6%9C%89%E7%83%AD%E5%BF%83%E5%B8%82%E6%B0%91%E4%B9%9F%E7%BB%99%E5%87%BA%E4%BA%86%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%EF%BC%9Ahttps://github.com/NotFound9/Leaf%E3%80%82">https://github.com/Meituan-Dianping/Leaf/issues/84，有热心市民也给出了解决方案：https://github.com/NotFound9/Leaf。</a></p>
+<li><p>美团 leaf<br>市面上，当前有美团的开源项目 leaf，将业务服务的 ip+port 添加到 zookeeper 上，通过 zookeeper 的分布式一致性以及它的持久性节点，来避免抢占相同的 workid，同时 leaf 还通过定时任务上传业务服务的时间信息，来避免时钟回拨的问题，可以仔细阅读下代码，这块代码还是很好理解：<a target="_blank" rel="noopener" href="https://github.com/Meituan-Dianping/Leaf">https://github.com/Meituan-Dianping/Leaf</a></p>
+<p>但是我司在 k8s 上部署服务的时候，并没有指定 ip，每次发布 ip 都是动态分配的，也就意味着相同业务实例它的 workid 会随着发布次数的变多，就会超过 1024 个，有人也提了 issue：<a target="_blank" rel="noopener" href="https://github.com/Meituan-Dianping/Leaf/issues/84">https://github.com/Meituan-Dianping/Leaf/issues/84</a>，有热心市民也给出了解决方案：<a target="_blank" rel="noopener" href="https://github.com/NotFound9/Leaf">https://github.com/NotFound9/Leaf</a>。</p>
 </li>
 </ol>
 <h2 id="自己实现"><a href="#自己实现" class="headerlink" title="自己实现"></a>自己实现</h2><p>基于 zookeeper 的临时节点的特性，即客户端断开连接，就会删除节点。可以实现一个自动生成不重复的 workId 的功能。</p>
