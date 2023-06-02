@@ -159,6 +159,129 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/3553903599/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Tim">
+      <meta itemprop="description" content="Tim's blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tim">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/3553903599/" class="post-title-link" itemprop="url">UML和相关工具</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-06-01 17:31:50" itemprop="dateCreated datePublished" datetime="2023-06-01T17:31:50+08:00">2023-06-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-06-02 18:16:22" itemprop="dateModified" datetime="2023-06-02T18:16:22+08:00">2023-06-02</time>
+              </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/3553903599/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/3553903599/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <blockquote>
+<p>大学的时候有门课程叫软件工程，那个时候根本不懂为啥要学这个，还不如让老师教我们怎么开发网站、游戏，学点技术更有意义。这门课最终也不知道学到了点什么，回忆起来竟是连老师是谁都忘了。现在再次回头来看这些知识的时候，已经毕业近十年了，可笑的是竟然还要花钱再买毕业时不知道丢到哪里的教材，还贼贵。珍惜每一次学习的机会。</p>
+</blockquote>
+<h2 id="UML-意义"><a href="#UML-意义" class="headerlink" title="UML 意义"></a>UML 意义</h2><p>很多时候，客户跟产品经理交流，产品经理再跟开发交流，开发再和其他开发交流。在沟通的过程中，很多需求可能变了味，不再是客户最开始所描述的。其根本原因在于每个人的思维方式和理解能力是不同的。UML 的意义就是它定下来了一些建模的标准，把抽象的文字转换成了更形象的图形。你拿一个时序图或者活动图比你巴拉巴拉讲半天更能让其他人明白整个业务流程的流转交互。</p>
+<p>依稀记得大学的老师跟我们说过如果能熟练掌握 UML 建模，那么你应该可以很轻松的敲出代码。</p>
+<p>现在想想的确如此，客户的需求用用例图来表示明确功能点，复杂交互可以用活动图、时序图来表示，对象的状态变更可以用状态机图来表示。包图、类图可以化解多人开发时信息孤岛、命名冲突、不规范等问题，构件图可以有助于了解构件、包或者三方库之间的依赖关系，部署图可以让运维架构师们清晰的了解各软件服务所需的物理资源以及分布情况。</p>
+<h3 id="软件开发过程中各角色常用的建模图形"><a href="#软件开发过程中各角色常用的建模图形" class="headerlink" title="软件开发过程中各角色常用的建模图形"></a>软件开发过程中各角色常用的建模图形</h3><table>
+<thead>
+<tr>
+<th>角色</th>
+<th>常用建模</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>产品</td>
+<td>用例图、活动图</td>
+</tr>
+<tr>
+<td>开发</td>
+<td>活动图、时序图、类图、状态图、包图；数据库建模：ER 图、物理模型图</td>
+</tr>
+<tr>
+<td>测试</td>
+<td>用例图</td>
+</tr>
+<tr>
+<td>架构师、运维</td>
+<td>构件图（类似架构图）、部署图；网络拓扑图</td>
+</tr>
+</tbody></table>
+<h2 id="UML-常用工具"><a href="#UML-常用工具" class="headerlink" title="UML 常用工具"></a>UML 常用工具</h2><p>很长一段时间，我接触到的都是图形化界面的工具，如 Visio、PowerDesigner、网页版的图形化工具 Diagram 等。这些工具优点很明显，图形化的界面拖拽很方便；但缺点也很突出，不谈收费以及不适配所有平台这个问题外，图形、线条、箭头我一直存在对不齐的问题，其次每次都需要保留源文件才能进行修改，但是嵌入到输出页面的都是一张张图片而不会把源文件也放进去。</p>
+<p>后面接触到文本型的工具，如 PlantUML、Mermaid 等，说是工具，其实更加倾向于是一种新的语法。这两种现在基本上都有基于 Markdown 代码块的插件，来将代码块转换成图形，这样既可以解决用手和眼睛来拖拽对齐的问题，又可以解决输出页面保留了源文件（应该说是源代码）方便日后修改的问题。当然缺点就是得学习下新的语法。</p>
+<p>Mermaid 和 PlantUML 的语法就不多阐述了，基本上两者蛮相似的。以下是 Mermaid 给的一个 demo：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">sequenceDiagram</span><br><span class="line">Alice-&gt;&gt;John: Hello John, how are you?</span><br><span class="line">loop Healthcheck</span><br><span class="line">    John-&gt;&gt;John: Fight against hypochondria</span><br><span class="line">end</span><br><span class="line">Note right of John: Rational thoughts!</span><br><span class="line">John--&gt;&gt;Alice: Great!</span><br><span class="line">John-&gt;&gt;Bob: How about you?</span><br><span class="line">Bob--&gt;&gt;John: Jolly good!</span><br></pre></td></tr></table></figure>
+
+<p>预览结果：</p>
+<p><img src="/3553903599/preview.png" alt="预览结果"></p>
+<p>可以发现还是很清晰美观的。</p>
+<h3 id="IntelliJ-IDEA-Markdown-插件安装"><a href="#IntelliJ-IDEA-Markdown-插件安装" class="headerlink" title="IntelliJ IDEA Markdown 插件安装"></a>IntelliJ IDEA Markdown 插件安装</h3><p><img src="/3553903599/idea.png" alt="IEDA Markdown安装插件"></p>
+<h3 id="VS-Code-Markdown-插件安装"><a href="#VS-Code-Markdown-插件安装" class="headerlink" title="VS Code Markdown 插件安装"></a>VS Code Markdown 插件安装</h3><p><img src="/3553903599/vscode.png" alt="VS Code安装Mermaid插件"></p>
+<h2 id="外链"><a href="#外链" class="headerlink" title="外链"></a>外链</h2><ol>
+<li><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Unified_Modeling_Language">https://en.wikipedia.org/wiki/Unified_Modeling_Language</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/plantuml/plantuml">https://github.com/plantuml/plantuml</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/mermaid-js/mermaid">https://github.com/mermaid-js/mermaid</a></li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/1063751735/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1188,145 +1311,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/731259334/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Tim">
-      <meta itemprop="description" content="Tim's blog">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Tim">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/731259334/" class="post-title-link" itemprop="url">Java线程池</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-04-12 16:32:41" itemprop="dateCreated datePublished" datetime="2022-04-12T16:32:41+08:00">2022-04-12</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-04-13 11:13:05" itemprop="dateModified" datetime="2022-04-13T11:13:05+08:00">2022-04-13</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/731259334/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/731259334/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="线程池的目的"><a href="#线程池的目的" class="headerlink" title="线程池的目的"></a>线程池的目的</h2><p>省去频繁创建线程对象的开销，节省时间和资源</p>
-<h2 id="Executors-创建"><a href="#Executors-创建" class="headerlink" title="Executors 创建"></a>Executors 创建</h2><ul>
-<li><p>Executors.newFixedThreadPool <br>创建一个固定线程数的线程池。在任何时候，最多 nThreads 线程处于活动状态处理任务。如果在所有线程都处于活动状态时提交了其他任务，它们将在队列中等待，直到有线程可用。如果任何线程在关闭之前的执行过程中由于失败而终止，新的线程将取代它执行随后的任务。池中的线程将一直存在，直到显式 shutdown 。</p>
-</li>
-<li><p>Executors.newWorkStealingPool <br>创建一个线程池来维护足够的线程来支持给定的并行级别，并且可以使用多个队列来减少争用。并行度级别对应于主动参与或可参与任务处理的最大线程数。实际线程数可能会动态增长和收缩。工作窃取池不保证提交任务的执行顺序。</p>
-</li>
-<li><p>Executors.newCachedThreadPool <br>创建一个线程池，根据需要创建新线程，但在可用时将重用以前创建的线程。该线程池通常会提高执行许多短期异步任务的性能。如果可用，对 execute 的调用将重用以前构造的线程。如果没有可用的现有线程，将创建一个新线程并将其添加到池中。六十秒内未使用的线程将被终止并从缓存中删除。</p>
-</li>
-<li><p>Executors.newSingleThreadExecutor <br>创建单个线程数的线程池，它可以保证先进先出的执行顺序</p>
-</li>
-<li><p>Executors.newScheduledThreadPool <br>创建一个可以执行延迟任务或者周期任务的线程池</p>
-</li>
-<li><p>Executors.newSingleThreadScheduledExecutor <br>创建一个单线程的可以执行延迟任务或者周期任务的线程池</p>
-</li>
-</ul>
-<blockquote>
-<p>【强制】线程池不允许使用 Executors 去创建，而是通过 ThreadPoolExecutor 的方式，这样的处理方式让写的同学更加明确线程池的运行规则，规避资源耗尽的风险。<br>说明：Executors 返回的线程池对象的弊端如下：<br>1） FixedThreadPool 和 SingleThreadPool：允许的请求队列长度为 Integer.MAX_VALUE，可能会堆积大量的请求，从而导致 OOM。<br>2）CachedThreadPool：允许的创建线程数量为 Integer.MAX_VALUE，可能会创建大量的线程，从而导致 OOM。</p>
-</blockquote>
-<h2 id="ThreadPoolExecutor-创建"><a href="#ThreadPoolExecutor-创建" class="headerlink" title="ThreadPoolExecutor 创建"></a>ThreadPoolExecutor 创建</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">ThreadPoolExecutor</span><span class="params">(<span class="keyword">int</span> corePoolSize,</span></span></span><br><span class="line"><span class="function"><span class="params">                              <span class="keyword">int</span> maximumPoolSize,</span></span></span><br><span class="line"><span class="function"><span class="params">                              <span class="keyword">long</span> keepAliveTime,</span></span></span><br><span class="line"><span class="function"><span class="params">                              TimeUnit unit,</span></span></span><br><span class="line"><span class="function"><span class="params">                              BlockingQueue&lt;Runnable&gt; workQueue,</span></span></span><br><span class="line"><span class="function"><span class="params">                              ThreadFactory threadFactory,</span></span></span><br><span class="line"><span class="function"><span class="params">                              RejectedExecutionHandler handler)</span></span></span><br><span class="line"><span class="function"></span></span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>corePoolSize - 保留在池中的线程数，即使它们是空闲的，除非设置 allowCoreThreadTimeOut</li>
-<li>maximumPoolSize – 池中允许的最大线程数</li>
-<li>keepAliveTime – 当线程数大于核心线程数时，多余的空闲线程在终止前等待新任务的最长时间</li>
-<li>unit – keepAliveTime 参数的时间单位</li>
-<li>workQueue – 用于在执行任务之前保存任务的队列。此队列将仅保存由 execute 方法提交的 Runnable 任务。</li>
-<li>threadFactory – 执行器创建新线程时使用的工厂</li>
-<li>handler – 由于达到线程边界和队列容量而阻塞执行时使用的处理程序</li>
-</ul>
-<ol>
-<li><p>核心和最大线程数 <br>当在方法 execute(Runnable)中提交一个任务，并且运行的线程少于 corePoolSize 时，即使其他线程处于空闲状态，也会创建一个线程来处理该请求。如果运行的线程多于 corePoolSize 但少于 maximumPoolSize，则仅当队列已满时才会创建线程。</p>
-</li>
-<li><p>按需创建 <br>默认情况下，即使核心线程也是在新任务到达时才最初创建和启动，但这可以使用 prestartCoreThread 或 prestartAllCoreThreads 动态覆盖。</p>
-</li>
-<li><p>创建新线程 <br>新线程是通过 ThreadFactory 创建的。默认使用 Executors.defaultThreadFactory，它创建的线程都在同一个 ThreadGrouop 中，并且具有相同的 NORM_PRIORITY 优先级和非守护进程的状态。通过不同的 ThreadFactory，可以更改线程的名称、线程组、优先级、守护进程状态等。</p>
-</li>
-<li><p>存活时间 <br>如果线程池中线程数多于 corePoolSize，多余的线程如果空闲时间超过 keepAliveTime 将被终止。默认情况下，keep-alive 策略仅适用于超过 corePoolSize 的线程，但通过 allowCoreThreadTimeOut 方法可以将该策略用于核心线程，只要 keepAliveTime 值不为零。</p>
-</li>
-<li><p>队列 <br>任何 BlockingQueue 都可以用来传输和保存提交的任务。此队列的使用与池大小的交互：</p>
-<ul>
-<li>如果运行的线程少于 corePoolSize，则 Executor 总是更倾向添加新线程而不是排队</li>
-<li>如果 corePoolSize 或更多线程正在运行，Executor 总是更倾向排队而不是添加新线程</li>
-<li>如果请求无法排队，则会创建线程，除非这将超过 maximumPoolSize，在这种情况下，该任务将被拒绝</li>
-</ul>
-<p>排队的一般策略有以下三种：</p>
-<ol>
-<li>直接交接，默认选择 SynchronousQueue，它将任务交给线程而不会保留。如果没有立即可用的线程，则会创建线程。会有不断创建线程 oom 的风险</li>
-<li>无界队列，（LinkedBlockingQueue）当所有 corePoolSize 线程都忙时，使用无界队列将导致新任务等待。因此，不会创建超过 corePoolSize 个线程。（maximumPoolSize 的值没有任何影响）</li>
-<li>有界队列，（ArrayBlockingQueue）在与 maximumPoolSizes 一起使用时有助于防止资源耗尽，但可能更难以调整和控制。</li>
-</ol>
-</li>
-</ol>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1396,7 +1380,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">21</span>
+          <span class="site-state-item-count">22</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
