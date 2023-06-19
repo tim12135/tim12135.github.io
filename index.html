@@ -159,6 +159,117 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/3104045179/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Tim">
+      <meta itemprop="description" content="Tim's blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tim">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/3104045179/" class="post-title-link" itemprop="url">各种线程泄露问题</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-06-19 15:45:09 / 修改时间：16:51:20" itemprop="dateCreated datePublished" datetime="2023-06-19T15:45:09+08:00">2023-06-19</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/3104045179/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/3104045179/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="常用排查手段"><a href="#常用排查手段" class="headerlink" title="常用排查手段"></a>常用排查手段</h3><ul>
+<li>通过监控工具观察 web 容器所在服务器的状态，一般看 cpu、内存、socket 连接数</li>
+<li>通过监控工具观察 jvm 状态，一般看堆内存、gc、io、线程池状态</li>
+<li><code>jmap -dump:live,format=b,file=FILE PATH PID</code> dump jvm 内存，观察线程信息和堆内存信息</li>
+</ul>
+<h3 id="2023-06-19"><a href="#2023-06-19" class="headerlink" title="2023-06-19"></a>2023-06-19</h3><p><strong>事件描述：</strong>UAT 环境，进去项目首页，出现部分接口卡死的现象，但是其他接口都能正常请求。</p>
+<p><strong>事件原因：</strong>dump jvm 内存后，发现都卡死在<code>CompletableFurture#Join</code>这个方法。通过 grafa 监控的线程池状态，当前线程数已经达到最大线程数，且队列中已经排队 2000 多个任务。观察 dump 文件中的线程栈信息，发现有 200 多个容器线程处于等待状态，卡死在<code>CompletableFurture#Join</code>这个方法，同时线程池中的线程也处于处于等待状态，卡死在<code>CompletableFurture#Join</code>这个方法。根据线程池的线程栈调用信息，发现都是在某个业务类的方法进来，该业务类方法也开启了线程调用。</p>
+<p><strong>根本原因：</strong>总结下来就是，<strong>使用了同一个线程池，开启线程异步执行任务 A，任务 A 中又开启了线程异步执行任务 B，在并发场景高的情况下，可能会出现线程池中得到线程执行的都是任务 A，所有的任务 A 都执行到<code>开启线程执行任务 B的时间点</code>，但是由于活跃线程都被任务 A 占用了，所以任务 B 都在线程池队列中等待，而任务 A 又都在等待任务 B 返回结果，最终导致线程得不到释放而耗尽</strong></p>
+<p><strong>CAPA：</strong></p>
+<ol>
+<li>在同一个线程池中开启的线程在执行过程中不允许再开启该线程池中的其他线程去执行任务</li>
+<li>在调用外部服务的时候，需要配置超时熔断机制，避免卡死后带来的雪崩</li>
+</ol>
+<h3 id="2023-01-28"><a href="#2023-01-28" class="headerlink" title="2023-01-28"></a>2023-01-28</h3><p><strong>事件描述：</strong>生产环境，首页白页，所有请求后端接口卡死</p>
+<p><strong>事件原因：</strong>通过 grafa 观察后端服务器状态，发现 socket 连接数搞到 8k，web 容器的线程数也达到 500 多，没有得到释放。</p>
+<p><strong>根本原因：</strong>dump jvm 内存后，发现线程栈信息，都卡死在<code>CountDownLatch#await</code>上，根据堆栈提示的类和代码行数，找到发现在使用多线程调用时，线程执行过程中抛出了运行时异常，countDown 方法没有放在 finally 中，得不到执行，且 await 方法没有设置超时时间，导致主线程一直阻塞在 await 方法，最终 web 容器的线程池耗尽而卡死。</p>
+<p><strong>CAPA：</strong></p>
+<ol>
+<li>所用用到闭锁的地方，都需要将释放锁的逻辑放到 finally 中，且 await 都需要设置超时时间</li>
+<li>代码提交的时候用 sonarlint 扫描，避免这些 block 问题</li>
+<li>配置 actuator 监控线程池的使用状况，配置预警和告警通知，及时发现线程池状态不健康等问题</li>
+</ol>
+<h3 id="2022-UN"><a href="#2022-UN" class="headerlink" title="2022-UN"></a>2022-UN</h3><p><strong>事件描述：</strong>生产环境，首页白页，大部分请求后端接口卡死，过一段时间全部接口全部卡死</p>
+<p><strong>事件原因：</strong>通过 grafa 观察后端服务器状态，发现 socket 连接数搞到 8k，web 容器的线程数也达到 500 多，没有得到释放。</p>
+<p><strong>根本原因：</strong>微服务调用存在循环调用的问题。服务 A 调用服务 B，服务 B 又调用了服务 A。并发高时，循环调用导致了服务 A 的 web 容器线程数一下子上来，从而导致了服务 B 想要调用服务 A 得排队，继而导致服务 A 线程得不到释放，外部请求都在队列中排队，最终卡死。</p>
+<p><strong>CAPA：</strong></p>
+<ol>
+<li>微服务间避免循环调用，划清微服务的功能界限，只能单向调用</li>
+<li>微服务请求一定要设置超时时间和熔断机制，避免雪崩</li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/3553903599/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1226,103 +1337,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/1495700437/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Tim">
-      <meta itemprop="description" content="Tim's blog">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Tim">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/1495700437/" class="post-title-link" itemprop="url">链路结构是否存在环判断</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2022-08-18 14:32:10 / 修改时间：15:49:24" itemprop="dateCreated datePublished" datetime="2022-08-18T14:32:10+08:00">2022-08-18</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">算法</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/1495700437/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/1495700437/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <blockquote>
-<p>最近在公司业务中碰到了比较有趣的问题：树形结构的数据，设置父级的时候，形成了循环依赖。如：C 的父级是 B，B 的父级是 A，结果还设置了 A 的父级是 C，导致该类数据的递归运算时直接死循环后栈溢出了</p>
-</blockquote>
-<h1 id="有两种场景的判断方案，可以根据场景来选择"><a href="#有两种场景的判断方案，可以根据场景来选择" class="headerlink" title="有两种场景的判断方案，可以根据场景来选择"></a>有两种场景的判断方案，可以根据场景来选择</h1><h2 id="单项更新的时候，进行判断是否有环路"><a href="#单项更新的时候，进行判断是否有环路" class="headerlink" title="单项更新的时候，进行判断是否有环路"></a>单项更新的时候，进行判断是否有环路</h2><ul>
-<li><p>新增的时候，选择父级，一定是不会出现环路的，因为当前项还没有子项。删除也是，删除的时候会将当前项以及所有子项删除，不会形成新的环路。所以只需要判断更新。</p>
-</li>
-<li><p>更新的时候，迭代去判断父级，因为父级永远只有一个，所以只要递归往上找父级，如果父级跟自己相同，则存在环路；如果父级为空，则不存在环路。</p>
-</li>
-</ul>
-<h2 id="直接判断所有项中是否存在环路"><a href="#直接判断所有项中是否存在环路" class="headerlink" title="直接判断所有项中是否存在环路"></a>直接判断所有项中是否存在环路</h2><p>在环路中，从起点 O 开始跑，a 以 v 速度跑，b 以 2v 速度跑，则 b 跑完 2 圈的时候 a 跑完一圈，正好又在原点相遇。。。因此判断环路存在，一定存在下面两个条件：</p>
-<ol>
-<li>永远有下个节点</li>
-<li>且 b 和 a 再次相遇了</li>
-</ol>
-<p>具体实现如下：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">LinkedNode</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function">LinkedNode <span class="title">next</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CycleCheckUtils</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 判断是否有循环链路</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> linkedNode   链路节点</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> checkedNodes 已检查过的链路节点，如果当前链路没有环，则这些检查过的节点不需要再去判断</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> 是否有循环</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">boolean</span> <span class="title">isCycle</span><span class="params">(LinkedNode linkedNode, List&lt;LinkedNode&gt; checkedNodes)</span> </span>&#123;</span><br><span class="line">        LinkedNode slow = linkedNode;</span><br><span class="line">        LinkedNode fast = linkedNode;</span><br><span class="line">        <span class="keyword">while</span> (fast != <span class="keyword">null</span> &amp;&amp; fast.next() != <span class="keyword">null</span> &amp;&amp; fast.next().next() != <span class="keyword">null</span>) &#123;</span><br><span class="line">            fast = fast.next().next();</span><br><span class="line">            slow = slow.next();</span><br><span class="line">            <span class="keyword">if</span> (checkedNodes != <span class="keyword">null</span>) &#123;</span><br><span class="line">                checkedNodes.add(slow);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (slow == fast) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1392,7 +1406,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">22</span>
+          <span class="site-state-item-count">23</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
