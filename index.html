@@ -159,6 +159,199 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/1118405656/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Tim">
+      <meta itemprop="description" content="Tim's blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tim">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/1118405656/" class="post-title-link" itemprop="url">文件服务</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2024-02-02 17:42:56 / 修改时间：17:43:42" itemprop="dateCreated datePublished" datetime="2024-02-02T17:42:56+08:00">2024-02-02</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%96%B9%E6%A1%88%E8%AE%BE%E8%AE%A1/" itemprop="url" rel="index"><span itemprop="name">方案设计</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/1118405656/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/1118405656/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="什么是-oss？"><a href="#什么是-oss？" class="headerlink" title="什么是 oss？"></a>什么是 oss？</h2><p>全称是 Object Storage Service，直译就是对象存储服务。OSS 具有与平台无关的 RESTful API 接口，您可以在任何应用、任何时间、任何地点存储和访问任意类型的数据。</p>
+<p>常见的 OSS 供应商</p>
+<ul>
+<li>国内：阿里云 OSS，腾讯云 OSS，七牛云 OSS</li>
+<li>国外 Amazon AWS，MinIO，其中 MinIO 是开源可以自建</li>
+</ul>
+<h2 id="oss-和文件系统的对比"><a href="#oss-和文件系统的对比" class="headerlink" title="oss 和文件系统的对比"></a>oss 和文件系统的对比</h2><table>
+<thead>
+<tr>
+<th align="left">对比项</th>
+<th align="left">OSS</th>
+<th align="left">文件系统</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">数据模型</td>
+<td align="left">OSS 是一个分布式的对象存储服务，提供的是一个 Key-Value 对形式的对象存储服务。</td>
+<td align="left">文件系统是一种典型的树状索引结构。</td>
+</tr>
+<tr>
+<td align="left">数据获取</td>
+<td align="left">根据 Object 的名称（Key）唯一的获取该 Object 的内容。虽然您可以使用类似 test1/test.jpg 的名称，但是这并不表示 Object 是保存在 test1 目录下。对于 OSS 来说，test1/test.jpg 仅仅只是一个字符串，与 example.jpg 并没有本质的区别。因此不同名称的 Object 之间的访问消耗的资源是类似的。</td>
+<td align="left">一个名为 test1/test.jpg 的文件，访问过程需要先访问到 test1 目录，然后再在该目录下查找名为 test.jpg 的文件。</td>
+</tr>
+<tr>
+<td align="left">优势</td>
+<td align="left">支持海量的用户并发访问。</td>
+<td align="left">支持文件的修改，例如修改指定偏移位置的内容、截断文件尾部等。也支持文件夹的操作，例如重命名目录、删除目录、移动目录等非常容易。</td>
+</tr>
+<tr>
+<td align="left">劣势</td>
+<td align="left">OSS 保存的 Object 不支持修改（追加写 Object 需要调用特定的接口，生成的 Object 也和正常上传的 Object 类型上有差别）。用户即使只需要修改一个字节也需要重新上传整个 Object。OSS 可以通过一些操作来模拟类似文件夹的功能，但是代价非常高。例如重命名目录，如果希望将 test1 目录重命名成 test2，则 OSS 的实际操作是将所有以 test1/开头的 Object 都重新复制成以 test2/开头的 Object，该操作会消耗大量的带宽、存储、计算、时间资源。因此在使用 OSS 时请尽量避免类似的操作。</td>
+<td align="left">受限于单个设备的性能。访问越深的目录消耗的资源也越大，操作拥有很多文件的目录也会非常慢。</td>
+</tr>
+</tbody></table>
+<h2 id="什么是-bucket？"><a href="#什么是-bucket？" class="headerlink" title="什么是 bucket？"></a>什么是 bucket？</h2><p>阿里云中的解释：在上传数据（例如文档、图片、音视频等）到 OSS 之前，您需要在 OSS 所支持的地域中创建一个存储空间（Bucket），然后将无限数量的对象（Object）上传到该 Bucket 中。</p>
+<p>我的理解：根文件夹，且所有上传的文件都是平铺在根文件夹中，没有目录结构（实际上有伪目录的概念，是个空的文件，主要用于控制目录下文件的权限）</p>
+<h2 id="为什么需要本地文件表？"><a href="#为什么需要本地文件表？" class="headerlink" title="为什么需要本地文件表？"></a>为什么需要本地文件表？</h2><p>业务系统中只要有上传文件的功能，就有一定会有用户上传相同的文件名称的文件，此时如果使用本地存储或者 oss 存储，在同一个目录（bucket）下是无法存储相同名称的文件。<br>因此需要一张本地文件表，记录原始名称和存储名称的映射表。 此外，通过本地文件表，不仅可以统计各业务的文件数、空间消耗，还可以记录文件的 oss 配置，实现文件存储在不同的 oss 服务中。</p>
+<h2 id="阿里云-OSS"><a href="#阿里云-OSS" class="headerlink" title="阿里云 OSS"></a>阿里云 OSS</h2><h3 id="服务器签名客户端直传-oss-并设置上传回调"><a href="#服务器签名客户端直传-oss-并设置上传回调" class="headerlink" title="服务器签名客户端直传 oss 并设置上传回调"></a>服务器签名客户端直传 oss 并设置上传回调</h3><p><a target="_blank" rel="noopener" href="https://www.alibabacloud.com/help/zh/oss/use-cases/overview-20?spm=a2c63.p38356.0.0.6b627dfc8Z247J">https://www.alibabacloud.com/help/zh/oss/use-cases/overview-20?spm=a2c63.p38356.0.0.6b627dfc8Z247J</a></p>
+<p>数据直传至 OSS 是利用 OSS 的表单上传 PostObject 接口。通过客户端先调用应用服务器生成并返回 Post 签名和 Post Policy，再使用这些信息上传到 OSS 服务器。为了将文件信息回写到本地文件表，此时有两种选择：</p>
+<ol>
+<li>如果 OSS 服务支持回调，则可以通过应用服务器返回对应的回调接口、以及指定回调的数据</li>
+<li>如果 OSS 服务不支持回调，则由客户端在上传结束后发起回调，可以复用上述接口</li>
+</ol>
+<p>局限性：PostObject 接口不支持分片上传</p>
+<h2 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">entity File &#123;</span><br><span class="line">    id 主键id</span><br><span class="line">    originName 原始名称</span><br><span class="line">    keyName 存储名称，uuid</span><br><span class="line">    storageConfigId 存储源id</span><br><span class="line">    mimeType 文件类型</span><br><span class="line">    size 文件大小</span><br><span class="line">&#125;</span><br><span class="line">entity FileBizInfo &#123;</span><br><span class="line">    id 主键id</span><br><span class="line">    fileId 文件id</span><br><span class="line">    bizId 业务id</span><br><span class="line">    bizType 业务类型</span><br><span class="line">&#125;</span><br><span class="line">entity StorageConfig &#123;</span><br><span class="line">    id 主键id</span><br><span class="line">    name 存储配置名称</span><br><span class="line">    enable 是否启用</span><br><span class="line">    weight 权重</span><br><span class="line">    ossType oss供应商类型</span><br><span class="line">    ossConfig oss配置</span><br><span class="line">&#125;</span><br><span class="line">entity OssConfig &#123;</span><br><span class="line">    endpoint 端点地址</span><br><span class="line">    bucketName 桶名（文件夹名称）</span><br><span class="line">    accessKeyId</span><br><span class="line">    accessKeySecret</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">File ||--|| FileBizInfo</span><br><span class="line">StorageConfig ||--o&#123; File</span><br></pre></td></tr></table></figure>
+
+<p>FileBizInfo：文件和业务的关系表。 看业务场景是否需要，不是必须维护项。<br>其数据源来源可以是上传接口，额外附带的扩展信息。也可以通过业务数据保存时，再维护业务数据和文件的关联关系。<br>此表的意义，是提供文件角度的视图，可以按照业务类型展示所有文件。</p>
+<h2 id="接口设计"><a href="#接口设计" class="headerlink" title="接口设计"></a>接口设计</h2><h3 id="后端内部-api"><a href="#后端内部-api" class="headerlink" title="后端内部 api"></a>后端内部 api</h3><ol>
+<li>单文件上传</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">输入：文件流、文件信息</span><br><span class="line">输出：文件id</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>根据文件 id 下载</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">输入：文件id</span><br><span class="line">输出：文件流</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>查询文件信息</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">输入：文件id集合、文件名、分页信息</span><br><span class="line">输出：文件信息分页结果</span><br></pre></td></tr></table></figure>
+
+<ol start="5">
+<li>删除文件信息</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">输入：文件id</span><br><span class="line">输出：文件信息</span><br></pre></td></tr></table></figure>
+
+<ol start="6">
+<li>物理删除 oss 文件</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">输入：文件id</span><br><span class="line">输出：文件信息</span><br></pre></td></tr></table></figure>
+
+<h3 id="web-接口"><a href="#web-接口" class="headerlink" title="web 接口"></a>web 接口</h3><ol>
+<li>单文件上传</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">输入：文件流、文件名</span><br><span class="line">输出：文件信息</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>获取上传凭证</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">输入：文件名</span><br><span class="line">输出：上传凭证（Post签名、Post Policy），以及判断对应的oss服务是否支持回调，回调的地址和内容（业务数据、文件id、文件原始名、oss配置id、新的文件名keyName）</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>上传完成回调接口（对应 oss 服务回调）</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">输入：文件信息（文件名、文件大小、文件类型）、设置好的回调内容（业务数据、文件id、文件原始名、oss配置id、新的文件名keyName）</span><br><span class="line">输出：通知oss回调成功</span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>上传完成回调接口（对应前端）</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">输入：文件信息（文件名、文件大小、文件类型）、设置好的回调内容（业务数据、文件id、文件原始名、oss配置id、新的文件名keyName）</span><br><span class="line">输出：文件id</span><br></pre></td></tr></table></figure>
+
+<ol start="5">
+<li>根据文件 id 下载</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">输入：文件id</span><br><span class="line">输出：文件流，请求头里重写了文件原始名</span><br></pre></td></tr></table></figure>
+
+<ol start="6">
+<li>根据文件 id 获取下载信息</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">输入：文件id</span><br><span class="line">输出：文件信息（文件原始名、文件大小、文件类型、下载路径、有效期）</span><br></pre></td></tr></table></figure>
+
+<ol start="7">
+<li>查询文件信息</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">输入：文件id集合、文件名、分页信息</span><br><span class="line">输出：文件信息分页结果</span><br></pre></td></tr></table></figure>
+
+<ol start="8">
+<li>删除文件信息</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">输入：文件id</span><br><span class="line">输出：文件信息</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/3104045179/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1251,92 +1444,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/2777437261/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Tim">
-      <meta itemprop="description" content="Tim's blog">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Tim">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2777437261/" class="post-title-link" itemprop="url">Mysql查询空格相关问题</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2022-08-18 15:55:26 / 修改时间：15:57:43" itemprop="dateCreated datePublished" datetime="2022-08-18T15:55:26+08:00">2022-08-18</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Mysql/" itemprop="url" rel="index"><span itemprop="name">Mysql</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2777437261/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2777437261/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> A <span class="keyword">where</span> <span class="keyword">name</span>=’jt’</span><br><span class="line"></span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> A <span class="keyword">where</span> <span class="keyword">name</span>=’jt ’</span><br><span class="line"></span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> A <span class="keyword">where</span> <span class="keyword">name</span>=’jt  ’</span><br><span class="line"></span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> A <span class="keyword">where</span> <span class="keyword">name</span>=’ jt’</span><br></pre></td></tr></table></figure>
-
-<p>上述 4 句 sql，其中前三句 sql 的效果是一致的，mysql 等值匹配的时候会忽略后置的空格，数据库中的记录如果 name 有’jt’，’jt ’都会被查询出来。而前置空格则会精确匹配。</p>
-<p>同时 mysql 默认是大小写不敏感的。’jt’和’JT’或者’Jt’都是一样能被‘jt’等值匹配出来。</p>
-<p>如果想要精确匹配，则可以通过 <code>where name like ?</code> 或者 <code>where name = binary ?</code>来实现</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1406,7 +1513,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-count">24</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1446,7 +1553,7 @@
 <div class="copyright">
   
   &copy; 
-  <span itemprop="copyrightYear">2023</span>
+  <span itemprop="copyrightYear">2024</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
