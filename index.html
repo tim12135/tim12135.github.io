@@ -159,6 +159,295 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/2116195305/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Tim">
+      <meta itemprop="description" content="Tim's blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tim">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2116195305/" class="post-title-link" itemprop="url">Mysql数据隔离和MVCC</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2024-09-10 17:44:43 / 修改时间：17:45:35" itemprop="dateCreated datePublished" datetime="2024-09-10T17:44:43+08:00">2024-09-10</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Mysql/" itemprop="url" rel="index"><span itemprop="name">Mysql</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2116195305/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2116195305/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="并发事务所产生的问题"><a href="#并发事务所产生的问题" class="headerlink" title="并发事务所产生的问题"></a>并发事务所产生的问题</h2><ol>
+<li>脏读<br>读到了其他事务未提交的数据。未提交意味着这些数据可能会回滚，读到了不一定最终存在的数据，这就是脏读。</li>
+<li>不可重复读<br>在一个事务内，最开始读到的数据和事务结束前任意时刻读到的同一批数据出现不一致的情况。</li>
+<li>幻读<br>在一个事务内，相同的查询条件不同时刻读到的结果数量不一致。</li>
+</ol>
+<h2 id="隔离级别"><a href="#隔离级别" class="headerlink" title="隔离级别"></a>隔离级别</h2><ol>
+<li>读未提交 READ UNCOMMITTED<br>允许事务读取未被其他事务提交的变更。可能会导致脏读、不可重复读、幻读。</li>
+<li>读已提交 READ COMMITTED<br>只允许事务读取已经被其他事务提交的变更。可以避免脏读，但可能会导致不可能重复读、幻读。</li>
+<li>可重复读 REPEATABLE READ<br>确保事务可以多次从一次字段读取相同的值，在这个事务持续期间，禁止其他事务更新这个字段。可以避免脏读和不可重复读，但可能导致幻读。</li>
+<li>序列化 SERIALIZABLE<br>提供严格的事务隔离。事务串行化顺序运行，可以避免所有并发问题，但性能最差。</li>
+</ol>
+<p>Mysql 默认隔离级别：REPEATABLE READ，可以通过语句<code>select @@tx_isolation;</code>查询。</p>
+<h2 id="MVCC"><a href="#MVCC" class="headerlink" title="MVCC"></a>MVCC</h2><h3 id="隐藏列"><a href="#隐藏列" class="headerlink" title="隐藏列"></a>隐藏列</h3><p>DB_TRX_ID：更改当前记录的事务 id<br>DB_ROLL_PTR：回滚指针，指向 undo log 的指针<br>DB_ROW_ID：innodb 为没有主键和唯一索引的表自动添加的隐藏主键</p>
+<h3 id="快照读和当前读"><a href="#快照读和当前读" class="headerlink" title="快照读和当前读"></a>快照读和当前读</h3><ul>
+<li>快照读：普通的 select 查询语句（不加锁的 select）就是快照读，快照读是基于 MVCC</li>
+<li>当前读：执行 insert、update、delete 以及 select … for update、select … lock in share mode 时，会读取最新版本数据</li>
+</ul>
+<h3 id="Undo-Log"><a href="#Undo-Log" class="headerlink" title="Undo Log"></a>Undo Log</h3><p>Undo Log 的目的：</p>
+<ul>
+<li>确保事务的原子性。即如果需要回滚，则可以根据 UndoLog 来撤销之前未提交的数据变更。</li>
+<li>实现 MVCC。Undo Log 记录了反向操作记录，可得出之前版本的数据，作为数据的旧版本快照，并形成了一条数据版本链，供其他并发事务进行快照读。</li>
+</ul>
+<h3 id="Read-View"><a href="#Read-View" class="headerlink" title="Read View"></a>Read View</h3><p>关键字段</p>
+<ul>
+<li>m_creator_trx_id：创建该 Read View 的事务 ID。</li>
+<li>m_ids：创建 Read View 时其他未提交的活跃事务 ID 列表。不包括当前事务自己和已提交的事务（正在内存中）。</li>
+<li>m_low_limit_id：创建 Read View 时最大的事务 ID+1，即下一个将要分配的事务 ID。大于等于这个 ID 的数据版本均不可见。</li>
+<li>m_up_limit_id：活跃事务列表 m_ids 中最小的事务 ID，如果 m_ids 为空，则 m_low_limit_id 为 m_up_limit_id。小于这个 ID 的数据版本均可见。</li>
+</ul>
+<p>Read View 可见性判断</p>
+<ul>
+<li>DB_TRX_ID == m_creator_trx_id，表示当前事务访问自己修改的记录，因此该版本可以被当前事务访问</li>
+<li>DB_TRX_ID &lt; m_up_limit_id，表示该版本是在当前事务生成 ReadView 之间提交的，因此该版本可以被当前事务访问</li>
+<li>DB_TRX_ID &gt;= m_low_limit_id，表示该版本是在当前事务生成 ReadView 之后提交的，因此该版本不能被当前事务访问</li>
+<li>DB_TRX_ID &gt;= m_up_limit_id &amp;&amp; DB_TRX_ID &lt; m_low_limit_id &amp;&amp; m_ids 包含 DB_TRX_ID，<br>表示创建 ReadView 时生成该版本的事务仍处于活跃状态，因此该版本不能被访问</li>
+<li>DB_TRX_ID &gt;= m_up_limit_id &amp;&amp; DB_TRX_ID &lt; m_low_limit_id &amp;&amp; m_ids 不包含 DB_TRX_ID，<br>表示创建 ReadView 时生成该版本的事务已提交，因此该版本能访问</li>
+</ul>
+<p>RC 和 RR 下的 Read View</p>
+<ul>
+<li>RC：每次 SELECT 数据前都生成一个 ReadView</li>
+<li>RR：只在第一次读取数据时生成一个 ReadView，后面会复用第一次生成的</li>
+</ul>
+<h3 id="案例"><a href="#案例" class="headerlink" title="案例"></a>案例</h3><h4 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h4><p>MYSQL 默认隔离级别为可重复读</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> idn</span><br><span class="line">(</span><br><span class="line">    <span class="keyword">id</span> <span class="built_in">int</span> <span class="keyword">not</span> <span class="literal">null</span> primary <span class="keyword">key</span>,</span><br><span class="line">    n  <span class="built_in">int</span></span><br><span class="line">);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> idn</span><br><span class="line"><span class="keyword">values</span> (<span class="number">1</span>, <span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+
+<h4 id="场景一"><a href="#场景一" class="headerlink" title="场景一"></a>场景一</h4><table>
+<thead>
+<tr>
+<th align="center">编号</th>
+<th align="center">事务 A</th>
+<th align="center">事务 B</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">1</td>
+<td align="center">BEGIN;</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">2</td>
+<td align="center">select n from idn where id=1;</td>
+<td align="center">BEGIN;</td>
+</tr>
+<tr>
+<td align="center">3</td>
+<td align="center">update idn set n=2 where id=1;</td>
+<td align="center">select n from idn where id=1;</td>
+</tr>
+<tr>
+<td align="center">4</td>
+<td align="center">select n from idn where id=1;</td>
+<td align="center">update idn set n=3 where id=1;</td>
+</tr>
+<tr>
+<td align="center">5</td>
+<td align="center">COMMIT;</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">6</td>
+<td align="center"></td>
+<td align="center">select n from idn where id=1;</td>
+</tr>
+<tr>
+<td align="center">7</td>
+<td align="center"></td>
+<td align="center">COMMIT;</td>
+</tr>
+</tbody></table>
+<ul>
+<li>时间点 3 的时候，事务 A 将 id=1 的记录 n 设置为 2，对于事务 B 来说此时的 ReadView，事务 A 处于活跃中的事务，但是未提交，所以不可见，其查询结果仍是 1</li>
+<li>时间点 4 的时候，事务 B 会阻塞，因为事务 A 在时间点 3 执行了 update 语句，对 id=1 的记录上了行锁</li>
+<li>时间点 5 的时候，事务 A 提交了，释放了行锁，事务 B 的 update 语句成功执行，id=1 的记录 n 设置为了 3</li>
+<li>时间点 6 的时候，事务 B 查询 id=1 的记录，因为最新版本的所属事务就是自己，所以看到的结果 n=3</li>
+</ul>
+<h4 id="场景二"><a href="#场景二" class="headerlink" title="场景二"></a>场景二</h4><table>
+<thead>
+<tr>
+<th align="center">编号</th>
+<th align="center">事务 A</th>
+<th align="center">事务 B</th>
+<th align="center">事务 C</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">1</td>
+<td align="center">BEGIN;</td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">2</td>
+<td align="center">select n from idn where id=1;</td>
+<td align="center">BEGIN;</td>
+<td align="center">BEGIN;</td>
+</tr>
+<tr>
+<td align="center">3</td>
+<td align="center">update idn set n=2 where id=1;</td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">4</td>
+<td align="center">select n from idn where id=1;</td>
+<td align="center">select n from idn where id=1;</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">5</td>
+<td align="center">COMMIT;</td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">6</td>
+<td align="center"></td>
+<td align="center">select n from idn where id=1;</td>
+<td align="center">select n from idn where id=1;</td>
+</tr>
+<tr>
+<td align="center">7</td>
+<td align="center"></td>
+<td align="center">select n from idn where id=1 for update;</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">8</td>
+<td align="center"></td>
+<td align="center">COMMIT;</td>
+<td align="center">COMMIT;</td>
+</tr>
+</tbody></table>
+<ul>
+<li>时间点 4 的时候，事务 B 查询 id=1 的记录，因为此时事务 A 处于活跃状态，因此事务 A 的修改，事务 B 不可见</li>
+<li>时间点 6 的时候，事务 B 查询 id=1 的记录，因为 mysql 的隔离级别设置为可重复读，所以 ReadView 在时间点 4 的时候已经生成，对于事务 A 的判断是处于活跃中的事务且未提交，所以不可见，查询的结果仍是 1</li>
+<li>时间点 6 的时候，事务 C 查询 id=1 的记录，此时生成对应的 ReadView，事务 A 已经提交属于历史版本小于事务 C 的 m_up_limit_id，可见，查询的结果 n=2</li>
+<li>时间点 7 的时候，事务 B 查询 id=1 的记录，但是加上了 for update 语句，上了排它锁，属于当前读，读取的是最新版本，查询的结果 n=2</li>
+</ul>
+<h4 id="场景三"><a href="#场景三" class="headerlink" title="场景三"></a>场景三</h4><table>
+<thead>
+<tr>
+<th align="center">编号</th>
+<th align="center">事务 A</th>
+<th align="center">事务 B</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">1</td>
+<td align="center">BEGIN;</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">2</td>
+<td align="center">select n from idn where id=1;</td>
+<td align="center">BEGIN;</td>
+</tr>
+<tr>
+<td align="center">3</td>
+<td align="center">update idn set n=n+1 where id=1;</td>
+<td align="center">select n from idn where id=1;</td>
+</tr>
+<tr>
+<td align="center">4</td>
+<td align="center">select n from idn where id=1;</td>
+<td align="center">update idn set n=n+1 where id=1;</td>
+</tr>
+<tr>
+<td align="center">5</td>
+<td align="center">COMMIT;</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">6</td>
+<td align="center"></td>
+<td align="center">select n from idn where id=1;</td>
+</tr>
+<tr>
+<td align="center">7</td>
+<td align="center"></td>
+<td align="center">COMMIT;</td>
+</tr>
+</tbody></table>
+<ul>
+<li>时间点 4 的时候，事务 B 会阻塞，因为事务 A 在时间点 3 执行了 update 语句，对 id=1 的记录上了行锁</li>
+<li>时间点 5 的时候，事务 A 提交了，释放了行锁，事务 B 的 update 语句成功执行，id=1 的记录 n=n+1，此时因为是 update 语句，所以是当前读，n 的初始值为事务 A 更新后的值 2，然后再加 1，最终等于 3</li>
+<li>时间点 6 的时候，事务 B 查询 id=1 的记录，因为最新版本的所属事务就是自己，所以看到的结果 n=3</li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/1272129741/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -184,7 +473,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2024-02-22 10:16:43 / 修改时间：10:30:27" itemprop="dateCreated datePublished" datetime="2024-02-22T10:16:43+08:00">2024-02-22</time>
+              <time title="创建时间：2024-02-22 10:16:43 / 修改时间：10:32:14" itemprop="dateCreated datePublished" datetime="2024-02-22T10:16:43+08:00">2024-02-22</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1308,124 +1597,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/1346865043/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Tim">
-      <meta itemprop="description" content="Tim's blog">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Tim">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/1346865043/" class="post-title-link" itemprop="url">RequestAbortedException的一次排查</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2023-03-15 19:59:59" itemprop="dateCreated datePublished" datetime="2023-03-15T19:59:59+08:00">2023-03-15</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-03-16 15:59:46" itemprop="dateModified" datetime="2023-03-16T15:59:46+08:00">2023-03-16</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/1346865043/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/1346865043/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <blockquote>
-<p>近期正式环境的日志经常出现<code>org.springframework.web.client.ResourceAccessException: I/O error on GET request for &quot;http://xxx/xxx&quot;: Request aborted; nested exception is org.apache.http.impl.execchain.RequestAbortedException: Request aborted</code>这个异常，原以为是服务端断开了请求，后面排查才发现 http 请求里还有这么多门道。</p>
-</blockquote>
-<p>公司的微服务调用，有些项目用的是 OpenFeign，有的直接用了 RestTemplate。用 RestTemplate 作为 Http 客户端的微服务，在启动类上都有加一段 RestTemplate 的 Bean 实例配置，就是设置了 RestTemplate 使用的 HttpClient 它的连接池最大连接数，以及 http 请求默认的连接超时和读取超时。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="function">RestTemplate <span class="title">restTemplate</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    HttpClientBuilder httpClientBuilder = HttpClients.custom();</span><br><span class="line">    Integer poolSize = Runtime.getRuntime().availableProcessors() * <span class="number">2</span> - <span class="number">1</span>;</span><br><span class="line">    poolSize = poolSize &lt; <span class="number">4</span> ? <span class="number">4</span> : poolSize;</span><br><span class="line">    httpClientBuilder.setMaxConnTotal(poolSize * <span class="number">10</span>);</span><br><span class="line">    httpClientBuilder.setMaxConnPerRoute(poolSize);</span><br><span class="line">    httpClientBuilder.disableCookieManagement();</span><br><span class="line">    httpClientBuilder.disableAuthCaching();</span><br><span class="line">    httpClientBuilder.setConnectionTimeToLive(<span class="number">60</span>, TimeUnit.SECONDS);</span><br><span class="line">    RequestConfig.Builder builder = RequestConfig.custom();</span><br><span class="line">    builder.setConnectionRequestTimeout(<span class="number">30000</span>).setConnectTimeout(<span class="number">30000</span>).setSocketTimeout(<span class="number">30000</span>);</span><br><span class="line">    httpClientBuilder.setDefaultRequestConfig(builder.build());</span><br><span class="line">    httpClientBuilder.setKeepAliveStrategy(DefaultConnectionKeepAliveStrategy.INSTANCE);</span><br><span class="line">    HttpClient httpClient = httpClientBuilder.build();</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> DynamicTimeoutHttpRequestFactory(httpClient);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>上述配置的连接数配置估计也是 CV 大法过来，不知道具体含义。这里排查问题的时候也了解了下：</p>
-<ul>
-<li><code>maxConnTotal</code>同一时间最大连接数</li>
-<li><code>maxConnPerRoute</code>同一域名同一时间最大连接数</li>
-<li><code>connectionRequestTimout</code>从连接池获取连接的 timeout</li>
-<li><code>connectTimeout</code>客户端和服务器建立连接的 timeout</li>
-<li><code>socketTimeout</code>客户端从服务器读取数据的 timeout</li>
-</ul>
-<p>上述的配置看起来就是建立了一个连接数是<code>（cpu线程数*2-1）*10</code>的连接池，相同域名同一时间最多连接数是<code>（cpu线程数*2-1）</code>，按照线上配置是 4 核心 8 线程，最大连接数是 150，相同域名最多同时就是 15。一旦用完就会阻塞在获取 httpclient 连接的位置。根据异常的堆栈日志：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">Caused by: org.apache.http.impl.execchain.RequestAbortedException: Request aborted</span><br><span class="line">	at org.apache.http.impl.execchain.MainClientExec.execute(MainClientExec.java:<span class="number">194</span>)</span><br><span class="line">	at org.apache.http.impl.execchain.ProtocolExec.execute(ProtocolExec.java:<span class="number">185</span>)</span><br><span class="line">	at org.apache.http.impl.execchain.RetryExec.execute(RetryExec.java:<span class="number">89</span>)</span><br><span class="line">	at org.apache.http.impl.execchain.RedirectExec.execute(RedirectExec.java:<span class="number">111</span>)</span><br><span class="line">	at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:<span class="number">185</span>)</span><br><span class="line">	at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:<span class="number">83</span>)</span><br><span class="line">	at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:<span class="number">56</span>)</span><br><span class="line">	at org.springframework.http.client.HttpComponentsClientHttpRequest.executeInternal(HttpComponentsClientHttpRequest.java:<span class="number">89</span>)</span><br><span class="line">	at org.springframework.http.client.AbstractBufferingClientHttpRequest.executeInternal(AbstractBufferingClientHttpRequest.java:<span class="number">48</span>)</span><br><span class="line">	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:<span class="number">53</span>)</span><br><span class="line">	at org.springframework.http.client.InterceptingClientHttpRequest$InterceptingRequestExecution.execute(InterceptingClientHttpRequest.java:<span class="number">112</span>)</span><br><span class="line">	at com.taimeitech.architecture.gateway.kubernetes.devtool.resttemplate.K8sDevSupportClientHttpRequestInterceptor.intercept(K8sDevSupportClientHttpRequestInterceptor.java:<span class="number">37</span>)</span><br><span class="line">	at org.springframework.http.client.InterceptingClientHttpRequest$InterceptingRequestExecution.execute(InterceptingClientHttpRequest.java:<span class="number">88</span>)</span><br><span class="line">	at org.springframework.http.client.InterceptingClientHttpRequest.executeInternal(InterceptingClientHttpRequest.java:<span class="number">72</span>)</span><br><span class="line">	at org.springframework.http.client.AbstractBufferingClientHttpRequest.executeInternal(AbstractBufferingClientHttpRequest.java:<span class="number">48</span>)</span><br><span class="line">	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:<span class="number">53</span>)</span><br><span class="line">	at org.springframework.web.client.RestTemplate.doExecute(RestTemplate.java:<span class="number">660</span>)</span><br><span class="line">	... <span class="number">35</span> more</span><br><span class="line">Caused by: java.lang.InterruptedException</span><br><span class="line">	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.reportInterruptAfterWait(AbstractQueuedSynchronizer.java:<span class="number">2014</span>)</span><br><span class="line">	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.awaitUntil(AbstractQueuedSynchronizer.java:<span class="number">2129</span>)</span><br><span class="line">	at org.apache.http.pool.AbstractConnPool.getPoolEntryBlocking(AbstractConnPool.java:<span class="number">378</span>)</span><br><span class="line">	at org.apache.http.pool.AbstractConnPool.access$<span class="number">200</span>(AbstractConnPool.java:<span class="number">69</span>)</span><br><span class="line">	at org.apache.http.pool.AbstractConnPool$<span class="number">2.</span>get(AbstractConnPool.java:<span class="number">246</span>)</span><br><span class="line">	at org.apache.http.pool.AbstractConnPool$<span class="number">2.</span>get(AbstractConnPool.java:<span class="number">193</span>)</span><br><span class="line">	at org.apache.http.impl.conn.PoolingHttpClientConnectionManager.leaseConnection(PoolingHttpClientConnectionManager.java:<span class="number">303</span>)</span><br><span class="line">	at org.apache.http.impl.conn.PoolingHttpClientConnectionManager$<span class="number">1.</span>get(PoolingHttpClientConnectionManager.java:<span class="number">279</span>)</span><br><span class="line">	at org.apache.http.impl.execchain.MainClientExec.execute(MainClientExec.java:<span class="number">191</span>)</span><br><span class="line">	... <span class="number">51</span> more</span><br></pre></td></tr></table></figure>
-
-<p>可以定位到这两行<code>at org.apache.http.impl.execchain.MainClientExec.execute(MainClientExec.java:194)</code>。这行对应的代码如下：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//MainClientExec.java:194</span></span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">int</span> timeout = config.getConnectionRequestTimeout();</span><br><span class="line">    managedConn = connRequest.get(timeout &gt; <span class="number">0</span> ? timeout : <span class="number">0</span>, TimeUnit.MILLISECONDS);</span><br><span class="line">&#125; <span class="keyword">catch</span>(<span class="keyword">final</span> InterruptedException interrupted) &#123;</span><br><span class="line">    Thread.currentThread().interrupt();</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> RequestAbortedException(<span class="string">&quot;Request aborted&quot;</span>, interrupted);</span><br><span class="line">&#125; <span class="keyword">catch</span>(<span class="keyword">final</span> ExecutionException ex) &#123;</span><br><span class="line">    Throwable cause = ex.getCause();</span><br><span class="line">    <span class="keyword">if</span> (cause == <span class="keyword">null</span>) &#123;</span><br><span class="line">        cause = ex;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> RequestAbortedException(<span class="string">&quot;Request execution failed&quot;</span>, cause);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这里可以看到再获取<code>HttpClientConnection</code>的时候，线程被 interrupt 了，然后被包装成了<code>RequestAbortedException</code>抛出。</p>
-<p>看到这里我以为是<code>connectionRequestTimeout</code>超时导致的这个异常，但是看了 apm 内的时间线和 30 秒的比对。</p>
-<p><img src="/1346865043/apm.png" alt="apm日志"></p>
-<p>发现并没有获取连接超时，并且发现日志中还有对应 Hystrix 的报错<code>xxx timed-out and no fallback available.</code>，这个异常是 HystrixCommand 超时且没有 fallback 才会抛出的异常。这就很奇怪了，因为 Hystrix 的超时配置我设置的是 30 秒，我们 Hystrix 开启的时间点是方法入口，按照这个逻辑整个方法应该执行了 30 秒，但是看 apm 日志，整个 HystrixCommand 只执行了 15 秒左右。还有 15 秒去哪了？</p>
-<p>反复查看日志和 Hystrix 文档，才发现 HystrixCommand 的执行，原来要分成两部分，在 Hystrix Thread 模式下，HystrixCommand execute 后，如果对应的 threadPool coresize 有可用的，则直接执行，如果没有可用的，则进入队列等待。而 execute 后，Hystrix 还开启了一个 time 线程用来计时，此时如果 Command 没有可用线程进入队列等待，但 time 线程还是会计时，这里耗掉了那丢失的 15 秒。</p>
-<p>而后有空余线程来执行 Command 的时候，在发起 http 请求时，由于 HttpClient 连接池连接数不够，处于阻塞状态，又过了 15 秒，此时已超过了 Hystrix 超时的 30 秒，time 线程发起了超时 fallback，对执行命令的线程发起了 interrupt，此时获取连接而阻塞的线程就抛出了异常，然后被包装成了 RequestAbortedException 抛出。</p>
-<p><img src="/1346865043/sequence.png" alt="时序"></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1495,7 +1666,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">25</span>
+          <span class="site-state-item-count">26</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1508,7 +1679,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-count">32</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
