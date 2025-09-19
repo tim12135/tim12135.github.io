@@ -159,6 +159,120 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/981914688/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Tim">
+      <meta itemprop="description" content="Tim's blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tim">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/981914688/" class="post-title-link" itemprop="url">zookeeper分布式锁相关问题</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-19 16:26:24 / 修改时间：16:29:28" itemprop="dateCreated datePublished" datetime="2025-09-19T16:26:24+08:00">2025-09-19</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/981914688/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/981914688/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="ZK-节点类型"><a href="#ZK-节点类型" class="headerlink" title="ZK 节点类型"></a>ZK 节点类型</h2><ul>
+<li>PERSISTENT: 持久节点</li>
+<li>EPHEMERAL: 临时节点</li>
+<li>PERSISTENT_SEQUENTIAL: 持久有序节点</li>
+<li>EPHEMERAL_SEQUENTIAL: 临时有序节点</li>
+<li>CONTAINER: 容器节点，当该节点下面没有子节点时会被自动删除，<strong>zk 3.5.6 后支持</strong></li>
+<li>PERSISTENT_WITH_TTL: 持久类型的节点可以设置存活时间，当该节点下面没有子节点且超过 TTL 指定时间后会被自动删除，<strong>zk<br>3.5.6 后支持</strong></li>
+<li>PERSISTENT_SEQUENTIAL_WITH_TTL: 持久有序类型的节点可以设置存活时间，<strong>zk 3.5.6 后支持</strong></li>
+</ul>
+<h2 id="ZK-命令"><a href="#ZK-命令" class="headerlink" title="ZK 命令"></a>ZK 命令</h2><ul>
+<li><p><code>./zkCli.sh -server ip:port</code><br>连接远程 zk 服务</p>
+</li>
+<li><p><code>create [-s] [-e] [-c] [-t ttl] path [data] [acl]</code><br>创建节点<br>-s : 创建有序节点。<br>-e : 创建临时节点。<br>-c : 创建一个容器节点。<br>-t ttl : 创建一个 TTL 节点， -t 时间（单位毫秒）。<br>data：节点的数据，可选，如果不使用时，节点数据就为 null。<br>acl：访问控制</p>
+</li>
+<li><p><code>ls [-s] [-w] [-R] path</code><br>使用 ls 命令来查看当前 znode 的子节点<br>-w: 监听子节点变化<br>-s: 节点状态信息（时间戳、版本号、数据大小等）<br>-R: 表示递归的获取</p>
+</li>
+<li><p><code>get [-s] [-w] path</code><br>获取节点数据信息<br>-s: 节点状态信息（时间戳、版本号、数据大小等）<br>-w: 监听节点变化</p>
+</li>
+<li><p><code>delete [-v version] path</code><br>删除某一节点，只能删除无子节点的节点。<br>-v: 表示节点版本号</p>
+</li>
+<li><p><code>deleteall path</code><br>递归的删除某一节点及其子节点</p>
+</li>
+<li><p><code>stat [-w] path</code><br>查看节点状态信息<br>-w: 监听节点变化</p>
+</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">cZxid ：Znode创建的事务id</span><br><span class="line">ctime ：节点创建时的时间戳</span><br><span class="line">mZxid ：Znode被修改的事务id，每次变化都会产生唯一的事务id，通过zxid，可以确定更新操作的先后顺序</span><br><span class="line">mtime ：节点修改时间戳</span><br><span class="line">pZxid ：表示该节点的子节点列表最后一次修改的事务ID，添加子节点或删除子节点会影响子节点列表，但是修改子节点的数据内容则不影响该ID（注意: 只有子节点列表变更了才会变更pzxid，子节点内容变更不会影响pzxid）</span><br><span class="line">cversion ：子节点的版本号。当znode的子节点有变化时，cversion 的值就会 增加1</span><br><span class="line">dataVersion ：数据版本号，每次对节点进行set操作时dataVersion的值会增加1（即使设置的是相同的数据），可有效避免了数据更新时出现的先后顺序问题</span><br><span class="line">aclVersion ：</span><br><span class="line">ephemeralOwner：为0时表示持久节点。否则是临时节点，该节点绑定的session id。</span><br><span class="line">dataLength ：数据长度</span><br><span class="line">numChildren：子节点的数量（只统计直接子节点的数量）</span><br></pre></td></tr></table></figure>
+
+<h2 id="Curator-ZK-分布式锁"><a href="#Curator-ZK-分布式锁" class="headerlink" title="Curator ZK 分布式锁"></a>Curator ZK 分布式锁</h2><blockquote>
+<p>curator:2.11.1, zookeeper:3.4.8</p>
+</blockquote>
+<p>使用<code>InterProcessMutex</code>上锁后，发现会根据提供的 path 创建目录，并在该目录下创建临时有序节点，来实现公平锁的逻辑。</p>
+<p>但是在释放锁后，只是将临时有序节点删除了，并没有将 path 目录给删除，会一直留存。</p>
+<p>解决办法：升级 zookeeper 驱动 3.5.7，即可支持创建 path 目录时按照 container 模式创建，如上描述，当目录下所有子节点都删除后，会有线程定时扫描删除该节点。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/3088755786/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1495,143 +1609,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/2997510128/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Tim">
-      <meta itemprop="description" content="Tim's blog">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Tim">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2997510128/" class="post-title-link" itemprop="url">SpringBoot升级swagger启动报错</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2023-04-11 17:30:56" itemprop="dateCreated datePublished" datetime="2023-04-11T17:30:56+08:00">2023-04-11</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-05-18 17:28:59" itemprop="dateModified" datetime="2023-05-18T17:28:59+08:00">2023-05-18</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2997510128/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2997510128/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>原先的项目一部分在使用 SpringBoot 2.4，但 2.4 的版本中对于线程池没有默认的监控，需要自己去实现。但是在 2.6 版本有默认实现监控，所以想将项目升级到 2.6。</p>
-<h3 id="升级-amp-问题"><a href="#升级-amp-问题" class="headerlink" title="升级&amp;问题"></a>升级&amp;问题</h3><p>SpringBoot 和 SpringCloud 版本的对应关系，参考：<a target="_blank" rel="noopener" href="https://start.spring.io/actuator/info">https://start.spring.io/actuator/info</a></p>
-<p>修改好 pom 后，刷新 maven 没有报错，启动出现了异常，核心错误如下：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Failed to start bean <span class="string">&#x27;documentationPluginsBootstrapper&#x27;</span>; nested exception is java.lang.NullPointerException</span><br></pre></td></tr></table></figure>
-
-<h3 id="网上检索到的原因和解决方案，如下："><a href="#网上检索到的原因和解决方案，如下：" class="headerlink" title="网上检索到的原因和解决方案，如下："></a>网上检索到的原因和解决方案，如下：</h3><p>原因：这是因为 Springfox 使用的路径匹配是基于 AntPathMatcher 的，而 Spring Boot 2.6.X 使用的是 PathPatternMatcher。<br>解决：</p>
-<ol>
-<li>在 application.properties 里配置：spring.mvc.pathmatch.matching-strategy=ANT_PATH_MATCHER。</li>
-<li>添加如下代码</li>
-</ol>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> BeanPostProcessor <span class="title">springfoxHandlerProviderBeanPostProcessor</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> BeanPostProcessor() &#123;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> Object <span class="title">postProcessAfterInitialization</span><span class="params">(Object bean, String beanName)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">            <span class="keyword">if</span> (bean <span class="keyword">instanceof</span> WebMvcRequestHandlerProvider || bean <span class="keyword">instanceof</span> WebFluxRequestHandlerProvider) &#123;</span><br><span class="line">                customizeSpringfoxHandlerMappings(getHandlerMappings(bean));</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> bean;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">private</span> &lt;T extends RequestMappingInfoHandlerMapping&gt; <span class="function"><span class="keyword">void</span> <span class="title">customizeSpringfoxHandlerMappings</span><span class="params">(List&lt;T&gt; mappings)</span> </span>&#123;</span><br><span class="line">            List&lt;T&gt; copy = mappings.stream()</span><br><span class="line">                    .filter(mapping -&gt; mapping.getPatternParser() == <span class="keyword">null</span>)</span><br><span class="line">                    .collect(Collectors.toList());</span><br><span class="line">            mappings.clear();</span><br><span class="line">            mappings.addAll(copy);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@SuppressWarnings(&quot;unchecked&quot;)</span></span><br><span class="line">        <span class="function"><span class="keyword">private</span> List&lt;RequestMappingInfoHandlerMapping&gt; <span class="title">getHandlerMappings</span><span class="params">(Object bean)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                Field field = ReflectionUtils.findField(bean.getClass(), <span class="string">&quot;handlerMappings&quot;</span>);</span><br><span class="line">                field.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">                <span class="keyword">return</span> (List&lt;RequestMappingInfoHandlerMapping&gt;) field.get(bean);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (IllegalArgumentException | IllegalAccessException e) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>具体可参考：<a target="_blank" rel="noopener" href="https://github.com/springfox/springfox/issues/3462">https://github.com/springfox/springfox/issues/3462</a></p>
-<h3 id="适应新版本的解决方案"><a href="#适应新版本的解决方案" class="headerlink" title="适应新版本的解决方案"></a>适应新版本的解决方案</h3><p>上述的方案，试过没有什么问题，但是感觉侵入性太强，修改了 spring 升级的内容，仔细看了 issue 的回复<br><img src="/2997510128/1.png" alt="issue信息"><br>spring 官方其实已经推出了新的 springdoc 来作为 springfox 的替代。</p>
-<p>按照文档进行迁移：<a target="_blank" rel="noopener" href="https://springdoc.org/migrating-from-springfox.html%EF%BC%8C%E5%85%B6%E5%AE%9E%E5%B0%B1%E4%B8%A4%E6%AD%A5%EF%BC%9A">https://springdoc.org/migrating-from-springfox.html，其实就两步：</a></p>
-<ol>
-<li>删除 swagger 的 jar 包和相关配置</li>
-<li>引入 jar 包</li>
-</ol>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springdoc<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>springdoc-openapi-ui<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.7.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<ol start="3">
-<li>增加 springdoc 的配置，如下是我的 demo 案例</li>
-</ol>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SpringdocConfiguration</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> GroupedOpenApi <span class="title">publicApi</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        String[] contextHeaderNames = <span class="keyword">new</span> String[]&#123;<span class="string">&quot;M-Token&quot;</span>, <span class="string">&quot;M-UserId&quot;</span>&#125;;</span><br><span class="line">        <span class="keyword">return</span> GroupedOpenApi.builder()</span><br><span class="line">                .group(<span class="string">&quot;mine-demo&quot;</span>)</span><br><span class="line">                .packagesToScan(<span class="string">&quot;io.github.demo&quot;</span>)</span><br><span class="line">                .pathsToMatch(<span class="string">&quot;/**&quot;</span>)</span><br><span class="line">                .addOperationCustomizer((operation, handlerMethod) -&gt; &#123;</span><br><span class="line">                    <span class="keyword">for</span> (String contextHeaderName : contextHeaderNames) &#123;</span><br><span class="line">                        Parameter missingParam = <span class="keyword">new</span> Parameter()</span><br><span class="line">                                .in(ParameterIn.HEADER.toString())</span><br><span class="line">                                .schema(<span class="keyword">new</span> StringSchema())</span><br><span class="line">                                .name(contextHeaderName);</span><br><span class="line">                        operation.addParametersItem(missingParam);</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">return</span> operation;</span><br><span class="line">                &#125;)</span><br><span class="line">                .build();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> OpenAPI <span class="title">apiInfo</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> OpenAPI().info(<span class="keyword">new</span> Info().title(<span class="string">&quot;mine测试案例&quot;</span>).version(<span class="string">&quot;1.0.0&quot;</span>));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ol start="4">
-<li>刷新 maven，启动，访问/swagger-ui.html 即可跳转到/swagger-ui/index.html</li>
-</ol>
-<p><img src="/2997510128/springdoc.png" alt="springdoc效果"></p>
-<h3 id="使用-knife4j-的-ui"><a href="#使用-knife4j-的-ui" class="headerlink" title="使用 knife4j 的 ui"></a>使用 knife4j 的 ui</h3><p>如果不喜欢原生的 ui 风格和操作方式，个人推荐使用 xiaoymin 的 knife4j 的 ui，他提供了比较友好的界面<br>使用步骤也很简单，如下：</p>
-<ol>
-<li>引入 jar 包，这里注意下版本，具体看官方文档：<a target="_blank" rel="noopener" href="https://doc.xiaominfo.com/%EF%BC%8C%E6%88%91%E8%BF%99%E8%BE%B9%E7%94%A8%E7%9A%84%E6%98%AF">https://doc.xiaominfo.com/，我这边用的是</a> spring boot 2.6，所以对应使用</li>
-</ol>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.github.xiaoymin<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>knife4j-openapi3-spring-boot-starter<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>4.1.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<p>这里需要注意 knife4j 中已经依赖了 springdoc-openapi-ui，如果和前面引入的版本不一致，则需要把前面引入的 jar 移除掉，不然会版本冲突。</p>
-<ol start="2">
-<li>在 application.yml 中增加配置，开启 knife4j 的 ui</li>
-</ol>
-<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">knife4j:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
-
-<ol start="3">
-<li>刷新 maven 启动，访问/doc.html</li>
-</ol>
-<p><img src="/2997510128/knife.png" alt="knife效果"></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1701,7 +1678,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-count">28</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1714,7 +1691,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">34</span>
+        <span class="site-state-item-count">36</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>

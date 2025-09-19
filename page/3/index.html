@@ -159,6 +159,133 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/195629511/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Tim">
+      <meta itemprop="description" content="Tim's blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tim">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/195629511/" class="post-title-link" itemprop="url">Webflux踩坑经历</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-10-27 10:48:58" itemprop="dateCreated datePublished" datetime="2020-10-27T10:48:58+08:00">2020-10-27</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-03-01 16:16:47" itemprop="dateModified" datetime="2022-03-01T16:16:47+08:00">2022-03-01</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/195629511/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/195629511/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <blockquote>
+<p>近期公司提倡使用 webflux 进行响应式编程，在开发了一个功能模块期间，遇到了很多问题。更加痛苦的是，国内关于 webflux 的问答或者教程还是太基础，没有实战内容，特此记录下期间遇到的问题和解决方案。</p>
+</blockquote>
+<h2 id="项目技术栈"><a href="#项目技术栈" class="headerlink" title="项目技术栈"></a>项目技术栈</h2><ul>
+<li>MonoDB 4.2.6 搭建的复制集（mongo 4.x 后支持多文档事务）</li>
+<li>Spring boot 2.3.3.RELEASE</li>
+<li>spring-boot-starter-webflux</li>
+<li>spring-boot-starter-data-mongodb-reactive</li>
+</ul>
+<h2 id="坑"><a href="#坑" class="headerlink" title="坑"></a>坑</h2><h3 id="事务问题"><a href="#事务问题" class="headerlink" title="事务问题"></a>事务问题</h3><p>在得知 mongdb 能支持多文档事务后，本身文档存储贴合我们自定义程度很高的业务，我们果断决定使用 mongdb 作为我们的首选数据库。</p>
+<ol>
+<li>引入 spring mongo 的事务管理器，关于 mongodb 的写入级别，可以参照业务需要灵活配置。</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> ReactiveMongoTransactionManager <span class="title">reactiveMongoTransactionManager</span><span class="params">(ReactiveMongoDatabaseFactory databaseFactory)</span> </span>&#123;</span><br><span class="line">    TransactionOptions transactionOptions = TransactionOptions.builder().writeConcern(WriteConcern.ACKNOWLEDGED).build();</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> ReactiveMongoTransactionManager(databaseFactory, transactionOptions);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>想要并行查询，如下代码，同时查询学生和学校信息</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Transactional</span></span><br><span class="line"><span class="keyword">public</span> Mono&lt;Tuple2&lt;Student, School&gt;&gt; test(String id, String schoolId) &#123;</span><br><span class="line">    <span class="keyword">return</span> Mono.zip(mongoTemplate.findById(id, Student.class),</span><br><span class="line">            mongoTemplate.findById(schoolId, School.class));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>结果提示事务无法查询到，导致 Subscription 已经终止</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">com.mongodb.MongoException: Subscription has already been terminated</span><br><span class="line">...</span><br><span class="line">Caused by: com.mongodb.MongoQueryException: Query failed with error code <span class="number">251</span> and error message <span class="string">&#x27;Given transaction number 1 does not match any in-progress transactions. The active transaction number is -1&#x27;</span> on server <span class="number">192.168</span>.<span class="number">104.117</span>:<span class="number">20001</span></span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>其原因就是事务的开启，不能从 Mono.zip 或者 Flux 这种并行的消息流打开，而是需要先通过单一的消息流打开，后面就会以该事务的 id 来保持数据库请求在一个事务中，最终提交事务或者回滚</li>
+</ol>
+<h3 id="异常和事务"><a href="#异常和事务" class="headerlink" title="异常和事务"></a>异常和事务</h3><p>业务中有一块逻辑是关于库存的变更：某种 sku 在库存中不存在的时候，新增库存记录；存在时，则去更新它的入库数量。此处通过数据库唯一键来保证库存中 sku 记录的唯一性。这样并行插入相同 sku 的库存记录应该会有一个事务抛出唯一键冲突异常，然后获取库存记录再进行更新。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">mongoTemplate.insert(stock)</span><br><span class="line">    .onErrorResume(error -&gt; &#123;</span><br><span class="line">        log.warn(<span class="string">&quot;新增库存失败，尝试更新：&quot;</span> + error.getMessage(), error);</span><br><span class="line">        <span class="keyword">return</span> getStock(stock)</span><br><span class="line">                .flatMap(nowStock -&gt; changeInNum(nowStock, stock.getInNum()));</span><br><span class="line">    &#125;);</span><br></pre></td></tr></table></figure>
+
+<p>但实际执行的时候，虽然 onErrorResume 会执行，但是此时事务已经回滚了，接下来的查询更新操作，都会抛出异常提示 transaction number does not match 异常。用下面的方式就不会因为 mongodb 插入异常导致事务回滚：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">mongoTemplate.inTransaction().execute(mongoOperations -&gt; &#123;</span><br><span class="line">    <span class="keyword">return</span> mongoOperations.insert(stock);</span><br><span class="line">&#125;).collectList()</span><br><span class="line">    .onErrorResume(error -&gt; &#123;</span><br><span class="line">        log.warn(<span class="string">&quot;新增库存失败，尝试更新：&quot;</span> + error.getMessage(), error);</span><br><span class="line">        <span class="keyword">return</span> getStock(stock)</span><br><span class="line">                .flatMap(nowStock -&gt; changeInNum(nowStock, stock.getInNum()));</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="分布式锁"><a href="#分布式锁" class="headerlink" title="分布式锁"></a>分布式锁</h3><p>通过 Mono.delay 来释放线程并且实现等待，而不是采用以前的 Thread.sleep 来阻塞线程</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">DistributedLock</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">default</span> Mono&lt;Boolean&gt; <span class="title">getLock</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> getLock(key, Duration.of(<span class="number">5</span>, ChronoUnit.MINUTES), <span class="number">60</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function">Mono&lt;Boolean&gt; <span class="title">getLock</span><span class="params">(String key, Duration expire, <span class="keyword">int</span> retryNum)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function">Mono&lt;Boolean&gt; <span class="title">deleteLock</span><span class="params">(String key)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">default</span> &lt;T&gt; <span class="function">Mono&lt;T&gt; <span class="title">lock</span><span class="params">(String key, Supplier&lt;Mono&lt;T&gt;&gt; supplier)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> lock(key, Duration.of(<span class="number">5</span>, ChronoUnit.MINUTES), <span class="number">60</span>, supplier);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &lt;T&gt; <span class="function">Mono&lt;T&gt; <span class="title">lock</span><span class="params">(String key, Duration expire, <span class="keyword">int</span> retryNum, Supplier&lt;Mono&lt;T&gt;&gt; supplier)</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RedisDistributedLock</span> <span class="keyword">implements</span> <span class="title">DistributedLock</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String CAN_T_LOCK = <span class="string">&quot;can&#x27;t lock&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> ReactiveStringRedisTemplate reactiveStringRedisTemplate;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Mono&lt;Boolean&gt; <span class="title">getLock</span><span class="params">(String key, Duration expire, <span class="keyword">int</span> retryNum)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> reactiveStringRedisTemplate.opsForValue()</span><br><span class="line">                .setIfAbsent(key, key, expire).flatMap(flag -&gt; &#123;</span><br><span class="line">                    <span class="keyword">if</span> (flag) &#123;</span><br><span class="line">                        <span class="keyword">return</span> Mono.just(<span class="keyword">true</span>);</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        <span class="keyword">if</span> (retryNum &lt; <span class="number">1</span>) &#123;</span><br><span class="line">                            <span class="keyword">return</span> Mono.just(<span class="keyword">false</span>);</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">return</span> Mono.delay(Duration.of(<span class="number">1</span>, ChronoUnit.SECONDS)).flatMap(l -&gt; getLock(key, expire, retryNum - <span class="number">1</span>));</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Mono&lt;Boolean&gt; <span class="title">deleteLock</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> reactiveStringRedisTemplate.delete(key).map(l -&gt; l &gt; <span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> &lt;T&gt; <span class="function">Mono&lt;T&gt; <span class="title">lock</span><span class="params">(String key, Duration expire, <span class="keyword">int</span> retryNum, Supplier&lt;Mono&lt;T&gt;&gt; supplier)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> getLock(key, expire, retryNum).flatMap(flag -&gt; &#123;</span><br><span class="line">            <span class="keyword">if</span> (!flag) &#123;</span><br><span class="line">                <span class="keyword">return</span> Mono.error(<span class="keyword">new</span> BusinessException(<span class="keyword">new</span> ErrorInfo(CAN_T_LOCK, <span class="string">&quot;系统繁忙，稍后再试&quot;</span>)));</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">return</span> supplier.get().doFinally(signalType -&gt; &#123;</span><br><span class="line">                    deleteLock(key).subscribe();</span><br><span class="line">                &#125;);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/429807150/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1086,7 +1213,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-count">28</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1099,7 +1226,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">34</span>
+        <span class="site-state-item-count">36</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
