@@ -159,6 +159,171 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/2429361668/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Tim">
+      <meta itemprop="description" content="Tim's blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tim">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2429361668/" class="post-title-link" itemprop="url">unicode与UTF的计算逻辑</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-11-13 10:01:09 / 修改时间：10:02:53" itemprop="dateCreated datePublished" datetime="2025-11-13T10:01:09+08:00">2025-11-13</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">算法</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2429361668/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2429361668/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <blockquote>
+<p>unicode 码位，是对应字符的一个逻辑坐标。而真正用于存储到磁盘上的时候，会转换成特定的字符集，如 UTF-16、UTF-8、UTF-32 等。</p>
+</blockquote>
+<h2 id="UTF-16"><a href="#UTF-16" class="headerlink" title="UTF-16"></a>UTF-16</h2><p>UTF-16 一般一个字符占用 16 位或者 32 位，即 2 个字节或者 4 个字节。</p>
+<p>unicode 码位大于 0xFFFF 时，此时需要减去 0x10000，然后拆分成高 10 位和低 10 位。<br>高位加上 0xD800，低位加上 0xDC00，然后转换成 UTF-16。</p>
+<p>如：字符 𝒙，对应 unicode 码位是 U+1D499。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">0x1D499 - 0x10000 &#x3D; 0xD499</span><br><span class="line">0xD499换算成二进制：1101 0100 1001 1001</span><br><span class="line">拆分成低10位：00 1001 1001 &#x3D;&gt; 0x099</span><br><span class="line">拆分成高10位：00 0011 0101 &#x3D;&gt; 0x035</span><br><span class="line">高10位加上0xD800：0xD800 + 0x035 &#x3D; 0xD835</span><br><span class="line">低10位加上0xDC00：0xDC00 + 0x099 &#x3D; 0xDC99</span><br><span class="line">UTF-16：D8 35 DC 99</span><br></pre></td></tr></table></figure>
+
+<h2 id="UTF-8"><a href="#UTF-8" class="headerlink" title="UTF-8"></a>UTF-8</h2><p>UTF-8 是一种可变长度编码，一般一个字符占用 1~4 个字节。</p>
+<table>
+<thead>
+<tr>
+<th>Unicode 码位范围</th>
+<th>UTF-8 字节数</th>
+<th>编码格式（二进制模板）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>U+0000–U+007F</td>
+<td>1</td>
+<td>0xxxxxxx</td>
+</tr>
+<tr>
+<td>U+0080–U+07FF</td>
+<td>2</td>
+<td>110xxxxx 10xxxxxx</td>
+</tr>
+<tr>
+<td>U+0800–U+FFFF</td>
+<td>3</td>
+<td>1110xxxx 10xxxxxx 10xxxxxx</td>
+</tr>
+<tr>
+<td>U+10000–U+10FFFF</td>
+<td>4</td>
+<td>11110xxx 10xxxxxx 10xxxxxx 10xxxxxx</td>
+</tr>
+</tbody></table>
+<p>如：字符 𝒙，对应 unicode 码位是 U+1D499。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">0x1D499换算成二进制：0001 1101 0100 1001 1001</span><br><span class="line">对应4字节，因此编码格式是：11110xxx 10xxxxxx 10xxxxxx 10xxxxxx</span><br><span class="line">将二进制码由右往左填充进模板中：11110&#96;000&#96; 10&#96;01 1101&#96; 10&#96;0100 10&#96; 10&#96;01 1001&#96;</span><br><span class="line">UTF-8：F0 9D 92 99</span><br></pre></td></tr></table></figure>
+
+<h2 id="UTF-32"><a href="#UTF-32" class="headerlink" title="UTF-32"></a>UTF-32</h2><p>UTF-32 一个字符固定占用 4 个字节。unicode 码位通过补零扩成 32 位，然后按端序摆字节即可。</p>
+<p>如：字符 𝒙，对应 unicode 码位是 U+1D499。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">目标码位：U+1D499</span><br><span class="line">32 位十六进制值：0x0001D499</span><br><span class="line">大端 UTF-32BE（高位在前）</span><br><span class="line">00 01 D4 99</span><br><span class="line">小端 UTF-32LE（低位在前）</span><br><span class="line">99 D4 01 00</span><br></pre></td></tr></table></figure>
+
+<h2 id="BOM"><a href="#BOM" class="headerlink" title="BOM"></a>BOM</h2><p>BOM 是 Byte Order Mark 的缩写，中文常叫“字节顺序标记”。</p>
+<p>它不是一个“可见字符”，而是一个特殊的 Unicode 码位 U+FEFF（Zero-Width No-Break Space），放在文本文件最开头，用来告诉程序：<br>“这份文件用的是哪种 Unicode 编码、哪种字节序。”</p>
+<p>常见 BOM 字节序列：</p>
+<table>
+<thead>
+<tr>
+<th>编码名称</th>
+<th>BOM 十六进制</th>
+<th>字节序含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>UTF-8</td>
+<td><code>EF BB BF</code></td>
+<td>只是声明“我是 UTF-8”，<strong>不涉字节序</strong></td>
+</tr>
+<tr>
+<td>UTF-16 LE</td>
+<td><code>FF FE</code></td>
+<td>小端序（Little-Endian）</td>
+</tr>
+<tr>
+<td>UTF-16 BE</td>
+<td><code>FE FF</code></td>
+<td>大端序（Big-Endian）</td>
+</tr>
+<tr>
+<td>UTF-32 LE</td>
+<td><code>FF FE 00 00</code></td>
+<td>32 位小端</td>
+</tr>
+<tr>
+<td>UTF-32 BE</td>
+<td><code>00 00 FE FF</code></td>
+<td>32 位大端</td>
+</tr>
+</tbody></table>
+<p>UTF16 必须在开头放上 BOM（FE FF 表示 BE，FF FE 表示 LE），否则字节序未知。Windows 系统内部默认使用 UTF-16 LE。<br>此外：代理对的书写顺序在逻辑码元流里永远是 高代理在前，低代理在后。所以字符 𝒙，对应 unicode 码位是 U+1D499 的计算如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">UTF-16BE：D8 35 DC 99</span><br><span class="line">UTF-16LE：35 D8 99 DC</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/981914688/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1497,118 +1662,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/4026186378/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Tim">
-      <meta itemprop="description" content="Tim's blog">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Tim">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/4026186378/" class="post-title-link" itemprop="url">雪花算法自动生成workId</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2023-04-26 15:32:17" itemprop="dateCreated datePublished" datetime="2023-04-26T15:32:17+08:00">2023-04-26</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-05-25 14:23:02" itemprop="dateModified" datetime="2023-05-25T14:23:02+08:00">2023-05-25</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">算法</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/4026186378/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/4026186378/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <blockquote>
-<p>Twitter 的雪花算法大部分人应该都知道，用于生成有序的数值类型的 id。算法的原理也很简单，通过划分了 64 位比特：1 位符号位固定为 0 表示正数，41 位时间戳，5 位数据中心 id，5 位机器 id，12 位有序序号。其中 5 位数据中心 id 和 5 位机器 id，接下来我将合并成 10 位 workid 来做讨论，含义是一样的，总共可以分配 1024 台机器用于生成相同业务的主键。</p>
-</blockquote>
-<h2 id="为啥要区分-workid？"><a href="#为啥要区分-workid？" class="headerlink" title="为啥要区分 workid？"></a>为啥要区分 workid？</h2><p>同一种业务他的主键一定是唯一的。如商品服务，则商品表内的主键肯定是不能重复的。但如果发布多个商品服务实例，此时 id 如果是有商品服务自己生成，则不区分 workid，那么在相同毫秒下如果出现并发请求且请求到了不同的实例，理论上是会出现 id 重复的。虽然概率很小，但是在一些集中时间高并发的业务是可能出现的，我们还是应该要劲量避免这种问题。</p>
-<h2 id="怎么解决"><a href="#怎么解决" class="headerlink" title="怎么解决"></a>怎么解决</h2><ol>
-<li><p>手动配置<br>单机情况下，我们一般在实现该算法的时候，可能就直接指定了 workid 为一个固定的整数（0~1023）。或者集群环境下，有一台或多台服务专门提供生成主键的服务，此时也可以通过手动分配（硬编码或者配置文件）的方式来指定 workid。</p>
-<p>但是随着容器化自动部署，共用配置中心，相同的服务用的是同一套配置中心，很难通过手动的配置方式来指定 workid。即使可以做到，对于后期的运维也是很麻烦的事情。</p>
-</li>
-<li><p>美团 leaf<br>市面上，当前有美团的开源项目 leaf，将业务服务的 ip+port 添加到 zookeeper 上，通过 zookeeper 的分布式一致性以及它的持久性节点，来避免抢占相同的 workid，同时 leaf 还通过定时任务上传业务服务的时间信息，来避免时钟回拨的问题，可以仔细阅读下代码，这块代码还是很好理解：<a target="_blank" rel="noopener" href="https://github.com/Meituan-Dianping/Leaf">https://github.com/Meituan-Dianping/Leaf</a></p>
-<p>但是我司在 k8s 上部署服务的时候，并没有指定 ip，每次发布 ip 都是动态分配的，也就意味着相同业务实例它的 workid 会随着发布次数的变多，就会超过 1024 个，有人也提了 issue：<a target="_blank" rel="noopener" href="https://github.com/Meituan-Dianping/Leaf/issues/84">https://github.com/Meituan-Dianping/Leaf/issues/84</a>，有热心市民也给出了解决方案：<a target="_blank" rel="noopener" href="https://github.com/NotFound9/Leaf">https://github.com/NotFound9/Leaf</a>。</p>
-</li>
-</ol>
-<h2 id="自己实现"><a href="#自己实现" class="headerlink" title="自己实现"></a>自己实现</h2><p>基于 zookeeper 的临时节点的特性，即客户端断开连接，就会删除节点。可以实现一个自动生成不重复的 workId 的功能。</p>
-<ol>
-<li>参考美团的 snowflake 算法，我把 workId 给暴露出去，同时提供了 init 和 destroy 方法，用于容器内的初始化和销毁，主要用于 zk 客户端</li>
-<li>创建了一个 ZKSnowflake 继承 Snowflake</li>
-<li>在 init 方法中，通过分布式锁先锁住对应业务类型的节点，用于该业务类型多实例发布的时候避免抢占。</li>
-<li>遍历该业务节点下的所有节点，然后再 0~1023 这个范围内遍历，选出还没有被使用的节点，将这个下标作为 workid，并创建到 zk 中作为一个临时节点。</li>
-<li>zk 客户端增加监听，对重连的事件，进行重新获取 workid，期间内不允许生成 id。（该类情况可以根据业务的实际场景来判断，其实如果都是指定时间发布的，后续不做修改也可以，只要在按批发布的时候区分好 workid 即可）</li>
-</ol>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Snowflake</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Random RANDOM = <span class="keyword">new</span> Random();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> twepoch = <span class="number">1288834974657L</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> workerIdBits = <span class="number">10L</span>;</span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">final</span> <span class="keyword">long</span> minWorkerId = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">final</span> <span class="keyword">long</span> maxWorkerId = ~(-<span class="number">1L</span> &lt;&lt; workerIdBits);</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> sequenceBits = <span class="number">12L</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> workerIdShift = sequenceBits;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> timestampLeftShift = sequenceBits + workerIdBits;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> sequenceMask = ~(-<span class="number">1L</span> &lt;&lt; sequenceBits);</span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">long</span> workerId;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> sequence = <span class="number">0L</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> lastTimestamp = -<span class="number">1L</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">long</span> <span class="title">nextId</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">long</span> timestamp = timeGen();</span><br><span class="line">        <span class="keyword">if</span> (timestamp &lt; lastTimestamp) &#123;</span><br><span class="line">            <span class="keyword">long</span> offset = lastTimestamp - timestamp;</span><br><span class="line">            <span class="keyword">if</span> (offset &lt;= <span class="number">5</span>) &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    wait(offset &lt;&lt; <span class="number">1</span>);</span><br><span class="line">                    timestamp = timeGen();</span><br><span class="line">                    <span class="keyword">if</span> (timestamp &lt; lastTimestamp) &#123;</span><br><span class="line">                        <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(</span><br><span class="line">                                String.format(<span class="string">&quot;Clock moved backwards. Refusing to generate id for %d milliseconds&quot;</span>, lastTimestamp - timestamp));</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                    <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">&quot;Wait interrupted&quot;</span>);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(</span><br><span class="line">                        String.format(<span class="string">&quot;Clock moved backwards. Refusing to generate id for %d milliseconds&quot;</span>, lastTimestamp - timestamp));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (lastTimestamp == timestamp) &#123;</span><br><span class="line">            sequence = (sequence + <span class="number">1</span>) &amp; sequenceMask;</span><br><span class="line">            <span class="keyword">if</span> (sequence == <span class="number">0</span>) &#123;</span><br><span class="line">                <span class="comment">//seq 为0的时候表示是下一毫秒时间开始对seq做随机</span></span><br><span class="line">                sequence = RANDOM.nextInt(<span class="number">100</span>);</span><br><span class="line">                timestamp = tilNextMillis(lastTimestamp);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">//如果是新的ms开始</span></span><br><span class="line">            sequence = RANDOM.nextInt(<span class="number">100</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        lastTimestamp = timestamp;</span><br><span class="line">        <span class="keyword">return</span> ((timestamp - twepoch) &lt;&lt; timestampLeftShift) | (workerId &lt;&lt; workerIdShift) | sequence;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">long</span> <span class="title">tilNextMillis</span><span class="params">(<span class="keyword">long</span> lastTimestamp)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">long</span> timestamp = timeGen();</span><br><span class="line">        <span class="keyword">while</span> (timestamp &lt;= lastTimestamp) &#123;</span><br><span class="line">            timestamp = timeGen();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> timestamp;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">long</span> <span class="title">timeGen</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> System.currentTimeMillis();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Slf4j</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ZkSnowflake</span> <span class="keyword">extends</span> <span class="title">Snowflake</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String ROOT = <span class="string">&quot;/snowflake/&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String LOCK = <span class="string">&quot;/lock/&quot;</span>;</span><br><span class="line">    <span class="keyword">private</span> String zkAddress;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String lockPath;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String groupPath;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> CuratorFramework client;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> <span class="keyword">boolean</span> prepare = <span class="keyword">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">long</span> <span class="title">nextId</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (!prepare) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">&quot;workId未装载完毕&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">super</span>.nextId();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ZkSnowflake</span><span class="params">(String zkAddress, String groupName)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.zkAddress = zkAddress;</span><br><span class="line">        <span class="keyword">this</span>.lockPath = LOCK + groupName;</span><br><span class="line">        <span class="keyword">this</span>.groupPath = ROOT + groupName;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        client = CuratorFrameworkFactory.builder().connectString(zkAddress).sessionTimeoutMs(<span class="number">5000</span>).connectionTimeoutMs(<span class="number">5000</span>).retryPolicy(<span class="keyword">new</span> ExponentialBackoffRetry(<span class="number">1000</span>, <span class="number">3</span>)).build();</span><br><span class="line">        client.start();</span><br><span class="line"></span><br><span class="line">        genWorkId(client);</span><br><span class="line"></span><br><span class="line">        client.getConnectionStateListenable().addListener((cli, connectionState) -&gt; &#123;</span><br><span class="line">            <span class="keyword">if</span> (connectionState == ConnectionState.RECONNECTED) &#123;</span><br><span class="line">                log.error(<span class="string">&quot;zk重连&quot;</span>);</span><br><span class="line">                genWorkId(cli);</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (connectionState == ConnectionState.LOST) &#123;</span><br><span class="line">                log.error(<span class="string">&quot;zk失连&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        log.info(<span class="string">&quot;snowflake启动成功，workId：&#123;&#125;&quot;</span>, workerId);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        client.close();</span><br><span class="line">        log.info(<span class="string">&quot;zk客户端关闭&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">genWorkId</span><span class="params">(CuratorFramework client)</span> </span>&#123;</span><br><span class="line">        prepare = <span class="keyword">false</span>;</span><br><span class="line">        InterProcessMutex lock = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            lock = <span class="keyword">new</span> InterProcessMutex(client, lockPath);</span><br><span class="line">            lock.acquire();</span><br><span class="line"></span><br><span class="line">            Stat stat = client.checkExists().forPath(groupPath);</span><br><span class="line">            <span class="keyword">if</span> (stat == <span class="keyword">null</span>) &#123;</span><br><span class="line">                client.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT).forPath(groupPath);</span><br><span class="line">            &#125;</span><br><span class="line">            List&lt;String&gt; children = client.getChildren().forPath(groupPath);</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">long</span> workerId = minWorkerId; workerId &lt;= maxWorkerId; workerId++) &#123;</span><br><span class="line">                String workerIdStr = String.valueOf(workerId);</span><br><span class="line">                <span class="keyword">if</span> (!children.contains(workerIdStr)) &#123;</span><br><span class="line">                    String nodePath = groupPath + <span class="string">&quot;/&quot;</span> + workerIdStr;</span><br><span class="line">                    client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(nodePath);</span><br><span class="line">                    <span class="keyword">this</span>.workerId = workerId;</span><br><span class="line">                    prepare = <span class="keyword">true</span>;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (!prepare) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">&quot;workId已超范围无法分配&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(e);</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (lock != <span class="keyword">null</span>) &#123;</span><br><span class="line">                    lock.release();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                log.error(e.getMessage(), e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>相比于美团的，自己实现的方法比较简单，但是没法解决时钟回拨的问题（因为无法知道该服务实例上一次生成 id 的时间戳），也可能会遇到 zk 丢失节点（临时节点）等一些问题。</p>
-<p>网上也有基于 redis 的方案，等有空了再整合下。</p>
-<p>后续再学习下有没有更好的方案~~</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1678,7 +1731,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-count">29</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1691,7 +1744,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">36</span>
+        <span class="site-state-item-count">38</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
