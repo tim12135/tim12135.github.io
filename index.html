@@ -159,6 +159,161 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/2106194653/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Tim">
+      <meta itemprop="description" content="Tim's blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tim">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2106194653/" class="post-title-link" itemprop="url">记录一次操作FTP卡住的情况</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2026-07-09 17:41:40 / 修改时间：17:42:43" itemprop="dateCreated datePublished" datetime="2026-07-09T17:41:40+08:00">2026-07-09</time>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2106194653/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2106194653/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="FTP操作卡住问题记录"><a href="#FTP操作卡住问题记录" class="headerlink" title="FTP操作卡住问题记录"></a>FTP操作卡住问题记录</h1><h2 id="问题现象"><a href="#问题现象" class="headerlink" title="问题现象"></a>问题现象</h2><p>2026-07-09 03:39:37，生产环境中 <code>FtpsFileResourceServiceImpl#downloadFiles</code> 方法在调用 <code>ftpClient.listFiles()</code> 后无限阻塞，不再往下执行，日志停在了：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">FTP command sent: LIST</span><br><span class="line">FTP reply received: 150 Opening ASCII mode data connection for &#x2F;bin&#x2F;ls.</span><br></pre></td></tr></table></figure>
+
+<p>之后再无任何 FTP 日志输出，方法一直卡住。</p>
+<h2 id="完整日志"><a href="#完整日志" class="headerlink" title="完整日志"></a>完整日志</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">2026-07-09 03:39:37.733  INFO  connecting...ftp服务器:ctms-ftp.hengrui.com:21</span><br><span class="line">2026-07-09 03:39:37.741  INFO  FTP reply received: 220 Serv-U FTP Server v15.5.0 ready...</span><br><span class="line">2026-07-09 03:39:37.741  INFO  FTP command sent: AUTH TLS</span><br><span class="line">2026-07-09 03:39:37.744  INFO  FTP reply received: 234 AUTH command OK. Initiating SSL connection.</span><br><span class="line">2026-07-09 03:39:37.778  INFO  FTP command sent: USER suyuan.zhou@taimei.com</span><br><span class="line">2026-07-09 03:39:37.780  INFO  FTP reply received: 331 User name okay, need password.</span><br><span class="line">2026-07-09 03:39:37.780  INFO  FTP command sent: PASS ****</span><br><span class="line">2026-07-09 03:39:37.845  INFO  FTP reply received: 230 User logged in, proceed.</span><br><span class="line">2026-07-09 03:39:37.845  INFO  connect successful...ftp服务器:ctms-ftp.hengrui.com:21</span><br><span class="line">2026-07-09 03:39:37.845  INFO  FTP command sent: TYPE I</span><br><span class="line">2026-07-09 03:39:37.846  INFO  FTP reply received: 200 Type set to I.</span><br><span class="line">2026-07-09 03:39:37.846  INFO  FTP command sent: CWD &#x2F;SHR-1501-I-103</span><br><span class="line">2026-07-09 03:39:37.848  INFO  FTP reply received: 250 Directory changed to &#x2F;SHR-1501-I-103</span><br><span class="line">2026-07-09 03:39:37.848  INFO  FTP command sent: SYST</span><br><span class="line">2026-07-09 03:39:37.849  INFO  FTP reply received: 215 UNIX Type: L8</span><br><span class="line">2026-07-09 03:39:37.850  INFO  FTP command sent: PORT 10,221,8,11,158,135</span><br><span class="line">2026-07-09 03:39:37.851  INFO  FTP reply received: 200 PORT command successful.</span><br><span class="line">2026-07-09 03:39:37.851  INFO  FTP command sent: LIST</span><br><span class="line">2026-07-09 03:39:37.854  INFO  FTP reply received: 150 Opening ASCII mode data connection for &#x2F;bin&#x2F;ls.</span><br><span class="line">&#x2F;&#x2F; 此后无日志，卡死</span><br></pre></td></tr></table></figure>
+
+<h2 id="原因分析"><a href="#原因分析" class="headerlink" title="原因分析"></a>原因分析</h2><h3 id="直接原因：FTP-使用了主动模式（PORT），数据通道建立失败"><a href="#直接原因：FTP-使用了主动模式（PORT），数据通道建立失败" class="headerlink" title="直接原因：FTP 使用了主动模式（PORT），数据通道建立失败"></a>直接原因：FTP 使用了主动模式（PORT），数据通道建立失败</h3><p>日志中出现了 <code>PORT 10,221,8,11,158,135</code> 命令，这是<strong>主动模式</strong>的标志。其含义是：</p>
+<ul>
+<li>客户端告诉 FTP 服务器：”请向 <code>10.221.8.11:40583</code>（158×256+135）发起 TCP 连接来建立数据通道”</li>
+<li>服务器回复 <code>200 PORT command successful</code>，随后发送 <code>150 Opening ASCII mode data connection</code></li>
+<li>但服务器实际回连客户端内网地址 <code>10.221.8.11</code> 时，由于 NAT/防火墙的原因，该地址对服务器不可达</li>
+<li>数据通道始终无法建立，<code>listFiles()</code> 无限等待</li>
+</ul>
+<h3 id="根本原因：代码默认未启用被动模式，也未设置任何超时"><a href="#根本原因：代码默认未启用被动模式，也未设置任何超时" class="headerlink" title="根本原因：代码默认未启用被动模式，也未设置任何超时"></a>根本原因：代码默认未启用被动模式，也未设置任何超时</h3><ol>
+<li><p><strong><code>FtpsWrapper.configureClient()</code></strong> 从未调用 <code>enterLocalPassiveMode()</code>，Apache Commons Net 默认使用主动模式。</p>
+</li>
+<li><p><strong><code>FtpsFileResourceServiceImpl.downloadFiles()</code></strong> 中有被动模式开关：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (fileResourceConfig.getFtpLocalPassiveMode()) &#123;</span><br><span class="line">    ftpClient.enterLocalPassiveMode();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但 <code>FileResourceConfig.ftpLocalPassiveMode</code> 的数据库默认值为 <code>false</code>，被动模式未被启用。</p>
+</li>
+<li><p><strong>未设置任何超时</strong>——实际连接使用的 FTPClient 没有设置 <code>setConnectTimeout</code>、<code>setDefaultTimeout</code>、<code>setDataTimeout</code>，数据通道连不上时无限阻塞，不会报错也不会超时。</p>
+</li>
+</ol>
+<h3 id="主动模式-vs-被动模式"><a href="#主动模式-vs-被动模式" class="headerlink" title="主动模式 vs 被动模式"></a>主动模式 vs 被动模式</h3><table>
+<thead>
+<tr>
+<th></th>
+<th>主动模式（PORT）</th>
+<th>被动模式（PASV）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>数据通道建立</td>
+<td>服务器主动连接客户端</td>
+<td>客户端主动连接服务器</td>
+</tr>
+<tr>
+<td>日志特征</td>
+<td><code>PORT</code> 命令</td>
+<td><code>PASV</code> 命令</td>
+</tr>
+<tr>
+<td>NAT/防火墙</td>
+<td>需服务器能回连客户端内网，通常失败</td>
+<td>客户端主动出连，通常可通</td>
+</tr>
+<tr>
+<td>适用场景</td>
+<td>客户端有公网IP</td>
+<td>现代网络环境（推荐默认）</td>
+</tr>
+</tbody></table>
+<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>在 <code>FtpsWrapper.configureClient()</code> 中统一设置被动模式和超时：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">configureClient</span><span class="params">(FTPClient client)</span> </span>&#123;</span><br><span class="line">    client.addProtocolCommandListener(<span class="keyword">new</span> ProtocolCommandListener() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">protocolCommandSent</span><span class="params">(ProtocolCommandEvent event)</span> </span>&#123;</span><br><span class="line">            logger.info(<span class="string">&quot;FTP command sent: &#123;&#125;&quot;</span>, event.getMessage());</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">protocolReplyReceived</span><span class="params">(ProtocolCommandEvent event)</span> </span>&#123;</span><br><span class="line">            logger.info(<span class="string">&quot;FTP reply received: &#123;&#125;&quot;</span>, event.getMessage());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">    client.setControlEncoding(<span class="string">&quot;utf-8&quot;</span>);</span><br><span class="line">    client.setConnectTimeout(<span class="number">30000</span>);   <span class="comment">// 连接服务器超时 30s</span></span><br><span class="line">    client.setDefaultTimeout(<span class="number">60000</span>);   <span class="comment">// 控制通道读取超时 60s</span></span><br><span class="line">    client.setDataTimeout(<span class="number">60000</span>);      <span class="comment">// 数据通道读取超时 60s</span></span><br><span class="line">    client.enterLocalPassiveMode();    <span class="comment">// 默认使用被动模式</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="各超时说明"><a href="#各超时说明" class="headerlink" title="各超时说明"></a>各超时说明</h3><table>
+<thead>
+<tr>
+<th>方法</th>
+<th>作用</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>setConnectTimeout(30000)</code></td>
+<td>连接 FTP 服务器超时</td>
+<td>30秒内连不上则报错</td>
+</tr>
+<tr>
+<td><code>setDefaultTimeout(60000)</code></td>
+<td>控制通道（命令）读取超时</td>
+<td>60秒内收不到服务器响应则报错</td>
+</tr>
+<tr>
+<td><code>setDataTimeout(60000)</code></td>
+<td>数据通道（LIST/RETR等）读取超时</td>
+<td>60秒内数据通道无数据读取则报错，<strong>防止无限挂起</strong></td>
+</tr>
+</tbody></table>
+<blockquote>
+<p><strong>注意</strong>：<code>setDataTimeout</code> 设置的是 socket 的 SO_TIMEOUT，即两次数据读取之间的最大间隔，不是总传输时间限制。大文件下载只要数据持续流式传输就不会被中断，只有网络卡死或断开时才会触发超时。</p>
+</blockquote>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/2000278683/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -184,7 +339,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2025-11-13 10:13:07 / 修改时间：10:13:48" itemprop="dateCreated datePublished" datetime="2025-11-13T10:13:07+08:00">2025-11-13</time>
+              <time title="创建时间：2025-11-13 10:13:07 / 修改时间：10:14:00" itemprop="dateCreated datePublished" datetime="2025-11-13T10:13:07+08:00">2025-11-13</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1510,99 +1665,10 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/1063751735/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Tim">
-      <meta itemprop="description" content="Tim's blog">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Tim">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/1063751735/" class="post-title-link" itemprop="url">Mac多JDK配置</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2023-05-18 16:19:42 / 修改时间：17:36:39" itemprop="dateCreated datePublished" datetime="2023-05-18T16:19:42+08:00">2023-05-18</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/1063751735/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/1063751735/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="zshrc-文件"><a href="#zshrc-文件" class="headerlink" title=".zshrc 文件"></a>.zshrc 文件</h2><figure class="highlight zsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">export</span> MAVEN_HOME=<span class="string">&#x27;/Applications/IntelliJ IDEA.app/Contents/plugins/maven/lib/maven3&#x27;</span></span><br><span class="line"><span class="built_in">export</span> JAVA_8_HOME=`/usr/libexec/java_home -v <span class="string">&#x27;1.8.0&#x27;</span>`</span><br><span class="line"><span class="built_in">export</span> JAVA_11_HOME=`/usr/libexec/java_home -v 11`</span><br><span class="line"><span class="built_in">export</span> JAVA_17_HOME=`/usr/libexec/java_home -v 17`</span><br><span class="line"><span class="built_in">alias</span> jdk8=<span class="string">&quot;export JAVA_HOME=&#x27;<span class="variable">$&#123;JAVA_8_HOME&#125;</span>&#x27;&quot;</span></span><br><span class="line"><span class="built_in">alias</span> jdk11=<span class="string">&quot;export JAVA_HOME=<span class="variable">$&#123;JAVA_11_HOME&#125;</span>&quot;</span></span><br><span class="line"><span class="built_in">alias</span> jdk17=<span class="string">&quot;export JAVA_HOME=<span class="variable">$&#123;JAVA_17_HOME&#125;</span>&quot;</span></span><br><span class="line"><span class="built_in">export</span> JAVA_HOME=<span class="variable">$&#123;JAVA_11_HOME&#125;</span></span><br><span class="line"><span class="built_in">export</span> PATH=<span class="variable">$&#123;PATH&#125;</span>:<span class="variable">$&#123;MAVEN_HOME&#125;</span>/bin:<span class="variable">$&#123;JAVA_HOME&#125;</span>/bin</span><br></pre></td></tr></table></figure>
-
-<h2 id="踩坑记录"><a href="#踩坑记录" class="headerlink" title="踩坑记录"></a>踩坑记录</h2><ol>
-<li>路径如果有空格，需要用单引号引起来，或者用\</li>
-<li>如果提示没有权限 Permission denied，直接找到对应目录，chmod a+x 对应目录</li>
-<li>zsh 修改后会马上生效，但是如果是在.bash_profile 中修改，需要执行 source 命令来生效刚刚的修改，建议直接用 zsh</li>
-<li>/usr/libexec/java_home -V，注意是大写 V，可以查看系统里所有 jdk 环境，匹配的时候可以模糊匹配，但是有多个相同版本的时候，需要精确一点</li>
-</ol>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1668,7 +1734,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">30</span>
+          <span class="site-state-item-count">31</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1708,7 +1774,7 @@
 <div class="copyright">
   
   &copy; 
-  <span itemprop="copyrightYear">2025</span>
+  <span itemprop="copyrightYear">2026</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
