@@ -159,6 +159,854 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/1669588220/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Tim">
+      <meta itemprop="description" content="Tim's blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tim">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/1669588220/" class="post-title-link" itemprop="url">SaaS多租户差异化表单设计方案</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2026-07-16 16:19:45 / 修改时间：16:21:53" itemprop="dateCreated datePublished" datetime="2026-07-16T16:19:45+08:00">2026-07-16</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%96%B9%E6%A1%88%E8%AE%BE%E8%AE%A1/" itemprop="url" rel="index"><span itemprop="name">方案设计</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/1669588220/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/1669588220/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="SaaS-多租户差异化表单设计方案总结"><a href="#SaaS-多租户差异化表单设计方案总结" class="headerlink" title="SaaS 多租户差异化表单设计方案总结"></a>SaaS 多租户差异化表单设计方案总结</h1><h2 id="一、问题背景"><a href="#一、问题背景" class="headerlink" title="一、问题背景"></a>一、问题背景</h2><p>在 SaaS 场景中，不同租户（客户）虽然共享同一套业务系统，但往往需要根据自身业务特点自定义表单字段。例如：</p>
+<ul>
+<li>租户 A 的 CRM 需要记录”客户行业分类”字段</li>
+<li>租户 B 的 CRM 需要记录”客户信用等级”字段</li>
+<li>租户 C 需要在标准字段基础上额外增加 20 个自定义字段</li>
+</ul>
+<p>核心挑战在于：<strong>如何在共享底层数据结构的前提下，让每个租户拥有独立的字段配置（Field Definition）和数据存储（Field Value），同时保持查询性能、数据一致性和可维护性。</strong></p>
+<hr>
+<h2 id="二、主流数据结构设计方案"><a href="#二、主流数据结构设计方案" class="headerlink" title="二、主流数据结构设计方案"></a>二、主流数据结构设计方案</h2><h3 id="方案一：EAV-模型（Entity-Attribute-Value）"><a href="#方案一：EAV-模型（Entity-Attribute-Value）" class="headerlink" title="方案一：EAV 模型（Entity-Attribute-Value）"></a>方案一：EAV 模型（Entity-Attribute-Value）</h3><h4 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">┌─────────────────────────────────────────┐</span><br><span class="line">│  field_definition (字段元数据表)          │</span><br><span class="line">│  id | tenant_id | field_name | field_type│</span><br><span class="line">│  1  | tenant_a  | industry     | string  │</span><br><span class="line">│  2  | tenant_b  | credit_level | enum    │</span><br><span class="line">└─────────────────────────────────────────┘</span><br><span class="line"></span><br><span class="line">┌─────────────────────────────────────┐</span><br><span class="line">│  field_value (字段值表)               │</span><br><span class="line">│  id | entity_id | field_id | value   │</span><br><span class="line">│  1  | 1001      | 1        | 医药     │</span><br><span class="line">│  2  | 1002      | 1        | 金融     │</span><br><span class="line">│  3  | 1001      | 2        | A        │</span><br><span class="line">└─────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<p>每条业务数据的一个自定义字段值占一行，通过 <code>field_id</code> 关联到字段定义。</p>
+<h4 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h4><ul>
+<li>架构简单直观，扩展性强，新增字段无需改表结构</li>
+<li>支持行级并发锁，不同字段更新互不干扰</li>
+<li>删除字段只需清理元数据 + 级联删除值行</li>
+<li>对关系型数据库友好，不依赖特定数据库特性</li>
+</ul>
+<h4 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h4><ul>
+<li>查询一个实体的所有字段需要大量 JOIN 或多次查询，性能差</li>
+<li>无法利用数据库的类型约束，所有值以字符串存储</li>
+<li>复杂条件查询（多字段组合过滤）SQL 极其冗长且低效</li>
+<li>存储膨胀严重，每条数据的每个字段值都占独立行，标识符重复存储</li>
+<li>写入性能随索引数量增长而下降</li>
+</ul>
+<h4 id="适用场景"><a href="#适用场景" class="headerlink" title="适用场景"></a>适用场景</h4><ul>
+<li>自定义字段数量较少（&lt; 50）</li>
+<li>传统成熟系统的局部字段扩展</li>
+<li>对查询性能要求不高的轻量级配置场景</li>
+</ul>
+<hr>
+<h3 id="方案二：JSON-JSONB-列存储"><a href="#方案二：JSON-JSONB-列存储" class="headerlink" title="方案二：JSON / JSONB 列存储"></a>方案二：JSON / JSONB 列存储</h3><h4 id="数据结构-1"><a href="#数据结构-1" class="headerlink" title="数据结构"></a>数据结构</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">┌─────────────────────────────────────────────┐</span><br><span class="line">│  business_entity (业务数据主表)               │</span><br><span class="line">│  id | tenant_id | std_name | custom_fields   │</span><br><span class="line">│  1  | tenant_a  | 张三      | &#123;&quot;industry&quot;:&quot;医药&quot;,&quot;score&quot;:95&#125; │</span><br><span class="line">│  2  | tenant_b  | 李四      | &#123;&quot;credit_level&quot;:&quot;A&quot;,&quot;region&quot;:&quot;华东&quot;&#125; │</span><br><span class="line">└─────────────────────────────────────────────┘</span><br><span class="line"></span><br><span class="line">┌─────────────────────────────────────────┐</span><br><span class="line">│  field_definition (字段定义，控制JSON结构) │</span><br><span class="line">│  id | tenant_id | field_key | field_type │</span><br><span class="line">│  1  | tenant_a  | industry   | string    │</span><br><span class="line">│  2  | tenant_a  | score      | number    │</span><br><span class="line">│  3  | tenant_b  | credit_level | enum    │</span><br><span class="line">└─────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<p>所有自定义字段值打包成一个 JSON 存储在主表的一个列中，字段定义表仅作为元数据描述。</p>
+<h4 id="优点-1"><a href="#优点-1" class="headerlink" title="优点"></a>优点</h4><ul>
+<li>存储紧凑，一条数据一行，无冗余行</li>
+<li>读写性能好，一次 IO 即可获取全部字段</li>
+<li>PostgreSQL 的 JSONB 支持 GIN 索引，可对 JSON 内部键值高效查询</li>
+<li>字段数量无上限，天然支持嵌套结构</li>
+<li>开发简单，ORM 友好</li>
+</ul>
+<h4 id="缺点-1"><a href="#缺点-1" class="headerlink" title="缺点"></a>缺点</h4><ul>
+<li>行级锁导致并发更新同一记录的不同字段时产生写争用</li>
+<li>全局字段删除需要遍历所有行清理 JSON 中的对应键</li>
+<li>无法强制严格的数据类型约束（依赖应用层校验）</li>
+<li>深层嵌套查询复杂度随层级增长</li>
+<li>部分传统关系型数据库（如 MySQL 5.7 以下）JSON 支持有限</li>
+</ul>
+<h4 id="适用场景-1"><a href="#适用场景-1" class="headerlink" title="适用场景"></a>适用场景</h4><ul>
+<li>大多数可扩展的 SaaS 产品（推荐首选方案）</li>
+<li>字段数量多但单条数据并发更新不频繁</li>
+<li>使用 PostgreSQL / MongoDB 等对 JSON 原生支持好的数据库</li>
+<li>需要快速迭代的敏捷型产品</li>
+</ul>
+<hr>
+<h3 id="方案三：宽表模式（预留列-Flex-Columns）"><a href="#方案三：宽表模式（预留列-Flex-Columns）" class="headerlink" title="方案三：宽表模式（预留列 / Flex Columns）"></a>方案三：宽表模式（预留列 / Flex Columns）</h3><h4 id="数据结构-2"><a href="#数据结构-2" class="headerlink" title="数据结构"></a>数据结构</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">┌──────────────────────────────────────────────────────────────────┐</span><br><span class="line">│  business_entity (业务数据主表)                                    │</span><br><span class="line">│  id | tenant_id | std_name | val_00 | val_01 | ... | val_99      │</span><br><span class="line">│  1  | tenant_a  | 张三      | 医药   | 95      | ... | null       │</span><br><span class="line">│  2  | tenant_b  | 李四      | A      | 华东    | ... | null       │</span><br><span class="line">└──────────────────────────────────────────────────────────────────┘</span><br><span class="line"></span><br><span class="line">┌──────────────────────────────────────────────────┐</span><br><span class="line">│  field_mapping (字段映射元数据)                    │</span><br><span class="line">│  id | tenant_id | field_name | val_col_index      │</span><br><span class="line">│  1  | tenant_a  | industry   | 0 (→ val_00)        │</span><br><span class="line">│  2  | tenant_a  | score      | 1 (→ val_01)        │</span><br><span class="line">│  3  | tenant_b  | credit_level | 0 (→ val_00)     │</span><br><span class="line">└──────────────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<p>预先在主表中创建固定数量的预留列（如 val_00 ~ val_99），通过元数据表记录每个租户的字段映射到哪个预留列。<strong>Salesforce 即采用此方案的核心变体。</strong></p>
+<h4 id="Salesforce-的实践"><a href="#Salesforce-的实践" class="headerlink" title="Salesforce 的实践"></a>Salesforce 的实践</h4><p>Salesforce 的多租户架构基于”Universal Data Dictionary (UDD)”：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">MT_Objects  → 存储对象（表）定义</span><br><span class="line">MT_Fields   → 存储字段定义（数据类型、索引策略等）</span><br><span class="line">MT_Data     → 存储实际数据，使用 flex columns（变长字符串槽位）</span><br><span class="line">MT_Indexes  → 索引透视表，存放强类型索引列</span><br><span class="line">MT_Clobs    → 大文本存储表（CLOB），脱离主行外置存储</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>每条数据通过 <code>OrgID</code> 隔离租户</li>
+<li>flex columns 以”canonical format”（规范字符串格式）存储所有类型数据</li>
+<li>运行时引擎根据 MT_Fields 的类型定义做类型转换</li>
+<li>通过大规模元数据缓存 + 按 OrgID 物理分区裁剪提升性能</li>
+</ul>
+<h4 id="Salesforce-Flex-Columns-技术细节"><a href="#Salesforce-Flex-Columns-技术细节" class="headerlink" title="Salesforce Flex Columns 技术细节"></a>Salesforce Flex Columns 技术细节</h4><h5 id="1-MT-Data-表的列类型与长度"><a href="#1-MT-Data-表的列类型与长度" class="headerlink" title="1. MT_Data 表的列类型与长度"></a>1. MT_Data 表的列类型与长度</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">┌──────────────────────────────────────────────────────────────────────┐</span><br><span class="line">│  MT_Data (数据存储主表)                                                │</span><br><span class="line">│  OrgID | ObjectID | ObjectInstanceID │ Value0 │ Value1 │ ... │ Value500│</span><br><span class="line">│  ───────┼─────────┼──────────────────┼────────┼────────┼─────┼─────────│</span><br><span class="line">│  字段类型:                                                            │</span><br><span class="line">│  VARCHAR  VARCHAR    VARCHAR          VARCHAR  VARCHAR       VARCHAR  │</span><br><span class="line">│  (定长)   (定长)     (定长)         (变长字符串)                           │</span><br><span class="line">│                                                                      │</span><br><span class="line">│  共约 501 个 Value 槽位（Value0 ~ Value500）                            │</span><br><span class="line">└──────────────────────────────────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<p><strong>字段类型：所有 Value 列均为变长字符串（VARCHAR / VARCHAR2）</strong></p>
+<ul>
+<li>无论业务字段是数字、日期、文本还是布尔，底层统一存储为<strong>字符串</strong></li>
+<li>数据库层面不区分类型，所有类型约束和校验在<strong>应用层</strong>完成</li>
+<li>每行的 501 个 Value 槽位对应 Salesforce 每个对象最多约 500 个自定义字段的限制</li>
+</ul>
+<p><strong>长度设定策略：</strong></p>
+<table>
+<thead>
+<tr>
+<th>数据类型</th>
+<th>存储方式</th>
+<th>长度处理</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>文本（Text）</td>
+<td>直接存入 Value 列</td>
+<td>最长 255 字符存入 flex column</td>
+</tr>
+<tr>
+<td>长文本（Long Text Area）</td>
+<td>外置到 MT_Clobs 表</td>
+<td>最长 32,000 字符，CLOB 存储</td>
+</tr>
+<tr>
+<td>数字（Number）</td>
+<td>转为规范字符串存入 Value 列</td>
+<td>如 <code>12345.67</code> → <code>&quot;12345.67&quot;</code></td>
+</tr>
+<tr>
+<td>日期/时间（Date/DateTime）</td>
+<td>转为规范字符串存入 Value 列</td>
+<td>如 <code>2026-07-16</code> → <code>&quot;2026-07-16T00:00:00Z&quot;</code></td>
+</tr>
+<tr>
+<td>布尔（Checkbox）</td>
+<td>转为字符串</td>
+<td><code>&quot;true&quot;</code> / <code>&quot;false&quot;</code></td>
+</tr>
+<tr>
+<td>选项列表（Picklist）</td>
+<td>直接存入 Value 列</td>
+<td>存储选项的 API Name 字符串</td>
+</tr>
+<tr>
+<td>关系（Lookup/Master-Detail）</td>
+<td>存储目标记录 ID</td>
+<td>18 位或 15 位 ID 字符串</td>
+</tr>
+</tbody></table>
+<p><strong>关键设计：长短分离</strong></p>
+<ul>
+<li>短数据（≤ 255 字符）→ 存入 MT_Data 的 flex column（VARCHAR）</li>
+<li>长数据（&gt; 255 字符，最长 32,000）→ 存入 MT_Clobs 表（CLOB 类型），主表只保留引用</li>
+</ul>
+<p><strong>MT_Clobs 表结构（一个记录有多个长文本字段怎么存？）：</strong></p>
+<p>MT_Clobs 采用与 MT_Indexes 相同的”一行一个字段值”模式。一条业务记录上有 N 个长文本字段，就在 MT_Clobs 中产生 N 行，通过 <code>FieldID</code> 区分：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">┌──────────────────────────────────────────────────────────────────────────┐</span><br><span class="line">│  MT_Clobs (长文本外置存储表)                                                │</span><br><span class="line">│  OrgID │ ObjectID │ RecordID │ FieldID │ ClobValue (CLOB)                │</span><br><span class="line">│  ───────┼─────────┼──────────┼─────────┼─────────────────────────────────│</span><br><span class="line">│  t_a   │ obj_cust │ 1001     │ 10      │ &quot;这是一段很长的客户描述...&quot;(3000字) │</span><br><span class="line">│  t_a   │ obj_cust │ 1001     │ 11      │ &quot;这是另一段很长的备注...&quot;(5000字)  │</span><br><span class="line">│  t_a   │ obj_cust │ 1001     │ 12      │ &quot;还有第三段长文本...&quot;(800字)      │</span><br><span class="line">│  t_a   │ obj_cust │ 1002     │ 10      │ &quot;另一个客户的描述...&quot;(1200字)     │</span><br><span class="line">│  t_b   │ obj_cust │ 2001     │ 10      │ &quot;租户B客户描述...&quot;(2000字)       │</span><br><span class="line">└──────────────────────────────────────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>同一条记录（RecordID=1001）有 3 个长文本字段（FieldID=10/11/12），占 3 行</li>
+<li>每行只存一个 CLOB 值，通过 <code>(OrgID, ObjectID, RecordID, FieldID)</code> 四元组唯一定位</li>
+<li>MT_Data 中对应的 Value 列存一个简短引用标记（如字段 ID 或 null），表示”该字段值在 MT_Clobs 中”</li>
+</ul>
+<p><strong>为什么不用一行存多个 CLOB 列？</strong>（如 ClobValue0 ~ ClobValueN）</p>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th>一行一个 CLOB（实际方案）</th>
+<th>一行多个 CLOB 列</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>扩展性</td>
+<td>无限，新增长文本字段无需改表</td>
+<td>有上限，需预留列</td>
+</tr>
+<tr>
+<td>行大小</td>
+<td>每行只有一个 CLOB，行大小可控</td>
+<td>多个 CLOB 堆在一行，行可能超大</td>
+</tr>
+<tr>
+<td>更新性能</td>
+<td>更新单个字段只锁一行</td>
+<td>更新任一字段锁整行</td>
+</tr>
+<tr>
+<td>存储效率</td>
+<td>为空的 CLOB 不占行</td>
+<td>空列仍占位</td>
+</tr>
+<tr>
+<td>查询方式</td>
+<td>按 FieldID 过滤</td>
+<td>需知道列位置</td>
+</tr>
+</tbody></table>
+<p>这与 MT_Indexes 的设计思路完全一致：<strong>用行数换列数</strong>，牺牲少量 JOIN 性能换取无限扩展性。</p>
+<p><strong>读取流程（读取 RecordID=1001 的完整记录）：</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">步骤 1: 查 MT_Data，取所有短字段</span><br><span class="line">  ─────────────────────────────────────────</span><br><span class="line">  SELECT * FROM MT_Data</span><br><span class="line">  WHERE OrgID&#x3D;&#39;t_a&#39; AND ObjectID&#x3D;&#39;obj_cust&#39; AND ObjectInstanceID&#x3D;1001;</span><br><span class="line">  → Value0&#x3D;&quot;医药&quot;, Value1&#x3D;&quot;5000000&quot;, Value2&#x3D;null(标记为CLOB), Value3&#x3D;null(标记为CLOB), ...</span><br><span class="line"></span><br><span class="line">步骤 2: 查 MT_Fields，确认哪些字段是 longtext 类型</span><br><span class="line">  ─────────────────────────────────────────</span><br><span class="line">  SELECT FieldID, FieldNum, DataType FROM MT_Fields</span><br><span class="line">  WHERE OrgID&#x3D;&#39;t_a&#39; AND ObjectID&#x3D;&#39;obj_cust&#39; AND DataType&#x3D;&#39;longtext&#39;;</span><br><span class="line">  → FieldID&#x3D;10(FieldNum&#x3D;2), FieldID&#x3D;11(FieldNum&#x3D;3), FieldID&#x3D;12(FieldNum&#x3D;7)</span><br><span class="line"></span><br><span class="line">步骤 3: 查 MT_Clobs，取所有长文本字段值</span><br><span class="line">  ─────────────────────────────────────────</span><br><span class="line">  SELECT FieldID, ClobValue FROM MT_Clobs</span><br><span class="line">  WHERE OrgID&#x3D;&#39;t_a&#39; AND ObjectID&#x3D;&#39;obj_cust&#39; AND RecordID&#x3D;1001</span><br><span class="line">    AND FieldID IN (10, 11, 12);</span><br><span class="line">  → FieldID&#x3D;10: &quot;这是一段很长的客户描述...&quot;</span><br><span class="line">    FieldID&#x3D;11: &quot;这是另一段很长的备注...&quot;</span><br><span class="line">    FieldID&#x3D;12: &quot;还有第三段长文本...&quot;</span><br><span class="line"></span><br><span class="line">步骤 4: 应用层合并</span><br><span class="line">  ─────────────────────────────────────────</span><br><span class="line">  将 MT_Data 的短字段 + MT_Clobs 的长字段合并为完整记录返回</span><br></pre></td></tr></table></figure>
+
+<h5 id="2-Canonical-Format（规范字符串格式）"><a href="#2-Canonical-Format（规范字符串格式）" class="headerlink" title="2. Canonical Format（规范字符串格式）"></a>2. Canonical Format（规范字符串格式）</h5><p>所有数据在写入 MT_Data 前统一转换为 canonical string：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">写入流程:</span><br><span class="line">  用户输入 → 应用层校验 → 类型转换函数 → canonical string → 写入 Value 列</span><br><span class="line"></span><br><span class="line">读取流程:</span><br><span class="line">  读取 Value 列 → 读取 MT_Fields 获取字段类型 → 类型转换函数 → 原始类型返回</span><br><span class="line"></span><br><span class="line">类型转换函数:</span><br><span class="line">  TO_NUMBER()  → 字符串转数字</span><br><span class="line">  TO_DATE()    → 字符串转日期</span><br><span class="line">  TO_CHAR()    → 其他类型转字符串</span><br></pre></td></tr></table></figure>
+
+<p>例如：</p>
+<ul>
+<li>数字 <code>3.14159</code> → 存储 <code>&quot;3.14159&quot;</code>，读取时 <code>TO_NUMBER(&quot;3.14159&quot;)</code> → <code>3.14159</code></li>
+<li>日期 <code>2026-07-16 14:30:00</code> → 存储 <code>&quot;2026-07-16T14:30:00Z&quot;</code>，读取时 <code>TO_DATE(...)</code> → 日期对象</li>
+</ul>
+<h5 id="3-MT-Fields-元数据表结构"><a href="#3-MT-Fields-元数据表结构" class="headerlink" title="3. MT_Fields 元数据表结构"></a>3. MT_Fields 元数据表结构</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">┌────────────────────────────────────────────────────────────────────────┐</span><br><span class="line">│  MT_Fields (字段定义表)                                                  │</span><br><span class="line">│  FieldID  │ OrgID    │ ObjectID  │ FieldName    │ DataType │ IsIndexed │ FieldNum │</span><br><span class="line">│  ─────────┼──────────┼───────────┼──────────────┼──────────┼───────────┼──────────│</span><br><span class="line">│  1        │ tenant_a │ obj_cust  │ industry     │ string   │ true      │ 0        │</span><br><span class="line">│  2        │ tenant_a │ obj_cust  │ revenue      │ number   │ true      │ 1        │</span><br><span class="line">│  3        │ tenant_b │ obj_cust  │ credit_level │ picklist │ false     │ 0        │</span><br><span class="line">│  4        │ tenant_b │ obj_cust  │ description  │ longtext │ false     │ 1        │</span><br><span class="line">└────────────────────────────────────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>FieldNum</strong>：核心映射字段，指定该自定义字段的数据存储在 MT_Data 的哪个 Value 槽位</li>
+<li>同一个 Object 下，每个租户的 FieldNum 独立编号（不同租户可复用同一个 Value 列）</li>
+<li><strong>DataType</strong>：记录原始业务类型，供运行时做类型转换</li>
+<li><strong>IsIndexed</strong>：标记该字段是否需要索引，决定是否同步写入 MT_Indexes</li>
+</ul>
+<h5 id="4-MT-Indexes-索引透视表"><a href="#4-MT-Indexes-索引透视表" class="headerlink" title="4. MT_Indexes 索引透视表"></a>4. MT_Indexes 索引透视表</h5><p>由于多个不同类型的业务字段共享同一个 VARCHAR Value 列，数据库原生索引无法有效工作。Salesforce 引入了 MT_Indexes 透视表：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">┌──────────────────────────────────────────────────────────────────────────────┐</span><br><span class="line">│  MT_Indexes (索引透视表)                                                       │</span><br><span class="line">│  OrgID │ ObjectID │ FieldID │ RecordID │ StringValue │ NumValue │ DateValue  │</span><br><span class="line">│  ───────┼─────────┼─────────┼──────────┼─────────────┼──────────┼────────────│</span><br><span class="line">│  t_a   │ obj_cust │ 1       │ 1001     │ &quot;医药&quot;       │ null     │ null       │</span><br><span class="line">│  t_a   │ obj_cust │ 1       │ 1002     │ &quot;金融&quot;       │ null     │ null       │</span><br><span class="line">│  t_a   │ obj_cust │ 2       │ 1001     │ null         │ 5000000  │ null       │</span><br><span class="line">│  t_a   │ obj_cust │ 2       │ 1002     │ null         │ 8000000  │ null       │</span><br><span class="line">│  t_b   │ obj_cust │ 3       │ 2001     │ &quot;A&quot;          │ null     │ null       │</span><br><span class="line">│  t_b   │ obj_cust │ 5       │ 2001     │ null         │ null     │ 2026-07-16 │</span><br><span class="line">└──────────────────────────────────────────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<p><strong>RecordID 是最关键的列</strong>——它指向 MT_Data 中的 ObjectInstanceID，是连接索引与原始数据的桥梁。</p>
+<p><strong>各列作用：</strong></p>
+<table>
+<thead>
+<tr>
+<th>列名</th>
+<th>类型</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>OrgID</td>
+<td>VARCHAR</td>
+<td>租户隔离，查询时强制过滤</td>
+</tr>
+<tr>
+<td>ObjectID</td>
+<td>VARCHAR</td>
+<td>标识所属对象（如 Account、Contact）</td>
+</tr>
+<tr>
+<td>FieldID</td>
+<td>VARCHAR</td>
+<td>标识哪个自定义字段（关联 MT_Fields）</td>
+</tr>
+<tr>
+<td><strong>RecordID</strong></td>
+<td><strong>VARCHAR</strong></td>
+<td><strong>指向 MT_Data 中的记录 ID，回表取数据的关键</strong></td>
+</tr>
+<tr>
+<td>StringValue</td>
+<td>VARCHAR</td>
+<td>文本类字段的索引值（强类型）</td>
+</tr>
+<tr>
+<td>NumValue</td>
+<td>NUMBER</td>
+<td>数字类字段的索引值（强类型）</td>
+</tr>
+<tr>
+<td>DateValue</td>
+<td>DATE</td>
+<td>日期类字段的索引值（强类型）</td>
+</tr>
+</tbody></table>
+<p><strong>索引建立方式：</strong></p>
+<p>数据库在 MT_Indexes 上建立复合 B-Tree 索引，例如：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 文本类查询索引</span></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">INDEX</span> idx_string <span class="keyword">ON</span> MT_Indexes (OrgID, ObjectID, FieldID, StringValue);</span><br><span class="line"><span class="comment">-- 数字类查询索引</span></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">INDEX</span> idx_number <span class="keyword">ON</span> MT_Indexes (OrgID, ObjectID, FieldID, NumValue);</span><br><span class="line"><span class="comment">-- 日期类查询索引</span></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">INDEX</span> idx_date <span class="keyword">ON</span> MT_Indexes (OrgID, ObjectID, FieldID, DateValue);</span><br></pre></td></tr></table></figure>
+
+<p><strong>索引查找流程（以”查询租户 A 中年收入 &gt; 500 万的客户”为例）：</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">步骤 1: 查 MT_Fields，获取字段元数据</span><br><span class="line">  ─────────────────────────────────────────</span><br><span class="line">  SELECT FieldID, DataType, IsIndexed, FieldNum</span><br><span class="line">  FROM MT_Fields</span><br><span class="line">  WHERE OrgID &#x3D; &#39;tenant_a&#39; AND ObjectID &#x3D; &#39;obj_cust&#39; AND FieldName &#x3D; &#39;revenue&#39;;</span><br><span class="line">  → 结果: FieldID&#x3D;2, DataType&#x3D;&#39;number&#39;, IsIndexed&#x3D;true, FieldNum&#x3D;1</span><br><span class="line"></span><br><span class="line">步骤 2: 查 MT_Indexes，用强类型列做过滤，拿到 RecordID 列表</span><br><span class="line">  ─────────────────────────────────────────</span><br><span class="line">  SELECT RecordID</span><br><span class="line">  FROM MT_Indexes</span><br><span class="line">  WHERE OrgID &#x3D; &#39;tenant_a&#39;</span><br><span class="line">    AND ObjectID &#x3D; &#39;obj_cust&#39;</span><br><span class="line">    AND FieldID &#x3D; 2</span><br><span class="line">    AND NumValue &gt; 5000000;        ← 强类型比较，走 B-Tree 索引</span><br><span class="line">  → 结果: [1001, 1002, 1005, ...]</span><br><span class="line"></span><br><span class="line">步骤 3: 用 RecordID 回表 MT_Data，取完整记录</span><br><span class="line">  ─────────────────────────────────────────</span><br><span class="line">  SELECT * FROM MT_Data</span><br><span class="line">  WHERE OrgID &#x3D; &#39;tenant_a&#39;</span><br><span class="line">    AND ObjectID &#x3D; &#39;obj_cust&#39;</span><br><span class="line">    AND ObjectInstanceID IN (1001, 1002, 1005, ...);</span><br><span class="line">  → 结果: 完整的业务记录（从 Value 列读取所有字段值）</span><br></pre></td></tr></table></figure>
+
+<p><strong>为什么需要 MT_Indexes（核心问题解答）：</strong></p>
+<p>如果不加 MT_Indexes，在 MT_Data 上直接查询 <code>WHERE Value1 &gt; 5000000</code> 面临两个致命问题：</p>
+<ol>
+<li><p><strong>类型错误</strong>：Value1 是 VARCHAR 列，存的 <code>&quot;5000000&quot;</code> 是字符串。字符串比较 <code>&quot;5000000&quot; &gt; &quot;4999999&quot;</code> 的结果在数据库层面是不可靠的（字符串按字典序比较，<code>&quot;5000000&quot; &lt; &quot;4999999&quot;</code> 为 true，因为字符 <code>&#39;5&#39; &gt; &#39;4&#39;</code> 但长度不同会导致错乱）。更严重的是 <code>&quot;10000000&quot; &lt; &quot;5000000&quot;</code> 在字符串比较下成立（因为 <code>&#39;1&#39; &lt; &#39;5&#39;</code>），完全错误。</p>
+</li>
+<li><p><strong>语义混淆</strong>：同一个 Value1 列，租户 A 存的是数字 revenue，租户 B 存的可能是文本 credit_level。如果直接在 Value1 上建索引，索引中混合了数字字符串和文本字符串，查询结果毫无意义。</p>
+</li>
+</ol>
+<p>MT_Indexes 通过以下设计解决了这两个问题：</p>
+<ul>
+<li><strong>强类型列</strong>（NumValue/DateValue/StringValue）：让数据库以正确的数据类型做比较和索引</li>
+<li><strong>FieldID 过滤</strong>：确保只比较同一语义的字段值，不会跨租户、跨字段混淆</li>
+<li><strong>RecordID 回表</strong>：拿到匹配的 RecordID 后，回到 MT_Data 取完整记录</li>
+</ul>
+<p><strong>本质是”二级索引”模式</strong>：MT_Data 是堆表（主存储），MT_Indexes 是二级索引表。写入时同步写两处（主表 + 索引表），读取时先查索引表拿 ID，再回表取数据——这与数据库内部 B-Tree 二级索引的工作原理完全一致，只是 Salesforce 在应用层手动实现了它。</p>
+<h5 id="5-整体数据读写流程"><a href="#5-整体数据读写流程" class="headerlink" title="5. 整体数据读写流程"></a>5. 整体数据读写流程</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">                 ┌──────────────┐</span><br><span class="line">                 │  MT_Objects  │ ← 对象定义（哪些表）</span><br><span class="line">                 └──────┬───────┘</span><br><span class="line">                        │</span><br><span class="line">                 ┌──────▼───────┐</span><br><span class="line">  写入请求 ──────►│  MT_Fields   │ ← 字段定义（类型、位置、是否索引）</span><br><span class="line">                 └──┬───┬───┬───┘</span><br><span class="line">                    │   │   │</span><br><span class="line">       ┌────────────┘   │   └────────────┐</span><br><span class="line">       ▼                ▼                ▼</span><br><span class="line">┌──────────────┐ ┌──────────────┐ ┌──────────────┐</span><br><span class="line">│   MT_Data    │ │  MT_Indexes  │ │   MT_Clobs   │</span><br><span class="line">│ Value0~500   │ │ 强类型索引列  │ │  长文本CLOB  │</span><br><span class="line">│ (VARCHAR)    │ │ (String&#x2F;Num&#x2F; │ │ (≤32000字符) │</span><br><span class="line">│              │ │  Date)       │ │              │</span><br><span class="line">└──────────────┘ └──────────────┘ └──────────────┘</span><br><span class="line">短数据(≤255)     需索引字段       长文本字段</span><br></pre></td></tr></table></figure>
+
+<p>写入时：MT_Fields 决定数据写入哪个 Value 列、是否同步 MT_Indexes、是否外置 MT_Clobs<br>读取时：MT_Fields 决定从哪个 Value 列读取、用何种类型转换函数还原</p>
+<h5 id="6-关键设计总结"><a href="#6-关键设计总结" class="headerlink" title="6. 关键设计总结"></a>6. 关键设计总结</h5><table>
+<thead>
+<tr>
+<th>设计点</th>
+<th>方案</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>列数据类型</td>
+<td>统一 VARCHAR（变长字符串）</td>
+<td>避免为每种业务类型建列，实现统一存储</td>
+</tr>
+<tr>
+<td>列数量</td>
+<td><del>501 个（Value0</del>Value500）</td>
+<td>平衡单行存储容量与字段扩展需求</td>
+</tr>
+<tr>
+<td>短数据长度</td>
+<td>≤ 255 字符存入 flex column</td>
+<td>控制 VARCHAR 列的物理存储大小</td>
+</tr>
+<tr>
+<td>长数据长度</td>
+<td>≤ 32,000 字符存入 MT_Clobs</td>
+<td>超长数据不撑大主行，外置 CLOB</td>
+</tr>
+<tr>
+<td>类型处理</td>
+<td>canonical format + 运行时转换</td>
+<td>数据库不负责类型安全，应用层全权处理</td>
+</tr>
+<tr>
+<td>索引策略</td>
+<td>MT_Indexes 透视表 + 强类型列</td>
+<td>解决 VARCHAR 列无法按原始类型索引的问题</td>
+</tr>
+<tr>
+<td>元数据驱动</td>
+<td>MT_Fields 的 FieldNum 映射</td>
+<td>新增字段只需插元数据行，零 DDL</td>
+</tr>
+</tbody></table>
+<h5 id="7-查询引擎中间层（开发者怎么查-MT-Data？）"><a href="#7-查询引擎中间层（开发者怎么查-MT-Data？）" class="headerlink" title="7. 查询引擎中间层（开发者怎么查 MT_Data？）"></a>7. 查询引擎中间层（开发者怎么查 MT_Data？）</h5><p><strong>开发者绝不直接写 SQL 查 MT_Data。</strong> Salesforce 在应用层和数据库之间构建了一个完整的<strong>运行时查询引擎</strong>，开发者只需写 SOQL（Salesforce Object Query Language），引擎自动完成从逻辑字段到物理列的翻译。</p>
+<h6 id="架构全景"><a href="#架构全景" class="headerlink" title="架构全景"></a>架构全景</h6><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">┌─────────────────────────────────────────────────────────────────────┐</span><br><span class="line">│  开发者 &#x2F; 应用层                                                      │</span><br><span class="line">│                                                                     │</span><br><span class="line">│  SOQL:  SELECT Name, Industry, Revenue                              │</span><br><span class="line">│         FROM Account                                                │</span><br><span class="line">│         WHERE Revenue &gt; 5000000                                     │</span><br><span class="line">│                                                                     │</span><br><span class="line">│  （开发者只关心对象名 Account、字段名 Name&#x2F;Industry&#x2F;Revenue）           │</span><br><span class="line">└──────────────────────────────┬──────────────────────────────────────┘</span><br><span class="line">                               │</span><br><span class="line">                               ▼</span><br><span class="line">┌─────────────────────────────────────────────────────────────────────┐</span><br><span class="line">│  运行时查询引擎（中间层）                                               │</span><br><span class="line">│                                                                     │</span><br><span class="line">│  1. 解析 SOQL → 提取对象名、字段名、过滤条件                              │</span><br><span class="line">│  2. 查元数据缓存 → 将逻辑字段名映射为物理存储信息                           │</span><br><span class="line">│     ┌─────────────────────────────────────────────────────┐         │</span><br><span class="line">│     │  元数据缓存（内存，避免反复查 MT_Fields）                 │         │</span><br><span class="line">│     │  Account.Name      → FieldNum&#x3D;标准列,  Type&#x3D;string    │         │</span><br><span class="line">│     │  Account.Industry  → FieldNum&#x3D;0,       Type&#x3D;string    │         │</span><br><span class="line">│     │  Account.Revenue   → FieldNum&#x3D;1,       Type&#x3D;number    │         │</span><br><span class="line">│     │                     IsIndexed&#x3D;true                   │         │</span><br><span class="line">│     └─────────────────────────────────────────────────────┘         │</span><br><span class="line">│  3. 生成物理 SQL → 自动注入 OrgID、类型转换、JOIN MT_Indexes&#x2F;MT_Clobs    │</span><br><span class="line">└──────────────────────────────┬──────────────────────────────────────┘</span><br><span class="line">                               │</span><br><span class="line">                               ▼</span><br><span class="line">┌─────────────────────────────────────────────────────────────────────┐</span><br><span class="line">│  数据库层（Oracle）                                                   │</span><br><span class="line">│                                                                     │</span><br><span class="line">│  执行引擎拼好的 SQL，返回结果                                           │</span><br><span class="line">└─────────────────────────────────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<h6 id="SOQL-到-SQL-的完整翻译过程"><a href="#SOQL-到-SQL-的完整翻译过程" class="headerlink" title="SOQL 到 SQL 的完整翻译过程"></a>SOQL 到 SQL 的完整翻译过程</h6><p><strong>开发者写的 SOQL：</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="keyword">Name</span>, Industry, Revenue</span><br><span class="line"><span class="keyword">FROM</span> <span class="keyword">Account</span></span><br><span class="line"><span class="keyword">WHERE</span> Revenue &gt; <span class="number">5000000</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>引擎内部翻译步骤：</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">步骤 1: 解析 SOQL</span><br><span class="line">  ─────────────────────────────────────────</span><br><span class="line">  对象: Account → MT_Objects 查出 ObjectID &#x3D; &#39;obj_cust&#39;</span><br><span class="line">  字段: Name(标准字段), Industry(自定义), Revenue(自定义)</span><br><span class="line">  过滤: Revenue &gt; 5000000</span><br><span class="line"></span><br><span class="line">步骤 2: 查元数据缓存，映射字段</span><br><span class="line">  ─────────────────────────────────────────</span><br><span class="line">  缓存命中（不查数据库），获取:</span><br><span class="line">  ┌────────────┬──────────┬───────────┬───────────┬──────────┐</span><br><span class="line">  │ 逻辑字段名   │ FieldID  │ FieldNum  │ DataType  │ IsIndexed│</span><br><span class="line">  ├────────────┼──────────┼───────────┼───────────┼──────────┤</span><br><span class="line">  │ Name       │ (标准)   │ 标准列     │ string    │ -        │</span><br><span class="line">  │ Industry   │ 1        │ 0 (Val0)  │ string    │ true     │</span><br><span class="line">  │ Revenue    │ 2        │ 1 (Val1)  │ number    │ true     │</span><br><span class="line">  └────────────┴──────────┴───────────┴───────────┴──────────┘</span><br><span class="line"></span><br><span class="line">步骤 3: 生成物理 SQL（引擎自动拼装）</span><br><span class="line">  ─────────────────────────────────────────</span><br><span class="line">  -- 因为 Revenue 是 number 类型且 IsIndexed&#x3D;true，</span><br><span class="line">  -- 引擎选择走 MT_Indexes 强类型索引，而不是全表扫描 MT_Data</span><br><span class="line"></span><br><span class="line">  SELECT d.ObjectInstanceID  AS Id,</span><br><span class="line">         d.StdName           AS Name,         -- 标准字段，直接读列</span><br><span class="line">         d.Value0            AS Industry,     -- 自定义字段，读 Val0</span><br><span class="line">         TO_NUMBER(d.Value1) AS Revenue       -- 自定义字段，读 Val1 + 类型转换</span><br><span class="line">  FROM   MT_Data d</span><br><span class="line">  WHERE  d.OrgID     &#x3D; :current_org_id        -- 引擎自动注入租户隔离</span><br><span class="line">    AND  d.ObjectID  &#x3D; &#39;obj_cust&#39;</span><br><span class="line">    AND  d.ObjectInstanceID IN (              -- 引擎自动 JOIN MT_Indexes</span><br><span class="line">         SELECT i.RecordID</span><br><span class="line">         FROM   MT_Indexes i</span><br><span class="line">         WHERE  i.OrgID     &#x3D; :current_org_id</span><br><span class="line">           AND  i.ObjectID  &#x3D; &#39;obj_cust&#39;</span><br><span class="line">           AND  i.FieldID   &#x3D; 2               -- Revenue 的 FieldID</span><br><span class="line">           AND  i.NumValue  &gt; 5000000         -- 强类型比较，走 B-Tree</span><br><span class="line">    );</span><br></pre></td></tr></table></figure>
+
+<p><strong>如果查询涉及长文本字段（如 Description），引擎还会自动追加 MT_Clobs JOIN：</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 引擎自动追加了长文本的 JOIN</span></span><br><span class="line"><span class="keyword">SELECT</span> d.ObjectInstanceID <span class="keyword">AS</span> <span class="keyword">Id</span>,</span><br><span class="line">       d.StdName          <span class="keyword">AS</span> <span class="keyword">Name</span>,</span><br><span class="line">       d.Value0           <span class="keyword">AS</span> Industry,</span><br><span class="line">       c.ClobValue        <span class="keyword">AS</span> Description    <span class="comment">-- 从 MT_Clobs 取</span></span><br><span class="line"><span class="keyword">FROM</span>   MT_Data d</span><br><span class="line"><span class="keyword">LEFT</span> <span class="keyword">JOIN</span> MT_Clobs c</span><br><span class="line">  <span class="keyword">ON</span>   c.OrgID     = d.OrgID               <span class="comment">-- 引擎自动注入</span></span><br><span class="line">  <span class="keyword">AND</span>  c.ObjectID  = d.ObjectID</span><br><span class="line">  <span class="keyword">AND</span>  c.RecordID  = d.ObjectInstanceID</span><br><span class="line">  <span class="keyword">AND</span>  c.FieldID   = <span class="number">10</span>                     <span class="comment">-- Description 的 FieldID</span></span><br><span class="line"><span class="keyword">WHERE</span>  d.OrgID = :current_org_id</span><br><span class="line">  ...</span><br></pre></td></tr></table></figure>
+
+<h6 id="引擎自动处理的-5-件事"><a href="#引擎自动处理的-5-件事" class="headerlink" title="引擎自动处理的 5 件事"></a>引擎自动处理的 5 件事</h6><table>
+<thead>
+<tr>
+<th>引擎自动完成</th>
+<th>开发者无需关心</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>租户隔离</strong></td>
+<td>自动注入 <code>OrgID = 当前租户</code>，开发者 SOQL 中不写 OrgID</td>
+</tr>
+<tr>
+<td><strong>字段映射</strong></td>
+<td>逻辑字段名 → 物理 Value 列号，通过元数据缓存完成</td>
+</tr>
+<tr>
+<td><strong>类型转换</strong></td>
+<td>自动包裹 <code>TO_NUMBER()</code> / <code>TO_DATE()</code>，开发者拿到的就是正确类型</td>
+</tr>
+<tr>
+<td><strong>索引路由</strong></td>
+<td>自动判断走 MT_Indexes（有索引）还是全表扫描 MT_Data</td>
+</tr>
+<tr>
+<td><strong>长文本 JOIN</strong></td>
+<td>自动 LEFT JOIN MT_Clobs，开发者无感知</td>
+</tr>
+</tbody></table>
+<h6 id="元数据缓存：引擎高效的关键"><a href="#元数据缓存：引擎高效的关键" class="headerlink" title="元数据缓存：引擎高效的关键"></a>元数据缓存：引擎高效的关键</h6><p>如果没有缓存，每次查询都要先查 MT_Fields 获取字段映射，再查 MT_Data 取数据——两次数据库往返。Salesforce 的解决方案：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">┌──────────────────────────────────────────────────┐</span><br><span class="line">│              应用服务器集群                         │</span><br><span class="line">│                                                  │</span><br><span class="line">│  ┌─────────┐  ┌─────────┐  ┌─────────┐         │</span><br><span class="line">│  │ App 节点 │  │ App 节点 │  │ App 节点 │         │</span><br><span class="line">│  │┌───────┐│  │┌───────┐│  │┌───────┐│         │</span><br><span class="line">│  ││元数据 ││  ││元数据 ││  ││元数据 ││         │</span><br><span class="line">│  ││缓存   ││  ││缓存   ││  ││缓存   ││         │</span><br><span class="line">│  │└───────┘│  │└───────┘│  │└───────┘│         │</span><br><span class="line">│  └────┬────┘  └────┬────┘  └────┬────┘         │</span><br><span class="line">│       └────────────┼────────────┘               │</span><br><span class="line">│                    │ 同步                         │</span><br><span class="line">│              ┌─────▼──────┐                      │</span><br><span class="line">│              │  数据库      │                      │</span><br><span class="line">│              │  MT_Fields  │                      │</span><br><span class="line">│              └────────────┘                      │</span><br><span class="line">└──────────────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>每个 App 节点维护一份<strong>分布式内存元数据缓存</strong></li>
+<li>字段定义变更时，缓存自动失效并重新加载</li>
+<li>缓存命中率极高（字段定义变更频率远低于数据读写频率）</li>
+<li>效果：SOQL → SQL 翻译在内存中完成，零额外数据库查询</li>
+</ul>
+<h6 id="总结：三层架构职责划分"><a href="#总结：三层架构职责划分" class="headerlink" title="总结：三层架构职责划分"></a>总结：三层架构职责划分</h6><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">┌─────────────┬─────────────────────────────────────────────┐</span><br><span class="line">│   层级       │  职责                                        │</span><br><span class="line">├─────────────┼─────────────────────────────────────────────┤</span><br><span class="line">│  开发者      │  写 SOQL：只关心对象名、字段名、业务条件         │</span><br><span class="line">│             │  完全不知道 MT_Data &#x2F; MT_Fields 的存在          │</span><br><span class="line">├─────────────┼─────────────────────────────────────────────┤</span><br><span class="line">│  运行时引擎  │  SOQL → SQL 翻译：字段映射、类型转换、          │</span><br><span class="line">│  (中间层)    │  租户隔离、索引路由、长文本 JOIN                 │</span><br><span class="line">│             │  通过元数据缓存实现零额外 DB 查询                │</span><br><span class="line">├─────────────┼─────────────────────────────────────────────┤</span><br><span class="line">│  数据库      │  执行物理 SQL，返回原始 VARCHAR 字符串行         │</span><br><span class="line">│  (Oracle)   │  不知道业务语义，只做存储和 B-Tree 索引           │</span><br><span class="line">└─────────────┴─────────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<p><strong>业务端绝不会自己拼接 SQL。</strong> 整个翻译过程由运行时引擎 black-box 完成——这就是 Salesforce “元数据驱动架构”的核心价值：开发者面对的是逻辑对象模型，引擎负责一切物理映射。</p>
+<h5 id="8-联表查询（SOQL-Relationship-Queries）"><a href="#8-联表查询（SOQL-Relationship-Queries）" class="headerlink" title="8. 联表查询（SOQL Relationship Queries）"></a>8. 联表查询（SOQL Relationship Queries）</h5><p><strong>支持，但方式和 SQL JOIN 完全不同。</strong> SOQL 没有 INNER JOIN / LEFT JOIN 关键字，不支持任意表之间的自由关联。只能通过<strong>预定义的关系（Lookup / Master-Detail）</strong>进行导航式查询。</p>
+<h6 id="两种关联方向"><a href="#两种关联方向" class="headerlink" title="两种关联方向"></a>两种关联方向</h6><p><strong>① 子查父（Child-to-Parent，向上导航）</strong></p>
+<p>用<strong>点号语法</strong>访问父记录的字段，最多向上 <strong>5 级</strong>：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- SOQL：查询联系人及其所属客户的行业</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="keyword">Id</span>, FirstName, LastName, Account.Name, Account.Industry</span><br><span class="line"><span class="keyword">FROM</span> Contact</span><br><span class="line"><span class="keyword">WHERE</span> Account.Industry = <span class="string">&#x27;医药&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>等价 SQL 语义：<code>Contact LEFT JOIN Account ON Contact.AccountId = Account.Id</code></p>
+<p><strong>② 父查子（Parent-to-Child，向下导航）</strong></p>
+<p>用<strong>子查询（嵌套 SELECT）</strong>获取子记录列表，最多 <strong>1 级</strong>：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- SOQL：查询客户及其所有联系人</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="keyword">Id</span>, <span class="keyword">Name</span>, (<span class="keyword">SELECT</span> <span class="keyword">Id</span>, FirstName, LastName <span class="keyword">FROM</span> Contacts)</span><br><span class="line"><span class="keyword">FROM</span> <span class="keyword">Account</span></span><br><span class="line"><span class="keyword">WHERE</span> <span class="keyword">Name</span> <span class="keyword">LIKE</span> <span class="string">&#x27;A%&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>等价 SQL 语义：<code>Account LEFT JOIN Contact ON Contact.AccountId = Account.Id</code></p>
+<h6 id="常见-SQL-JOIN-的-SOQL-等价写法"><a href="#常见-SQL-JOIN-的-SOQL-等价写法" class="headerlink" title="常见 SQL JOIN 的 SOQL 等价写法"></a>常见 SQL JOIN 的 SOQL 等价写法</h6><table>
+<thead>
+<tr>
+<th>SQL JOIN 类型</th>
+<th>SOQL 等价写法</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>LEFT JOIN（父→子）</td>
+<td>子查询</td>
+<td><code>SELECT Name, (SELECT Name FROM Contacts) FROM Account</code></td>
+</tr>
+<tr>
+<td>LEFT JOIN（子→父）</td>
+<td>点号语法</td>
+<td><code>SELECT Name, Account.Name FROM Contact</code></td>
+</tr>
+<tr>
+<td>INNER JOIN（子→父）</td>
+<td>点号 + WHERE 过滤</td>
+<td><code>SELECT Name, Account.Name FROM Contact WHERE AccountId != null</code></td>
+</tr>
+<tr>
+<td>INNER JOIN（父→子）</td>
+<td>半连接子查询</td>
+<td><code>SELECT Name FROM Account WHERE Id IN (SELECT AccountId FROM Contact)</code></td>
+</tr>
+<tr>
+<td>LEFT ANTI JOIN</td>
+<td>NOT IN 子查询</td>
+<td><code>SELECT Name FROM Account WHERE Id NOT IN (SELECT AccountId FROM Contact)</code></td>
+</tr>
+</tbody></table>
+<h6 id="与-SQL-JOIN-的核心差异"><a href="#与-SQL-JOIN-的核心差异" class="headerlink" title="与 SQL JOIN 的核心差异"></a>与 SQL JOIN 的核心差异</h6><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>SQL JOIN</th>
+<th>SOQL Relationship Query</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>关联条件</strong></td>
+<td>任意字段（<code>ON A.col = B.col</code>）</td>
+<td>只能用预定义关系字段（Lookup / Master-Detail）</td>
+</tr>
+<tr>
+<td><strong>JOIN 关键字</strong></td>
+<td><code>INNER JOIN</code> / <code>LEFT JOIN</code> / <code>RIGHT JOIN</code></td>
+<td>无关键字，用点号或子查询</td>
+</tr>
+<tr>
+<td><strong>任意表关联</strong></td>
+<td>支持（任意两表只要有逻辑关联即可 JOIN）</td>
+<td><strong>不支持</strong>（必须有预定义关系）</td>
+</tr>
+<tr>
+<td><strong>向上深度</strong></td>
+<td>无限制</td>
+<td>最多 5 级</td>
+</tr>
+<tr>
+<td><strong>向下深度</strong></td>
+<td>无限制</td>
+<td>最多 1 级子查询</td>
+</tr>
+<tr>
+<td><strong>多对多</strong></td>
+<td>通过中间表 JOIN</td>
+<td>需通过 junction object 分两步查</td>
+</tr>
+<tr>
+<td><strong>聚合 + JOIN</strong></td>
+<td>自由组合</td>
+<td>受限（子查询中不能有聚合）</td>
+</tr>
+</tbody></table>
+<h6 id="引擎如何翻译关系查询（MT-Data-层面）"><a href="#引擎如何翻译关系查询（MT-Data-层面）" class="headerlink" title="引擎如何翻译关系查询（MT_Data 层面）"></a>引擎如何翻译关系查询（MT_Data 层面）</h6><p>关键点：<strong>Account 和 Contact 在物理层共享同一张 MT_Data 表</strong>，只是 ObjectID 不同。关系查询本质是 <strong>MT_Data 自连接（Self-Join）</strong>。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">开发者 SOQL:</span><br><span class="line">  SELECT Id, Name, Account.Name, Account.Industry</span><br><span class="line">  FROM Contact</span><br><span class="line">  WHERE Account.Industry &#x3D; &#39;医药&#39;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">引擎翻译为物理 SQL（MT_Data 自连接）:</span><br><span class="line"></span><br><span class="line">  元数据缓存信息:</span><br><span class="line">  ┌──────────────┬────────────────────┬───────────┐</span><br><span class="line">  │ 逻辑字段      │ 物理映射             │ ObjectID  │</span><br><span class="line">  ├──────────────┼────────────────────┼───────────┤</span><br><span class="line">  │ Contact      │ MT_Data (ObjectID&#x3D;&#39;obj_contact&#39;) │</span><br><span class="line">  │ Contact.Name │ 标准列 StdName       │           │</span><br><span class="line">  │ Contact.AccountId │ Value0 (存父记录ID) │        │</span><br><span class="line">  │ Account       │ MT_Data (ObjectID&#x3D;&#39;obj_account&#39;) │</span><br><span class="line">  │ Account.Name  │ 标准列 StdName       │           │</span><br><span class="line">  │ Account.Industry │ Value0          │           │</span><br><span class="line">  └──────────────┴────────────────────┴───────────┘</span><br><span class="line"></span><br><span class="line">  生成的物理 SQL:</span><br><span class="line"></span><br><span class="line">  SELECT c.ObjectInstanceID  AS Id,</span><br><span class="line">         c.StdName           AS Name,</span><br><span class="line">         p.StdName           AS Account_Name,       -- 父表标准字段</span><br><span class="line">         p.Value0            AS Account_Industry     -- 父表自定义字段</span><br><span class="line">  FROM   MT_Data c                                          -- 子表（Contact）</span><br><span class="line">  LEFT JOIN MT_Data p                                       -- 自连接到父表（Account）</span><br><span class="line">    ON   p.OrgID     &#x3D; c.OrgID                              -- 租户隔离</span><br><span class="line">    AND  p.ObjectID  &#x3D; &#39;obj_account&#39;                        -- 父表 ObjectID</span><br><span class="line">    AND  p.ObjectInstanceID &#x3D; TO_NUMBER(c.Value0)           -- 子表的 Value0 存的是父记录ID</span><br><span class="line">  WHERE  c.OrgID     &#x3D; :current_org_id                      -- 租户隔离</span><br><span class="line">    AND  c.ObjectID  &#x3D; &#39;obj_contact&#39;                        -- 子表 ObjectID</span><br><span class="line">    AND  p.Value0    &#x3D; &#39;医药&#39;                               -- 父表 Industry 过滤</span><br></pre></td></tr></table></figure>
+
+<p><strong>如果是父查子（带子查询），引擎翻译为不同的策略：</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">开发者 SOQL:</span><br><span class="line">  SELECT Id, Name, (SELECT Id, Name FROM Contacts)</span><br><span class="line">  FROM Account</span><br><span class="line">  WHERE Name LIKE &#39;A%&#39;</span><br><span class="line"></span><br><span class="line">引擎翻译策略（两步查询而非一个 JOIN）:</span><br><span class="line"></span><br><span class="line">  -- 步骤 1: 查父表记录</span><br><span class="line">  SELECT d.ObjectInstanceID, d.StdName</span><br><span class="line">  FROM   MT_Data d</span><br><span class="line">  WHERE  d.OrgID &#x3D; :org_id</span><br><span class="line">    AND  d.ObjectID &#x3D; &#39;obj_account&#39;</span><br><span class="line">    AND  d.StdName LIKE &#39;A%&#39;;</span><br><span class="line">  → 结果: [(1001, &#39;ABC Corp&#39;), (1002, &#39;ACME Ltd&#39;)]</span><br><span class="line"></span><br><span class="line">  -- 步骤 2: 用父记录 ID 批量查子表记录</span><br><span class="line">  SELECT d.ObjectInstanceID, d.StdName, d.Value0 AS AccountId</span><br><span class="line">  FROM   MT_Data d</span><br><span class="line">  WHERE  d.OrgID &#x3D; :org_id</span><br><span class="line">    AND  d.ObjectID &#x3D; &#39;obj_contact&#39;</span><br><span class="line">    AND  TO_NUMBER(d.Value0) IN (1001, 1002);   -- Value0 存的是父记录 ID</span><br><span class="line">  → 结果: 按 AccountId 分组后嵌套返回</span><br></pre></td></tr></table></figure>
+
+<p><strong>为什么父查子用两步而非一个 JOIN？</strong></p>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>一个 JOIN</th>
+<th>两步查询（实际方案）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SQL 复杂度</td>
+<td>一条复杂 SQL</td>
+<td>两条简单 SQL</td>
+</tr>
+<tr>
+<td>结果集</td>
+<td>笛卡尔积（父行 × 子行），需应用层去重</td>
+<td>父记录一组 + 子记录一组，天然分组</td>
+</tr>
+<tr>
+<td>结果结构</td>
+<td>扁平行（需要应用层组装成嵌套结构）</td>
+<td>直接映射为嵌套 JSON</td>
+</tr>
+<tr>
+<td>数据库压力</td>
+<td>一条大 JOIN（自连接 + 可能的索引扫描）</td>
+<td>两条简单查询（各走各自索引）</td>
+</tr>
+<tr>
+<td>分页友好</td>
+<td>难（子记录数膨胀导致分页不准）</td>
+<td>易（父记录分页，子记录各自独立）</td>
+</tr>
+</tbody></table>
+<p>Salesforce 选择两步查询策略，因为 SOQL 的返回结构本身就是嵌套的（Account 里嵌套 Contacts 数组），两步查询的结果天然就是嵌套结构，无需应用层组装。</p>
+<h4 id="优点-2"><a href="#优点-2" class="headerlink" title="优点"></a>优点</h4><ul>
+<li>单行存储，读取性能优于 EAV</li>
+<li>规避了表结构变更（DDL）风险</li>
+<li>保持了关系型表结构，可做有限 SQL 查询</li>
+<li>适合大规模多租户 SaaS，Salesforce 已验证可行性</li>
+</ul>
+<h4 id="缺点-2"><a href="#缺点-2" class="headerlink" title="缺点"></a>缺点</h4><ul>
+<li>预留列数量有上限，超出后需 DDL 扩列</li>
+<li>所有值以字符串存储，类型转换在应用层完成</li>
+<li>SQL 查询能力受限，复杂查询需应用层拼装</li>
+<li>多租户共用列，索引策略复杂，不同租户的同一列语义不同</li>
+<li>开发成本极高，需要构建完整的元数据引擎和运行时</li>
+<li>数据库账号权限管理不当易引发跨租户数据越权</li>
+</ul>
+<h4 id="适用场景-2"><a href="#适用场景-2" class="headerlink" title="适用场景"></a>适用场景</h4><ul>
+<li>超大规模多租户 SaaS 平台（如 Salesforce 级别）</li>
+<li>垂直领域 SaaS，字段模式相对固定</li>
+<li>团队有强基础设施能力，可投入大量研发资源</li>
+</ul>
+<hr>
+<h3 id="方案四：动态-DDL（运行时修改表结构）"><a href="#方案四：动态-DDL（运行时修改表结构）" class="headerlink" title="方案四：动态 DDL（运行时修改表结构）"></a>方案四：动态 DDL（运行时修改表结构）</h3><h4 id="数据结构-3"><a href="#数据结构-3" class="headerlink" title="数据结构"></a>数据结构</h4><p>每个租户有独立的表或独立的列，通过 DDL 在运行时动态创建/修改：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 租户 A 新增字段</span></span><br><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> tenant_a_customers <span class="keyword">ADD</span> <span class="keyword">COLUMN</span> industry <span class="built_in">VARCHAR</span>(<span class="number">100</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 租户 B 新增字段</span></span><br><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> tenant_b_customers <span class="keyword">ADD</span> <span class="keyword">COLUMN</span> credit_level <span class="built_in">VARCHAR</span>(<span class="number">10</span>);</span><br></pre></td></tr></table></figure>
+
+<p>或采用每租户独立表（Table-per-Tenant）策略。</p>
+<h4 id="优点-3"><a href="#优点-3" class="headerlink" title="优点"></a>优点</h4><ul>
+<li>完全的关系型能力：类型约束、索引、复杂 SQL 查询全部原生支持</li>
+<li>数据一致性强，可利用外键、CHECK 约束</li>
+<li>对外部 BI 工具和报表系统友好</li>
+<li>无需额外的元数据引擎，直接读取数据库 Schema</li>
+</ul>
+<h4 id="缺点-3"><a href="#缺点-3" class="headerlink" title="缺点"></a>缺点</h4><ul>
+<li>需要 DBA 级别权限，安全风险高</li>
+<li>DDL 操作（ALTER TABLE）在高并发下可能引发锁表</li>
+<li>多数据库方言适配成本高（MySQL / PostgreSQL / Oracle DDL 语法不同）</li>
+<li>表数量随租户增长膨胀，元数据管理困难</li>
+<li>字段重命名 / 删除时数据迁移成本高</li>
+<li>不适合 Serverless / 云原生无状态部署</li>
+</ul>
+<h4 id="适用场景-3"><a href="#适用场景-3" class="headerlink" title="适用场景"></a>适用场景</h4><ul>
+<li>ERP、MES 等企业级复杂系统（国内主流选择）</li>
+<li>租户数量有限且稳定的私有化部署场景</li>
+<li>对数据一致性和 SQL 查询能力要求极高的系统</li>
+</ul>
+<hr>
+<h3 id="方案五：混合方案（Hybrid）"><a href="#方案五：混合方案（Hybrid）" class="headerlink" title="方案五：混合方案（Hybrid）"></a>方案五：混合方案（Hybrid）</h3><p>实际生产中，成熟产品往往采用组合策略：</p>
+<h4 id="常见组合模式"><a href="#常见组合模式" class="headerlink" title="常见组合模式"></a>常见组合模式</h4><table>
+<thead>
+<tr>
+<th>组合</th>
+<th>标准字段</th>
+<th>自定义字段</th>
+<th>代表产品</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>关系列 + JSON</td>
+<td>固定列存储</td>
+<td>JSON 列存储</td>
+<td>大多数现代 SaaS</td>
+</tr>
+<tr>
+<td>关系列 + EAV</td>
+<td>固定列存储</td>
+<td>EAV 行存储</td>
+<td>传统企业系统</td>
+</tr>
+<tr>
+<td>元数据引擎 + Flex Columns</td>
+<td>元数据定义</td>
+<td>flex 列存储</td>
+<td>Salesforce</td>
+</tr>
+<tr>
+<td>关系列 + 文档库</td>
+<td>核心表存储</td>
+<td>MongoDB 扩展</td>
+<td>中大型 SaaS</td>
+</tr>
+</tbody></table>
+<h4 id="典型实践：标准字段用关系列-自定义字段用-JSON"><a href="#典型实践：标准字段用关系列-自定义字段用-JSON" class="headerlink" title="典型实践：标准字段用关系列 + 自定义字段用 JSON"></a>典型实践：标准字段用关系列 + 自定义字段用 JSON</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">business_entity:</span><br><span class="line">  id, tenant_id, name, created_at  ← 标准字段（关系列，有索引约束）</span><br><span class="line">  custom_fields (JSONB)            ← 自定义字段（JSON 列，GIN 索引）</span><br><span class="line"></span><br><span class="line">field_definition:</span><br><span class="line">  id, tenant_id, field_key, field_type, field_label, validation_rules</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>标准字段享受关系型全部优势（索引、约束、查询优化）</li>
+<li>自定义字段享受 JSON 灵活性</li>
+<li>高频查询的自定义字段可通过表达式索引提升性能</li>
+<li>字段定义表驱动前端表单渲染和数据校验</li>
+</ul>
+<hr>
+<h2 id="三、方案对比总览"><a href="#三、方案对比总览" class="headerlink" title="三、方案对比总览"></a>三、方案对比总览</h2><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>EAV</th>
+<th>JSON/JSONB</th>
+<th>宽表/Flex</th>
+<th>动态DDL</th>
+<th>混合方案</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>扩展性</strong></td>
+<td>好</td>
+<td>极好</td>
+<td>中（列上限）</td>
+<td>好</td>
+<td>极好</td>
+</tr>
+<tr>
+<td><strong>查询性能</strong></td>
+<td>差（多JOIN）</td>
+<td>好（GIN索引）</td>
+<td>中</td>
+<td>极好</td>
+<td>好</td>
+</tr>
+<tr>
+<td><strong>类型安全</strong></td>
+<td>差</td>
+<td>差（应用层）</td>
+<td>差（字符串）</td>
+<td>极好</td>
+<td>标准字段好/自定义差</td>
+</tr>
+<tr>
+<td><strong>并发写入</strong></td>
+<td>好（行级锁）</td>
+<td>差（行锁争用）</td>
+<td>中</td>
+<td>好</td>
+<td>视字段而定</td>
+</tr>
+<tr>
+<td><strong>存储效率</strong></td>
+<td>差（冗余行）</td>
+<td>好</td>
+<td>中</td>
+<td>好</td>
+<td>好</td>
+</tr>
+<tr>
+<td><strong>开发成本</strong></td>
+<td>中</td>
+<td>低</td>
+<td>极高</td>
+<td>中</td>
+<td>中</td>
+</tr>
+<tr>
+<td><strong>多DB适配</strong></td>
+<td>好</td>
+<td>中</td>
+<td>好</td>
+<td>差</td>
+<td>中</td>
+</tr>
+<tr>
+<td><strong>运维复杂度</strong></td>
+<td>中</td>
+<td>低</td>
+<td>高</td>
+<td>高</td>
+<td>中</td>
+</tr>
+<tr>
+<td><strong>适用规模</strong></td>
+<td>中小</td>
+<td>中大</td>
+<td>超大</td>
+<td>中小</td>
+<td>中大</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="四、业界代表产品实践"><a href="#四、业界代表产品实践" class="headerlink" title="四、业界代表产品实践"></a>四、业界代表产品实践</h2><h3 id="Salesforce"><a href="#Salesforce" class="headerlink" title="Salesforce"></a>Salesforce</h3><ul>
+<li><strong>方案</strong>：元数据引擎 + Flex Columns（宽表变体）</li>
+<li><strong>核心表</strong>：MT_Objects（对象定义）、MT_Fields（字段定义）、MT_Data（数据存储）</li>
+<li><strong>关键设计</strong>：UDD 统一数据字典 + 元数据缓存 + 按 OrgID 物理分区裁剪</li>
+<li><strong>亮点</strong>：将所有类型数据统一为 canonical format 字符串存储，运行时类型转换</li>
+</ul>
+<h3 id="Form-io"><a href="#Form-io" class="headerlink" title="Form.io"></a>Form.io</h3><ul>
+<li><strong>方案</strong>：Schema-Driven（JSON Schema）</li>
+<li><strong>核心设计</strong>：表单定义和提交数据均为 JSON 结构，分离存储</li>
+<li><strong>多租户</strong>：通过资源定义、权限控制、认证隔离实现租户定制</li>
+<li><strong>亮点</strong>：表单 JSON Schema 即是前端渲染蓝图，也是数据校验规则，做到”配置即代码”</li>
+</ul>
+<h3 id="钉钉宜搭-飞书低代码"><a href="#钉钉宜搭-飞书低代码" class="headerlink" title="钉钉宜搭 / 飞书低代码"></a>钉钉宜搭 / 飞书低代码</h3><ul>
+<li><strong>方案</strong>：模型驱动的混合方案</li>
+<li><strong>核心设计</strong>：标准字段关系列 + 自定义字段扩展存储</li>
+<li><strong>亮点</strong>：可视化表单设计器直接映射到后端数据模型，零代码创建租户专属表单</li>
+</ul>
+<h3 id="传统-ERP-MES"><a href="#传统-ERP-MES" class="headerlink" title="传统 ERP / MES"></a>传统 ERP / MES</h3><ul>
+<li><strong>方案</strong>：动态 DDL</li>
+<li><strong>核心设计</strong>：每租户独立表结构，运行时 ALTER TABLE</li>
+<li><strong>亮点</strong>：完全关系型能力，适合复杂业务约束场景</li>
+</ul>
+<hr>
+<h2 id="五、选型建议"><a href="#五、选型建议" class="headerlink" title="五、选型建议"></a>五、选型建议</h2><h3 id="按产品阶段选型"><a href="#按产品阶段选型" class="headerlink" title="按产品阶段选型"></a>按产品阶段选型</h3><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>推荐方案</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MVP / 早期</td>
+<td>JSON/JSONB</td>
+<td>开发快、迭代灵活、PostgreSQL 原生支持</td>
+</tr>
+<tr>
+<td>成长期</td>
+<td>混合方案（标准列 + JSON）</td>
+<td>兼顾性能与灵活性</td>
+</tr>
+<tr>
+<td>成熟期</td>
+<td>评估是否需要宽表/元数据引擎</td>
+<td>当 JSON 性能瓶颈出现时演进</td>
+</tr>
+</tbody></table>
+<h3 id="按业务特征选型"><a href="#按业务特征选型" class="headerlink" title="按业务特征选型"></a>按业务特征选型</h3><table>
+<thead>
+<tr>
+<th>业务特征</th>
+<th>推荐方案</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>字段数量 &lt; 30，查询简单</td>
+<td>JSON/JSONB</td>
+</tr>
+<tr>
+<td>字段数量 &gt; 100，需复杂查询</td>
+<td>混合方案 + 表达式索引</td>
+</tr>
+<tr>
+<td>需要 BI/报表对接</td>
+<td>动态 DDL 或 混合方案（标准字段关系列）</td>
+</tr>
+<tr>
+<td>超大规模 SaaS（万级租户）</td>
+<td>宽表 + 元数据引擎</td>
+</tr>
+<tr>
+<td>私有化部署、租户少</td>
+<td>动态 DDL</td>
+</tr>
+<tr>
+<td>需要嵌套/层级数据</td>
+<td>JSON/JSONB</td>
+</tr>
+</tbody></table>
+<h3 id="通用架构原则"><a href="#通用架构原则" class="headerlink" title="通用架构原则"></a>通用架构原则</h3><ol>
+<li><strong>元数据与数据分离</strong>：无论哪种存储方案，字段定义（元数据）必须独立于字段值（业务数据）</li>
+<li><strong>租户隔离优先</strong>：所有表必须带 <code>tenant_id</code>，所有查询必须强制过滤</li>
+<li><strong>标准 + 扩展分层</strong>：高频通用字段用关系列，低频定制字段用扩展存储</li>
+<li><strong>索引策略前置</strong>：在设计阶段就规划好哪些自定义字段需要索引，避免后期补救</li>
+<li><strong>数据校验在应用层</strong>：JSON / EAV / 宽表方案均无法依赖数据库做类型约束，需在应用层构建校验引擎</li>
+</ol>
+<hr>
+<h2 id="六、总结"><a href="#六、总结" class="headerlink" title="六、总结"></a>六、总结</h2><p>没有”最好”的方案，只有”最合适”的方案。核心权衡轴是 <strong>灵活性 vs 性能 vs 复杂度</strong>：</p>
+<ul>
+<li>追求<strong>极致灵活 + 快速迭代</strong> → JSON/JSONB（中小型 SaaS 首选）</li>
+<li>追求<strong>关系型能力 + 数据一致性</strong> → 动态 DDL（企业级私有部署）</li>
+<li>追求<strong>超大规模 + 多租户隔离</strong> → 宽表 + 元数据引擎（Salesforce 路线）</li>
+<li>追求<strong>平衡</strong> → 混合方案（标准关系列 + JSON 扩展列，多数成熟 SaaS 的选择）</li>
+</ul>
+<hr>
+<h2 id="参考来源"><a href="#参考来源" class="headerlink" title="参考来源"></a>参考来源</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://architect.salesforce.com/docs/architect/fundamentals/guide/platform-multitenant-architecture.html">Salesforce Platform Multitenant Architecture</a></li>
+<li><a target="_blank" rel="noopener" href="https://transition.co.nz/post/why-i-think-formio-is-architecturally-brilliant">Form.io JSON Form Schema Architecture</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.razsamuel.com/postgresql-jsonb-vs-eav-dynamic-data/">PostgreSQL JSONB vs EAV</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.cnblogs.com/hibpm/p/16370667.html">低代码表单引擎技术方案</a></li>
+<li><a target="_blank" rel="noopener" href="https://workos.com/blog/developers-guide-saas-multi-tenant-architecture">Multi-Tenant SaaS Architecture Guide</a></li>
+<li><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/4237063/how-to-implement-user-defined-fields-and-grouping-for-the-multi-tenant-applicati">StackOverflow: User Defined Fields for Multi-Tenant</a></li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/2106194653/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1530,141 +2378,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://tim12135.github.io/3553903599/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Tim">
-      <meta itemprop="description" content="Tim's blog">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Tim">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/3553903599/" class="post-title-link" itemprop="url">UML和相关工具</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2023-06-01 17:31:50" itemprop="dateCreated datePublished" datetime="2023-06-01T17:31:50+08:00">2023-06-01</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-06-16 13:56:20" itemprop="dateModified" datetime="2023-06-16T13:56:20+08:00">2023-06-16</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">软件工程</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/3553903599/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/3553903599/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <blockquote>
-<p>大学的时候有门课程叫软件工程，那个时候根本不懂为啥要学这个，还不如让老师教我们怎么开发网站、游戏，学点技术更有意义。这门课最终也不知道学到了点什么，回忆起来竟是连老师是谁都忘了。现在再次回头来看这些知识的时候，已经毕业近十年了。珍惜每一次学习的机会。</p>
-</blockquote>
-<h2 id="UML-意义"><a href="#UML-意义" class="headerlink" title="UML 意义"></a>UML 意义</h2><p>很多时候，客户跟产品经理交流，产品经理再跟开发交流，开发再和其他开发交流。在沟通的过程中，很多需求可能变了味，不再是客户最开始所描述的。其根本原因在于每个人的思维方式和理解能力是不同的。UML 的意义就是它定下了一套建模的标准，把抽象的文字转换成了更形象的图形。你拿一个时序图或者活动图比你巴拉巴拉讲半天更能让其他人明白整个业务流程的流转交互。</p>
-<p>依稀记得大学的老师跟我们说过如果能熟练掌握 UML 建模，那么你应该可以很轻松的敲出代码。</p>
-<p>现在想想的确如此，客户的需求用用例图来表示明确功能点，复杂交互可以用活动图、时序图来表示，对象的状态变更可以用状态机图来表示。包图、类图可以化解多人开发时信息孤岛、命名冲突、不规范等问题，组件图可以有助于了解组件、包或者三方库之间的依赖关系，部署图可以让运维架构师们清晰的了解各软件服务所需的物理资源以及分布情况。</p>
-<h2 id="软件开发过程中各角色常用的建模图形"><a href="#软件开发过程中各角色常用的建模图形" class="headerlink" title="软件开发过程中各角色常用的建模图形"></a>软件开发过程中各角色常用的建模图形</h2><table>
-<thead>
-<tr>
-<th>角色</th>
-<th>常用建模</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>产品</td>
-<td>用例图、活动图；思维导图、甘特</td>
-</tr>
-<tr>
-<td>开发</td>
-<td>活动图、时序图、类图、状态图、包图；数据库建模：ER 图、物理模型图</td>
-</tr>
-<tr>
-<td>测试</td>
-<td>用例图</td>
-</tr>
-<tr>
-<td>架构师、运维</td>
-<td>组件图（类似架构图）、部署图；网络拓扑图</td>
-</tr>
-</tbody></table>
-<h2 id="UML-常用工具"><a href="#UML-常用工具" class="headerlink" title="UML 常用工具"></a>UML 常用工具</h2><p>很长一段时间，我接触到的都是图形化界面的工具，如 Visio、PowerDesigner、网页版的图形化工具 Diagram 等。这些工具优点很明显，图形化的界面拖拽很方便；但缺点也很突出，不谈收费以及不适配所有平台这个问题外，图形、线条、箭头我一直存在对不齐的问题，其次每次都需要保留源文件才能进行修改，但是嵌入到输出页面的都是一张张图片而不会把源文件也放进去。</p>
-<p>后面接触到文本型的工具，如 PlantUML、Mermaid 等，说是工具，其实更加倾向于是实现了 UML 语法语义要求的语言。这两种现在基本上都有基于 Markdown 代码块的插件，来将代码块转换成图形，这样既可以解决用手和眼睛来拖拽对齐的问题，又可以解决输出页面保留了源文件（应该说是源代码）方便日后修改的问题。</p>
-<p>Mermaid 支持的图：流程图，时序图，类图，状态图，ER 图，甘特图，饼图，思维导图。。。</p>
-<p>PlantUML 支持的图：时序图，用例图，类图，活动图，状态图，组件图，部署图，ER 图，甘特图，思维导图。。。</p>
-<p>对比看，PlantUML 支持的 UML 图多一点，非 UML 图两者都有支持，Mermaid 相对多一些。但 Mermaid 部分图对中文支持不怎么友好，可以根据实际情况选择适合的。个人比较倾向 PlantUML，有对应的网址根据代码直接生成图片链接。</p>
-<p>PlantUML 和 Mermaid 各种图的语法就不多阐述了，两者基本上蛮相似的。以下是 PlantUML 给的一个 demo：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">@startuml</span><br><span class="line">Alice -&gt; Bob: Authentication Request</span><br><span class="line">Bob --&gt; Alice: Authentication Response</span><br><span class="line"></span><br><span class="line">Alice -&gt; Bob: Another authentication Request</span><br><span class="line">Alice &lt;-- Bob: Another authentication Response</span><br><span class="line">@enduml</span><br></pre></td></tr></table></figure>
-
-<p>预览结果：</p>
-<p><img src="https://www.plantuml.com/plantuml/png/SoWkIImgAStDuNBCoKnELT2rKt3AJx9IS2mjoKZDAybCJYp9pCzJ24ejB4qjBk42oYde0jM05MDHLLoGdrUSoeLkM5u-K5sHGY9MGw6ARNHryQb66EwGcfS2T300" alt="预览结果"></p>
-<p>可以发现还是很清晰美观的。如果你追求图形的样式、线条的布局，PlantUML 也有对应的一些配置，如正交线、分块等。</p>
-<h2 id="IntelliJ-IDEA-Markdown-插件安装"><a href="#IntelliJ-IDEA-Markdown-插件安装" class="headerlink" title="IntelliJ IDEA Markdown 插件安装"></a>IntelliJ IDEA Markdown 插件安装</h2><p><img src="/3553903599/idea.png" alt="IEDA Markdown安装插件"></p>
-<h2 id="VS-Code-Markdown-插件安装"><a href="#VS-Code-Markdown-插件安装" class="headerlink" title="VS Code Markdown 插件安装"></a>VS Code Markdown 插件安装</h2><p><img src="/3553903599/vscode.png" alt="VS Code安装Mermaid插件"></p>
-<h2 id="外链"><a href="#外链" class="headerlink" title="外链"></a>外链</h2><ol>
-<li><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Unified_Modeling_Language">https://en.wikipedia.org/wiki/Unified_Modeling_Language</a></li>
-<li><a target="_blank" rel="noopener" href="https://github.com/plantuml/plantuml">https://github.com/plantuml/plantuml</a></li>
-<li><a target="_blank" rel="noopener" href="https://github.com/mermaid-js/mermaid">https://github.com/mermaid-js/mermaid</a></li>
-</ol>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1734,7 +2447,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-count">32</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1747,7 +2460,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-count">41</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
